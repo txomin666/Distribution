@@ -179,6 +179,9 @@
             "Claroline\\FlashCardBundle\\": "plugin/flashcard",
             "Innova\\MediaResourceBundle\\": "plugin/media-resource",
             "Claroline\\DashboardBundle\\": "plugin/dashboard",
+            "Claroline\\MusicBookBundle\\": "plugin/music-book",
+            "Claroline\\MusicInstrumentBundle\\": "plugin/music-instrument",
+            "Claroline\\MusicTheoryBundle\\": "plugin/music-theory",
             "Claroline\\ClacoFormBundle\\": "plugin/claco-form"
         }
     },
@@ -234,6 +237,9 @@
             "Icap\\LessonBundle\\IcapLessonBundle",
             "Claroline\\ChatBundle\\ClarolineChatBundle",
             "Claroline\\DashboardBundle\\ClarolineDashboardBundle",
+            "Claroline\\MusicBookBundle\\ClarolineMusicBookBundle",
+            "Claroline\\MusicInstrumentBundle\\ClarolineMusicInstrumentBundle",
+            "Claroline\\MusicTheoryBundle\\ClarolineMusicTheoryBundle",
             "Claroline\\ClacoFormBundle\\ClarolineClacoFormBundle"
         ]
     }

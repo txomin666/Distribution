@@ -1,0 +1,152 @@
+<?php
+
+namespace Claroline\MusicBookBundle\Controller\Api;
+
+use Claroline\MusicBookBundle\Entity\SheetMusic;
+use Claroline\MusicBookBundle\Form\Type\SheetMusicType;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+
+/**
+ * SheetMusic CRUD Controller.
+ *
+ * @EXT\Route("/sheet_music", options={"expose"=true})
+ */
+class SheetMusicController extends Controller
+{
+    /**
+     * Lists all SheetMusic.
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("")
+     * @EXT\Method("GET")
+     */
+    public function listAction()
+    {
+        $entities = $this->container
+            ->get('doctrine.orm.entity_manager')
+            ->getRepository('ClarolineMusicBookBundle:SheetMusic')
+            ->findBy([], ['name' => 'ASC']);
+
+        return new JsonResponse($entities);
+    }
+
+    /**
+     * Gets a SheetMusic entity.
+     *
+     * @param SheetMusic $sheetMusic
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("GET")
+     */
+    public function getAction(SheetMusic $sheetMusic)
+    {
+        return new JsonResponse($sheetMusic);
+    }
+
+    /**
+     * Creates a new SheetMusic.
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("")
+     * @EXT\Method("POST")
+     */
+    public function createAction(Request $request)
+    {
+        $sheetMusic = new SheetMusic();
+        $form = $this->createForm(SheetMusicType::class, $sheetMusic);
+
+        $form->submit($request->get('data'));
+        if ($form->isValid()) {
+            // Save entity
+            $this->container->get('doctrine.orm.entity_manager')->persist($sheetMusic);
+            $this->container->get('doctrine.orm.entity_manager')->flush();
+
+            return new JsonResponse($sheetMusic, 201);
+        }
+
+        $errors = $this->getFormErrors($form);
+
+        return new JsonResponse($errors, 422);
+    }
+
+    /**
+     * Edits a SheetMusic.
+     *
+     * @param SheetMusic $sheetMusic
+     * @param Request $request
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("PUT")
+     */
+    public function updateAction(SheetMusic $sheetMusic, Request $request)
+    {
+        $form = $this->createForm(SheetMusicType::class, $sheetMusic, [
+            'method' => 'PUT',
+        ]);
+
+        $form->submit([$form->getName() => $request->get('data')]);
+        if ($form->isValid()) {
+            // Save entity
+            $this->container->get('doctrine.orm.entity_manager')->persist($sheetMusic);
+            $this->container->get('doctrine.orm.entity_manager')->flush();
+
+            return new JsonResponse($sheetMusic);
+        }
+
+        $errors = $this->getFormErrors($form);
+
+        return new JsonResponse($errors, 422);
+    }
+
+    /**
+     * Deletes a SheetMusic.
+     *
+     * @param SheetMusic $sheetMusic
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("DELETE")
+     */
+    public function deleteAction(SheetMusic $sheetMusic)
+    {
+        $this->getDoctrine()->getManager()->remove($sheetMusic);
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(null, 204);
+    }
+
+    /**
+     * @param $form
+     *
+     * @return array
+     */
+    private function getFormErrors(FormInterface $form)
+    {
+        $errors = [];
+        foreach ($form->getErrors() as $key => $error) {
+            $errors[$key] = $error->getMessage();
+        }
+
+        // Get errors from children
+        foreach ($form->all() as $child) {
+            if (!$child->isValid()) {
+                $errors[$child->getName()] = $this->getFormErrors($child);
+            }
+        }
+
+        return $errors;
+    }
+}

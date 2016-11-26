@@ -1,0 +1,47 @@
+{% extends "ClarolineCoreBundle:Desktop:layout.html.twig" %}
+
+{% block stylesheets %}
+    {# Claroline CSS #}
+    {{ parent() }}
+
+    {# Custom styles #}
+    {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusicbook/song-book.css'
+        '@ClarolineMusicBookBundle/Resources/styles/song-book/main.less'
+    %}
+    <link rel="stylesheet" media="screen" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %}
+
+{# Title of the Page #}
+{% block title %}
+    {{ 'song_book' | trans({}, 'ujm_exo') }}
+{% endblock %}
+
+{# Override breadcrumbs #}
+{% block breadcrumb %}
+    {{
+    macros.breadcrumbs([{
+        'icon': 'fa fa-briefcase',
+        'name': 'desktop'|trans({}, 'platform'),
+        'href': path('claro_desktop_open')
+    }, {
+        'name': 'song_book'|trans({}, 'song-book'),
+        'href': ''
+    }])
+    }}
+{% endblock %}
+
+{# Content of the Page #}
+{% block section_panel %}
+    <div id="song-book"></div>
+{% endblock %}
+
+{% block javascripts %}
+    {# Claroline JS #}
+    {{ parent() }}
+
+    {# Translations #}
+    <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'song-book' }) }}"></script>
+
+    <script src="{{ hotAsset('dist/claroline-distribution-plugin-music-book-song-book.js') }}"></script>
+{% endblock %}
