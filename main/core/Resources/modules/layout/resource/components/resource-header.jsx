@@ -1,19 +1,24 @@
 import React, { Component } from 'react'
 
+import PageHeader from '#/main/core/layout/page/components/page-header.jsx'
+import PageActions from '#/main/core/layout/page/components/page-actions.jsx'
+
 const T = React.PropTypes
 
-export default class PageHeader extends Component {
+export default class ResourceHeader extends Component {
   render() {
     return (
-      <div className="page-heading">
-      <h1 className="page-header">{this.props.title}</h1>
-
-    {this.props.children}
-  </div>
-  )
+      <PageHeader
+        title={this.props.resourceNode.name}
+      >
+        <PageActions
+          actions={this.props.resourceNode.actions}
+        />
+      </PageHeader>
+    )
   }
 }
 
-PageHeader.propTypes = {
-  title: T.string.isRequired
+ResourceHeader.propTypes = {
+  resourceNode: T.object.isRequired
 }

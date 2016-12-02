@@ -28,6 +28,7 @@ const MoreActionsDropdown = props =>
     pullRight={true}
   >
     <MenuItem header>More actions</MenuItem>
+
     {props.actions.map((action, index) => (
       <MenuItem key={index} eventKey={index}>
         {action.icon && <span className={action.icon}></span>}
@@ -55,7 +56,12 @@ export default class PageActions extends Component {
     return (
       <div className="page-actions">
         {primaryActions.map((primaryAction, index) => (
-          <PagePrimaryAction key={index} icon={primaryAction.icon} label={primaryAction.label} handleAction={primaryAction.handleAction} />
+          <PagePrimaryAction
+            key={index}
+            icon={primaryAction.icon}
+            label={primaryAction.label}
+            handleAction={primaryAction.handleAction}
+          />
         ))}
 
         {0 !== secondaryActions.length && <MoreActionsDropdown actions={secondaryActions} />}
