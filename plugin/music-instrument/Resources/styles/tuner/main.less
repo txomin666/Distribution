@@ -1,0 +1,35 @@
+.tuner {
+    .dropdown-toggle {
+        display: block;
+        /*background: @dark-base;
+        padding: @card-spacer-x @card-spacer-y;
+        margin-bottom: @card-spacer-y;*/
+    }
+
+    .tuner-block {
+        display: table;
+        width: 100%;
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .tuner-col {
+            display: table-cell;
+            vertical-align: middle;
+
+            &.tuner-notes {
+                width: 25%;
+            }
+
+            &.tuner-headstock {
+                width: 50%;
+            }
+
+            .tuner-cell {
+                text-align: center;
+            }
+        }
+    }
+}

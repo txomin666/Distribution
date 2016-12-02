@@ -5,8 +5,8 @@ namespace TheoryBundle\DataFixtures\ORM;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use TheoryBundle\Entity\Note\Note;
-use TheoryBundle\Entity\Note\NoteInfo;
+use Claroline\MusicTheoryBundle\Entity\Note\Note;
+use Claroline\MusicTheoryBundle\Entity\Note\NoteInfo;
 
 /**
  * Initializes Notes.

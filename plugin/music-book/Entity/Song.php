@@ -23,6 +23,10 @@ class Song extends AbstractResource implements \JsonSerializable
      */
     private $artist;
 
+    private $album;
+
+    private $genre;
+
     /**
      * URL to the cover of the Song.
      *

@@ -14,10 +14,6 @@ class InstrumentControllerTest extends WebTestCase
      */
     private $client;
 
-    private $requestParameters = [
-        'CONTENT_TYPE' => 'application/vnd.api+json'
-    ];
-
     public function setUp()
     {
         parent::setUp();
@@ -28,7 +24,7 @@ class InstrumentControllerTest extends WebTestCase
     public function testListAction()
     {
         // Request the endpoint
-        $this->client->request('GET', '/instruments', [], [], $this->requestParameters);
+        $this->client->request('GET', '/instruments', [], []);
 
         // Get the Response content
         $response = $this->client->getResponse();

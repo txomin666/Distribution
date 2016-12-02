@@ -14,7 +14,7 @@
 
 {# Title of the Page #}
 {% block title %}
-    {{ 'song_book' | trans({}, 'ujm_exo') }}
+    {{ 'song_book' | trans({}, 'tools') }}
 {% endblock %}
 
 {# Override breadcrumbs #}
@@ -25,7 +25,7 @@
         'name': 'desktop'|trans({}, 'platform'),
         'href': path('claro_desktop_open')
     }, {
-        'name': 'song_book'|trans({}, 'song-book'),
+        'name': 'song_book'|trans({}, 'tools'),
         'href': ''
     }])
     }}
@@ -41,7 +41,7 @@
     {{ parent() }}
 
     {# Translations #}
-    <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'song-book' }) }}"></script>
+    <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'tools' }) }}"></script>
 
     <script src="{{ hotAsset('dist/claroline-distribution-plugin-music-book-song-book.js') }}"></script>
 {% endblock %}

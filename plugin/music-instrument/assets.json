@@ -1,7 +1,8 @@
 {
   "webpack": {
     "entry": {
-
+      "instrument": "instrument/index",
+      "tuner": "tuner/index"
     }
   }
 }

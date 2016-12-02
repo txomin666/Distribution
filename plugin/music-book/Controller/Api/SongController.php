@@ -2,37 +2,69 @@
 
 namespace Claroline\MusicBookBundle\Controller\Api;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
+use Claroline\CoreBundle\Library\Validation\ValidationException;
 use Claroline\MusicBookBundle\Entity\Song;
-use Claroline\MusicBookBundle\Form\Type\SongType;
-use Symfony\Component\Form\FormInterface;
+use Claroline\MusicBookBundle\Manager\SongManager;
+use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
  * Song CRUD Controller.
  *
  * @EXT\Route("/songs", options={"expose"=true})
  */
-class SongController extends Controller
+class SongController
 {
+    /**
+     * @var AuthorizationCheckerInterface
+     */
+    private $authorization;
+
+    /**
+     * @var SongManager
+     */
+    private $songManager;
+
+    /**
+     * SongController constructor.
+     *
+     * @DI\InjectParams({
+     *     "authorization" = @DI\Inject("security.authorization_checker"),
+     *     "songManager"   = @DI\Inject("claro_music_book.manager.song")
+     * })
+     *
+     * @param AuthorizationCheckerInterface $authorization
+     * @param SongManager $songManager
+     */
+    public function __construct(
+        AuthorizationCheckerInterface $authorization,
+        SongManager $songManager)
+    {
+        $this->authorization = $authorization;
+        $this->songManager = $songManager;
+    }
+
     /**
      * Lists all Songs.
      *
      * @EXT\Route("")
      * @EXT\Method("GET")
      *
+     * @param User $user
+     *
      * @return JsonResponse
      */
-    public function listAction()
+    public function listAction(User $user)
     {
-        $entities = $this->container
-            ->get('doctrine.orm.entity_manager')
-            ->getRepository('ClarolineMusicBookBundle:Song')
-            ->findBy([], ['name' => 'ASC']);
-
-        return new JsonResponse($entities);
+        return new JsonResponse(
+            $this->songManager->search($user)
+        );
     }
 
     /**
@@ -47,6 +79,8 @@ class SongController extends Controller
      */
     public function getAction(Song $song)
     {
+        $this->assertHasPermission('OPEN', $song);
+
         return new JsonResponse($song);
     }
 
@@ -62,21 +96,13 @@ class SongController extends Controller
      */
     public function createAction(Request $request)
     {
-        $song = new Song();
-        $form = $this->createForm(SongType::class, $song);
+        try {
+            $song = $this->songManager->create($request->get('data'));
 
-        $form->submit($request->get('data'));
-        if ($form->isValid()) {
-            // Save entity
-            $this->container->get('doctrine.orm.entity_manager')->persist($song);
-            $this->container->get('doctrine.orm.entity_manager')->flush();
-
-            return new JsonResponse($song, 201);
+            return new JsonResponse($song);
+        } catch (ValidationException $e) {
+            return new JsonResponse($e->getErrors(), 422);
         }
-
-        $errors = $this->getFormErrors($form);
-
-        return new JsonResponse($errors, 422);
     }
 
     /**
@@ -92,22 +118,15 @@ class SongController extends Controller
      */
     public function updateAction(Song $song, Request $request)
     {
-        $form = $this->createForm(SongType::class, $song, [
-            'method' => 'PUT',
-        ]);
+        $this->assertHasPermission('ADMINISTRATE', $song);
 
-        $form->submit([$form->getName() => $request->get('data')]);
-        if ($form->isValid()) {
-            // Save entity
-            $this->container->get('doctrine.orm.entity_manager')->persist($song);
-            $this->container->get('doctrine.orm.entity_manager')->flush();
+        try {
+            $song = $this->songManager->update($request->get('data'), $song);
 
             return new JsonResponse($song);
+        } catch (ValidationException $e) {
+            return new JsonResponse($e->getErrors(), 422);
         }
-
-        $errors = $this->getFormErrors($form);
-
-        return new JsonResponse($errors, 422);
     }
 
     /**
@@ -122,31 +141,19 @@ class SongController extends Controller
      */
     public function deleteAction(Song $song)
     {
-        $this->getDoctrine()->getManager()->remove($song);
-        $this->getDoctrine()->getManager()->flush();
+        $this->assertHasPermission('ADMINISTRATE', $song);
+
+        $this->songManager->delete($song);
 
         return new JsonResponse(null, 204);
     }
 
-    /**
-     * @param $form
-     *
-     * @return array
-     */
-    private function getFormErrors(FormInterface $form)
+    private function assertHasPermission($permission, Song $song)
     {
-        $errors = [];
-        foreach ($form->getErrors() as $key => $error) {
-            $errors[$key] = $error->getMessage();
-        }
+        $collection = new ResourceCollection([$song->getResourceNode()]);
 
-        // Get errors from children
-        foreach ($form->all() as $child) {
-            if (!$child->isValid()) {
-                $errors[$child->getName()] = $this->getFormErrors($child);
-            }
+        if (!$this->authorization->isGranted($permission, $collection)) {
+            throw new AccessDeniedException($collection->getErrorsForDisplay());
         }
-
-        return $errors;
     }
 }

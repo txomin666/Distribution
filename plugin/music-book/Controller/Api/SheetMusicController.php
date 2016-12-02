@@ -4,18 +4,18 @@ namespace Claroline\MusicBookBundle\Controller\Api;
 
 use Claroline\MusicBookBundle\Entity\SheetMusic;
 use Claroline\MusicBookBundle\Form\Type\SheetMusicType;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use JMS\DiExtraBundle\Annotation as DI;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 
 /**
  * SheetMusic CRUD Controller.
  *
  * @EXT\Route("/sheet_music", options={"expose"=true})
  */
-class SheetMusicController extends Controller
+class SheetMusicController
 {
     /**
      * Lists all SheetMusic.

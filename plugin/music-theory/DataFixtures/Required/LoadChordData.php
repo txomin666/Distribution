@@ -5,7 +5,7 @@ namespace TheoryBundle\DataFixtures\ORM;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use TheoryBundle\Entity\Chord;
+use Claroline\MusicTheoryBundle\Entity\Chord;
 
 /**
  * Initializes chords.
@@ -42,7 +42,7 @@ class LoadChordData extends AbstractFixture implements OrderedFixtureInterface
 
             // Get the Intervals of the Chord
             foreach ($chord['intervals'] as $interval) {
-                /** @var \TheoryBundle\Entity\Interval $intervalEntity */
+                /** @var \Claroline\MusicTheoryBundle\Entity\Interval $intervalEntity */
                 $intervalEntity = $this->getReference('interval-'.$interval);
                 $entity->addInterval($intervalEntity);
             }

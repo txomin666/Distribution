@@ -1,3 +1,7 @@
+claro_artist: Artist
+artist_form_name: Name
+artist_form_published: Publish
+
 claro_song: Song
 song_form_name: Name
 song_form_published: Publish

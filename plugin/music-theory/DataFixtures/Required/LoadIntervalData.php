@@ -5,7 +5,7 @@ namespace TheoryBundle\DataFixtures\ORM;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use TheoryBundle\Entity\Interval;
+use Claroline\MusicTheoryBundle\Entity\Interval;
 
 /**
  * Initializes Intervals.

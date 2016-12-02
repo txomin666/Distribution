@@ -7,6 +7,10 @@ plugin:
           class: Claroline\MusicBookBundle\Entity\SheetMusic
           icon:  res_sheet_music.png
 
+        - name:  claro_artist
+          class: Claroline\MusicBookBundle\Entity\Artist
+          icon:  res_artist.png
+
         - name:  claro_song
           class: Claroline\MusicBookBundle\Entity\Song
           icon:  res_song.png

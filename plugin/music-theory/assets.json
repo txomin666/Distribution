@@ -1,7 +1,8 @@
 {
   "webpack": {
     "entry": {
-      "chord-grid": "chord-grid/index"
+      "chord-grid": "chord-grid/index",
+      "references": "theory-references/index"
     }
   }
 }

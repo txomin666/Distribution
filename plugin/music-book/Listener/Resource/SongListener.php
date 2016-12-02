@@ -89,7 +89,7 @@ class SongListener
         } else {
             $content = $this->container->get('templating')->render(
                 'ClarolineCoreBundle:Resource:createForm.html.twig', [
-                    'resourceType' => 'claro_music_instrument',
+                    'resourceType' => 'claro_song',
                     'form' => $form->createView(),
                 ]
             );

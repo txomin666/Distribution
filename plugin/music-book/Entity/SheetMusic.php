@@ -13,5 +13,5 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class SheetMusic extends AbstractResource
 {
-    
+    private $tempo;
 }
