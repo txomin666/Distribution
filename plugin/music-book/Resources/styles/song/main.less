@@ -1,3 +1,66 @@
-.song-cover {
+@import "../override.less";
 
+.song-cover {
+    position: relative;
+    width: 100%;
+    border: 2px dashed #CCC;
+    margin-bottom: 20px; // Same as panel
+
+    &:after {
+        content: "";
+        display: block;
+        padding-bottom: 100%;
+    }
+
+    .fa {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.song-player {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px; // Same as panel
+
+    .song-buttons {
+        flex: 1;
+        padding-right: 15px;
+
+        .btn {
+            /*background: none;
+            color: #337ab7;*/
+            font-size: 24px;
+            position: relative;
+            width: 100%;
+            /*border: 3px solid #337ab7;*/
+            border-radius: 50%;
+            padding: 10px;
+
+            &:hover,
+            &:focus {
+                /*text-decoration: none;
+                color: #337ab7;*/
+            }
+
+            &:after {
+                content: "";
+                display: block;
+                padding-bottom: 100%;
+            }
+
+            .fa {
+                position: absolute;
+                left: 0;
+                width: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+        }
+    }
+
+    .song-waveform {
+        flex: 15;
+    }
 }

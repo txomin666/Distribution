@@ -7,7 +7,12 @@ import Song from './components/song.jsx'
 const store = createStore({
   song: {
     name: "this is my song",
-    artist: "an Artist definition"
+    artists: [
+      {
+        "id": "123",
+        "name": "Anaal Nathrakh"
+      }
+    ]
   }
 })
 

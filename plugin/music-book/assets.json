@@ -1,6 +1,7 @@
 {
   "webpack": {
     "entry": {
+      "artist": "artist/index",
       "sheet-music": "sheet-music/index",
       "song": "song/index",
       "song-book": "song-book/index"

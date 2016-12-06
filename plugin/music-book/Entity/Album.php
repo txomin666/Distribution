@@ -6,9 +6,11 @@ class Album
 {
     private $id;
 
+    private $type;
+
     private $releaseDate;
 
-    private $band;
+    private $artist;
 
     private $songs;
 }
