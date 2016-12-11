@@ -14,7 +14,7 @@
 
 {# Title of the Page #}
 {% block title %}
-    {{ 'song_book' | trans({}, 'tools') }}
+    {{ 'claro_song_book' | trans({}, 'tools') }}
 {% endblock %}
 
 {# Override breadcrumbs #}
@@ -25,7 +25,7 @@
         'name': 'desktop'|trans({}, 'platform'),
         'href': path('claro_desktop_open')
     }, {
-        'name': 'song_book'|trans({}, 'tools'),
+        'name': 'claro_song_book'|trans({}, 'tools'),
         'href': ''
     }])
     }}

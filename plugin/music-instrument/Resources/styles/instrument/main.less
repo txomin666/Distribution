@@ -1,3 +1,5 @@
+@import "../common";
+
 .instrument-item {
     display: inline-table;
     vertical-align: middle;
@@ -32,4 +34,22 @@
 
 .instrument-type {
     opacity: 0.25;
+}
+
+.instrument-preview {
+
+}
+
+.instrument-select {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 20px;
+
+    &:hover,
+    &:focus {
+        .placeholder {
+            color: #337ab7;
+            border-color: #337ab7;
+        }
+    }
 }

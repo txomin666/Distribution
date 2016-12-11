@@ -30,7 +30,7 @@ class TheoryReferencesListener
     }
 
     /**
-     * @DI\Observe("open_tool_desktop_instrument_tuner")
+     * @DI\Observe("open_tool_desktop_claro_music_references")
      *
      * @param DisplayToolEvent $event
      */

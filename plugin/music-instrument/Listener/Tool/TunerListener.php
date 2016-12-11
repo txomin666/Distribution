@@ -43,7 +43,7 @@ class TunerListener
     public function onDisplay(DisplayToolEvent $event)
     {
         $subRequest = $this->container->get('request')->duplicate([], null, [
-            '_controller' => 'ClarolineMusicInstrumentBundle:Tool\Tuner:openDesktop',
+            '_controller' => 'ClarolineMusicInstrumentBundle:Tool\Tuner:open',
         ]);
 
         $response = $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);

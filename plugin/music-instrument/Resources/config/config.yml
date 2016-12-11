@@ -10,8 +10,8 @@ plugin:
     tools:
         - name:                        claro_instrument_tuner
           class:                       signal
-          is_displayable_in_workspace: true
-          is_displayable_in_desktop:   false
+          is_displayable_in_workspace: false
+          is_displayable_in_desktop:   true
 
     widgets:
         - name:                        claro_instrument_tuner

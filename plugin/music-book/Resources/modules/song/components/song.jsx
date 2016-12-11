@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import debounce from 'lodash/debounce'
 
 import { tex } from '#/main/core/translation/index'
 import ResourceHeader from '#/main/core/layout/resource/components/resource-header.jsx'
 import { actions } from './../actions/index'
+import AudioPlayer from '../../audio/components/audio-player.jsx'
 
 const T = React.PropTypes
 
@@ -13,7 +13,7 @@ const node = {
   actions: [
     {
       icon: 'fa fa-fw fa-pencil',
-      label: 'Edit song',
+      label: 'Edit',
       handleAction: () => true,
       primary: true
     },
@@ -30,59 +30,6 @@ const node = {
       primary: false
     }
   ]
-}
-
-class AudioPlayer extends Component {
-  constructor() {
-    super()
-    this.waveform = null
-  }
-
-  componentDidMount() {
-    this.waveform = WaveSurfer.create({
-      container: '#waveform',
-      barWidth: 2,
-      cursorColor: 'transparent',
-      progressColor: '#337AB7',
-      hideScrollbar: true,
-      height: 50,
-      waveColor: '#CCCCCC'
-    });
-
-    this.waveform.load('/04 - Pandemonic Hyperblast.mp3');
-
-    window.addEventListener('resize', debounce(() => {
-      this.waveform.empty();
-      this.waveform.drawBuffer();
-    }, 150));
-  }
-
-  componentWillUnmount() {
-    /*window.removeEventListener("resize", this.updateDimensions);*/
-  }
-
-  render() {
-    return (
-      <div className="song-player">
-        <div className="song-buttons">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => this.waveform.playPause()}
-          >
-            <span className="fa fa-play"></span>
-          </button>
-        </div>
-        <div className="song-waveform">
-          <div id="waveform"></div>
-        </div>
-      </div>
-    )
-  }
-}
-
-AudioPlayer.propTypes = {
-  audio: T.object
 }
 
 class ArtistLink extends Component {
@@ -143,33 +90,23 @@ class Song extends Component {
 
         <div className="row">
           <div className="col-md-3 col-sm-3">
-            <img className="img-responsive" src="/CodexNecro.jpg" />
-
-            <ul className="list-group">
-              <li className="list-group-item">
-                <label>Artist</label>
-                <Artists
-                  artists={this.props.song.artists}
-                />
-              </li>
-              <li className="list-group-item">
-                <label>Release date</label>
-                <span className="text-muted">
-                  2009
-                </span>
-              </li>
-              <li className="list-group-item">
-                <label>Genre</label>
-                <span className="label label-default">
-                  black metal
-                </span>
-              </li>
-            </ul>
+            <div className="panel panel-default">
+                <img className="img-responsive" src="/CodexNecro.jpg" />
+                <div className="panel-body">
+                  <Artists
+                    artists={this.props.song.artists}
+                  />
+                  <div className="text-muted">
+                    2009
+                  </div>
+                  <div className="label label-default">
+                    black metal
+                  </div>
+                </div>
+            </div>
           </div>
           <div className="col-md-9">
             <AudioPlayer />
-
-
           </div>
         </div>
       </div>
