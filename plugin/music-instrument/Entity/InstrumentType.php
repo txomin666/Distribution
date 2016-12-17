@@ -150,7 +150,7 @@ class InstrumentType implements \JsonSerializable
      */
     public function getClass()
     {
-        return '\\ClarolineMusicInstrumentBundle\\Entity\\Specification\\'.$this->prefix.'Specification';
+        return '\\Claroline\\MusicInstrumentBundle\\Entity\\Specification\\'.$this->prefix.'Specification';
     }
 
     /**
