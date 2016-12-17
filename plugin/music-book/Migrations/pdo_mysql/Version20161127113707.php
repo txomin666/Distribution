@@ -15,6 +15,20 @@ class Version20161127113707 extends AbstractMigration
     public function up(Schema $schema)
     {
         $this->addSql("
+            CREATE TABLE claro_music_artist (
+                id INT AUTO_INCREMENT NOT NULL, 
+                resourceNode_id INT DEFAULT NULL, 
+                UNIQUE INDEX UNIQ_AEBFD881B87FAB32 (resourceNode_id), 
+                PRIMARY KEY(id)
+            ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
+        ");
+        $this->addSql("
+            ALTER TABLE claro_music_artist 
+            ADD CONSTRAINT FK_AEBFD881B87FAB32 FOREIGN KEY (resourceNode_id) 
+            REFERENCES claro_resource_node (id) 
+            ON DELETE CASCADE
+        ");
+        $this->addSql("
             CREATE TABLE claro_music_sheet_music (
                 id INT AUTO_INCREMENT NOT NULL, 
                 resourceNode_id INT DEFAULT NULL, 
@@ -83,6 +97,9 @@ class Version20161127113707 extends AbstractMigration
         ");
         $this->addSql("
             DROP TABLE claro_music_song_sheet_music
+        ");
+        $this->addSql("
+            DROP TABLE claro_music_artist
         ");
     }
 }

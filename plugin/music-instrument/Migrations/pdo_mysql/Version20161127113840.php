@@ -65,7 +65,8 @@ class Version20161127113840 extends AbstractMigration
         $this->addSql("
             CREATE TABLE claro_music_instrument_piano (
                 id INT AUTO_INCREMENT NOT NULL, 
-                instrument_id INT DEFAULT NULL, 
+                instrument_id INT DEFAULT NULL,
+                keys INT NOT NULL, 
                 UNIQUE INDEX UNIQ_2170A776CF11D9C (instrument_id), 
                 PRIMARY KEY(id)
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
