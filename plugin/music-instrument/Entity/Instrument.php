@@ -24,7 +24,7 @@ class Instrument extends AbstractResource implements \JsonSerializable
      *
      * @var InstrumentType
      */
-    private $instrumentType;
+    private $type;
 
     /**
      * Specification of the Instrument.
@@ -56,21 +56,21 @@ class Instrument extends AbstractResource implements \JsonSerializable
      *
      * @return InstrumentType
      */
-    public function getInstrumentType()
+    public function getType()
     {
-        return $this->instrumentType;
+        return $this->type;
     }
 
     /**
      * Set type of the Instrument.
      *
-     * @param InstrumentType $instrumentType
+     * @param InstrumentType $type
      *
      * @return Instrument
      */
-    public function setInstrumentType(InstrumentType $instrumentType)
+    public function setInstrumentType(InstrumentType $type)
     {
-        $this->instrumentType = $instrumentType;
+        $this->type = $type;
 
         return $this;
     }
@@ -160,8 +160,6 @@ class Instrument extends AbstractResource implements \JsonSerializable
         $specification = $this->specification->jsonSerialize();
 
         return [
-            // Identifier of the Resource
-            'type' => 'instruments',
             'id' => $this->id,
 
             // Attributes of the Resource
@@ -174,7 +172,7 @@ class Instrument extends AbstractResource implements \JsonSerializable
             // Relationships with other Resources
             'relationships' => array_merge($specification['relationships'], [
                 'instrumentType' => [
-                    'data' => $this->instrumentType,
+                    'data' => $this->type,
                 ],
             ]),
         ];

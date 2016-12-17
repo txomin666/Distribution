@@ -42,14 +42,14 @@ class Tuner extends Component {
         <PageHeader title="Tuner" />
         
         <div className="row">
-          <div className="col-md-7 col-xs-12">
+          <div className="col-md-6 col-md-offset-3 col-xs-12">
             <InstrumentMenu
               handleSelect={() => {return true}}
             />
           </div>
 
           <div className="col-md-5 col-xs-12">
-            {null === this.props.selectedInstrument ? this.renderPlaceholder() : this.renderTuner()}
+            {null !== this.props.selectedInstrument && this.renderTuner()}
           </div>
         </div>
       </div>

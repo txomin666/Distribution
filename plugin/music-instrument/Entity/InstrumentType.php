@@ -57,6 +57,15 @@ class InstrumentType implements \JsonSerializable
     private $polyphonic = true;
 
     /**
+     * Is the instrument type enabled in the platform ?
+     *
+     * @ORM\Column(type="boolean")
+     *
+     * @var bool
+     */
+    private $enabled = true;
+
+    /**
      * Get id.
      *
      * @return int
@@ -141,7 +150,7 @@ class InstrumentType implements \JsonSerializable
      */
     public function getClass()
     {
-        return '\\InstrumentBundle\\Entity\\Specification\\'.$this->prefix.'Specification';
+        return '\\ClarolineMusicInstrumentBundle\\Entity\\Specification\\'.$this->prefix.'Specification';
     }
 
     /**
@@ -169,6 +178,30 @@ class InstrumentType implements \JsonSerializable
     }
 
     /**
+     * Is enabled ?
+     *
+     * @return bool
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * Set enabled.
+     *
+     * @param bool $enabled
+     *
+     * @return $this
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
+
+        return $this;
+    }
+
+    /**
      * Serialize the Entity.
      *
      * @return array
@@ -176,17 +209,11 @@ class InstrumentType implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            // Identifier of the Resource
-            'type' => 'instrument_types',
             'id' => $this->id,
-
-            // Attributes of the Resource
-            'attributes' => [
-                'name' => $this->name,
-                'icon' => $this->icon,
-                'prefix' => $this->prefix,
-                'polyphonic' => $this->polyphonic,
-            ],
+            'name' => $this->name,
+            'icon' => $this->icon,
+            'prefix' => $this->prefix,
+            'polyphonic' => $this->polyphonic,
         ];
     }
 }

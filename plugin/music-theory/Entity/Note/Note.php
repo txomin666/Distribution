@@ -2,13 +2,13 @@
 
 namespace Claroline\MusicTheoryBundle\Entity\Note;
 
+use Claroline\MusicTheoryBundle\Entity\Interval;
 use Doctrine\ORM\Mapping as ORM;
-use TheoryBundle\Entity\Interval;
 
 /**
  * Note.
  *
- * @ORM\Entity()
+ * @ORM\Entity(repositoryClass="Claroline\MusicTheoryBundle\Repository\NoteRepository")
  * @ORM\Table(name="claro_music_note")
  */
 class Note implements \JsonSerializable
@@ -315,21 +315,18 @@ class Note implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'type' => 'notes',
             'id' => $this->id,
-            'attributes' => [
-                // Note properties
-                'value' => $this->value,
-                'octave' => $this->octave,
-                'frequency' => $this->frequency,
-                'midi' => $this->midi,
+            // Note properties
+            'value' => $this->value,
+            'octave' => $this->octave,
+            'frequency' => $this->frequency,
+            'midi' => $this->midi,
 
-                // Flatten NoteInfo properties for simpler structure
-                'sharp_name' => $this->info->getSharpName(),
-                'flat_name' => $this->info->getFlatName(),
-                'accidental' => $this->info->isAccidental(),
-                'color' => $this->info->getColor(),
-            ],
+            // Flatten NoteInfo properties for simpler structure
+            'sharp_name' => $this->info->getSharpName(),
+            'flat_name' => $this->info->getFlatName(),
+            'accidental' => $this->info->isAccidental(),
+            'color' => $this->info->getColor(),
         ];
     }
 }

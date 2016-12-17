@@ -55,7 +55,7 @@ class Chord implements \JsonSerializable
      *
      * @ORM\ManyToMany(targetEntity="Claroline\MusicTheoryBundle\Entity\Interval", cascade={"all"})
      * @ORM\JoinTable(
-     *      name               = "theory_chord_interval",
+     *      name               = "claro_music_chord_interval",
      *      joinColumns        = { @ORM\JoinColumn(name="chord_id",    referencedColumnName="id") },
      *      inverseJoinColumns = { @ORM\JoinColumn(name="interval_id", referencedColumnName="id") }
      * )
@@ -198,13 +198,10 @@ class Chord implements \JsonSerializable
     public function jsonSerialize()
     {
         return array(
-            'type' => 'chords',
             'id' => $this->id,
-            'attributes' => array(
-                'name' => $this->name,
-                'symbol' => $this->symbol,
-                'notes_count' => $this->notesCount,
-            ),
+            'name' => $this->name,
+            'symbol' => $this->symbol,
+            'notes_count' => $this->notesCount,
         );
     }
 }

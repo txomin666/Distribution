@@ -2,10 +2,10 @@
 
 namespace TuningBundle\DataFixtures\ORM;
 
+use Claroline\MusicInstrumentBundle\Entity\Tuning\TuningCategory;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use TuningBundle\Entity\TuningCategory;
 
 /**
  * Initializes Tunings.

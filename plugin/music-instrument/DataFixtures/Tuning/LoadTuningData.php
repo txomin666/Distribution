@@ -2,13 +2,13 @@
 
 namespace TuningBundle\DataFixtures\ORM;
 
+use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
+use Claroline\MusicInstrumentBundle\Entity\Tuning\Tuning;
+use Claroline\MusicInstrumentBundle\Entity\Tuning\TuningNote;
+use Claroline\MusicTheoryBundle\Repository\NoteRepository;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use InstrumentBundle\Entity\InstrumentType;
-use TheoryBundle\Entity\Note\Note;
-use TuningBundle\Entity\Tuning;
-use TuningBundle\Entity\TuningNote;
 
 /**
  * Initializes Tunings.
@@ -28,45 +28,7 @@ class LoadTuningData extends AbstractFixture implements OrderedFixtureInterface
      */
     public function load(ObjectManager $manager)
     {
-        $tunings = [
-            [
-                'instrumentType' => 'guitar',
-                'default' => true,
-                'name' => 'Standard',
-                'notes' => ['E2', 'A2', 'D3', 'G3', 'B3', 'E4']
-            ], [
-                'instrumentType' => 'guitar',
-                'default' => false,
-                'name' => 'Down 1 step',
-                'notes' => ['D2', 'G2', 'C3', 'F3', 'A3', 'D4']
-            ], [
-                'instrumentType' => 'guitar',
-                'default' => false,
-                'name' => 'Down 2 steps',
-                'notes' => ['C2', 'F2', 'A♯2', 'D♯3', 'G3', 'C4']
-            ], [
-                'instrumentType' => 'bass',
-                'default' => true,
-                'name' => 'Standard',
-                'notes' => ['E1', 'A1', 'D2', 'G2']
-            ], [
-                'instrumentType' => 'ukulele',
-                'default' => true,
-                'name' => 'C Tuning',
-                'notes' => ['G4', 'C4', 'E4', 'A4']
-            ], [
-                'instrumentType' => 'ukulele',
-                'default' => false,
-                'name' => 'D Tuning',
-                'notes' => ['A4', 'D4', 'F♯4', 'B4']
-            ], [
-                'instrumentType' => 'ukulele',
-                'default' => false,
-                'name' => 'Low G',
-                'notes' => ['G3', 'C4', 'E4', 'A4']
-            ]
-        ];
-
+        $tunings = $this->getData();
         foreach ($tunings as $tuning) {
             $entity = new Tuning();
 
@@ -79,8 +41,9 @@ class LoadTuningData extends AbstractFixture implements OrderedFixtureInterface
 
             // Add tuning Notes
             foreach ($tuning['notes'] as $index => $note) {
-                /** @var Note $noteEntity */
-                $noteEntity = $this->getReference('note-'.$note);
+                /** @var NoteRepository $noteRepo */
+                $noteRepo = $manager->getRepository('ClarolineMusicTheoryBundle:Note\Note');
+                $noteEntity = $noteRepo->findOneByNameAndOctave($note[0], $note[1]);
 
                 $tuningNote = new TuningNote();
                 $tuningNote->setOrder($index);
@@ -97,5 +60,47 @@ class LoadTuningData extends AbstractFixture implements OrderedFixtureInterface
         }
 
         $manager->flush();
+    }
+
+    private function getData()
+    {
+        return [
+            [
+                'instrumentType' => 'guitar',
+                'default' => true,
+                'name' => 'Standard',
+                'notes' => [['E', 2], ['A', 2], ['D', 3], ['G', 3], ['B', 3], ['E', 4]],
+            ], [
+                'instrumentType' => 'guitar',
+                'default' => false,
+                'name' => 'Down 1 step',
+                'notes' => [['D', 2], ['G', 2], ['C', 3], ['F', 3], ['A', 3], ['D', 4]],
+            ], [
+                'instrumentType' => 'guitar',
+                'default' => false,
+                'name' => 'Down 2 steps',
+                'notes' => [['C', 2], ['F', 2], ['A♯', 2], ['D♯', 3], ['G', 3], ['C', 4]],
+            ], [
+                'instrumentType' => 'bass',
+                'default' => true,
+                'name' => 'Standard',
+                'notes' => [['E', 1], ['A', 1], ['D', 2], ['G', 2]],
+            ], [
+                'instrumentType' => 'ukulele',
+                'default' => true,
+                'name' => 'C Tuning',
+                'notes' => [['G', 4], ['C', 4], ['E', 4], ['A', 4]],
+            ], [
+                'instrumentType' => 'ukulele',
+                'default' => false,
+                'name' => 'D Tuning',
+                'notes' => [['A', 4], ['D', 4], ['F♯', 4], ['B', 4]],
+            ], [
+                'instrumentType' => 'ukulele',
+                'default' => false,
+                'name' => 'Low G',
+                'notes' => [['G', 3], ['C', 4], ['E', 4], ['A', 4]],
+            ]
+        ];
     }
 }

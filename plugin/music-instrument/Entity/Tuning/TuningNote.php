@@ -2,8 +2,8 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity\Tuning;
 
+use Claroline\MusicTheoryBundle\Entity\Note\Note;
 use Doctrine\ORM\Mapping as ORM;
-use TheoryBundle\Entity\Note\Note;
 
 /**
  * TuningNote.

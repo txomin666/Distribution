@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 
 import Placeholder from './../../components/placeholder.jsx'
 import InstrumentPreview from './preview.jsx'
+import InstrumentModal from './modal.jsx'
 
 const T = React.PropTypes
 
@@ -17,19 +18,27 @@ export default class InstrumentMenu extends Component {
 
   renderPreview() {
     return (
-      <InstrumentPreview />
+      <InstrumentPreview
+        instrument={this.props.selected}
+      />
     )
   }
 
   render() {
     return (
-      <button
-        type="button"
-        className="instrument-select btn btn-block"
-        onClick={() => this.props.handleSelect()}
-      >
-        {null === this.props.selected ? this.renderPlaceholder() : this.renderPreview()}
-      </button>
+      <div>
+        <button
+          type="button"
+          className="instrument-select btn btn-block"
+          onClick={() => this.props.handleSelect()}
+        >
+          {null === this.props.selected ? this.renderPlaceholder() : this.renderPreview()}
+        </button>
+        <InstrumentModal
+          show={false}
+          onSelect={() => true}
+        />
+      </div>
     )
   }
 }

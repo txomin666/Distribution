@@ -29,7 +29,8 @@ class Version20161127113840 extends AbstractMigration
         $this->addSql("
             CREATE TABLE claro_music_instrument_type (
                 id INT AUTO_INCREMENT NOT NULL, 
-                name VARCHAR(255) NOT NULL, 
+                name VARCHAR(255) NOT NULL,
+                enabled TINYINT(1) NOT NULL, 
                 icon VARCHAR(255) NOT NULL, 
                 prefix VARCHAR(255) NOT NULL, 
                 polyphonic TINYINT(1) NOT NULL, 

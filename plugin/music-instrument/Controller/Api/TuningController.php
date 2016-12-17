@@ -2,18 +2,38 @@
 
 namespace Claroline\MusicInstrumentBundle\Controller\Api;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Claroline\CoreBundle\Persistence\ObjectManager;
+use Claroline\MusicInstrumentBundle\Entity\Tuning\Tuning;
+use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Claroline\MusicInstrumentBundle\Entity\Tuning;
 
 /**
  * Tuning CRUD Controller.
  *
  * @EXT\Route("/tunings")
  */
-class TuningController extends Controller
+class TuningController
 {
+    /**
+     * @var ObjectManager
+     */
+    private $om;
+
+    /**
+     * TuningController constructor.
+     *
+     * @DI\InjectParams({
+     *     "om" = @DI\Inject("claroline.persistence.object_manager")
+     * })
+     *
+     * @param ObjectManager $om
+     */
+    public function __construct(ObjectManager $om)
+    {
+        $this->om = $om;
+    }
+
     /**
      * List all Tunings.
      *
@@ -24,10 +44,7 @@ class TuningController extends Controller
      */
     public function listAction()
     {
-        $entities = $this->container
-            ->get('doctrine.orm.entity_manager')
-            ->getRepository('TuningBundle:Tuning')
-            ->findBy([]);
+        $entities = $this->om->getRepository('TuningBundle:Tuning')->findBy([]);
 
         return new JsonResponse($entities);
     }

@@ -101,10 +101,38 @@ class Tuning implements \JsonSerializable
      * Set name.
      *
      * @param string $name
+     *
+     * @return Tuning
      */
     public function setName($name)
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * Is default ?
+     *
+     * @return bool
+     */
+    public function isDefault()
+    {
+        return $this->default;
+    }
+
+    /**
+     * Set default.
+     *
+     * @param $default
+     *
+     * @return Tuning
+     */
+    public function setDefault($default)
+    {
+        $this->default = $default;
+
+        return $this;
     }
 
     /**

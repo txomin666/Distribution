@@ -24,7 +24,7 @@ class Version20161127113725 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ");
         $this->addSql("
-            CREATE TABLE theory_chord_interval (
+            CREATE TABLE claro_music_chord_interval (
                 chord_id INT NOT NULL, 
                 interval_id INT NOT NULL, 
                 INDEX IDX_B41E83BDD4EB08E5 (chord_id), 
@@ -93,12 +93,12 @@ class Version20161127113725 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ");
         $this->addSql("
-            ALTER TABLE theory_chord_interval 
+            ALTER TABLE claro_music_chord_interval 
             ADD CONSTRAINT FK_B41E83BDD4EB08E5 FOREIGN KEY (chord_id) 
             REFERENCES claro_music_chord (id)
         ");
         $this->addSql("
-            ALTER TABLE theory_chord_interval 
+            ALTER TABLE claro_music_chord_interval 
             ADD CONSTRAINT FK_B41E83BD505A342E FOREIGN KEY (interval_id) 
             REFERENCES claro_music_interval (id)
         ");
@@ -131,11 +131,11 @@ class Version20161127113725 extends AbstractMigration
     public function down(Schema $schema)
     {
         $this->addSql("
-            ALTER TABLE theory_chord_interval 
+            ALTER TABLE claro_music_chord_interval 
             DROP FOREIGN KEY FK_B41E83BDD4EB08E5
         ");
         $this->addSql("
-            ALTER TABLE theory_chord_interval 
+            ALTER TABLE claro_music_chord_interval 
             DROP FOREIGN KEY FK_B41E83BD505A342E
         ");
         $this->addSql("
@@ -154,7 +154,7 @@ class Version20161127113725 extends AbstractMigration
             DROP TABLE claro_music_chord
         ");
         $this->addSql("
-            DROP TABLE theory_chord_interval
+            DROP TABLE claro_music_chord_interval
         ");
         $this->addSql("
             DROP TABLE claro_music_chord_grid
