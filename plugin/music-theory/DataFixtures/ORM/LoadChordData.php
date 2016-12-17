@@ -1,11 +1,11 @@
 <?php
 
-namespace TheoryBundle\DataFixtures\ORM;
+namespace Claroline\MusicTheoryBundle\DataFixtures\ORM;
 
+use Claroline\MusicTheoryBundle\Entity\Chord;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
-use Claroline\MusicTheoryBundle\Entity\Chord;
 
 /**
  * Initializes chords.

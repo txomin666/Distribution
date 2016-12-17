@@ -16,6 +16,6 @@ class ClarolineMusicTheoryBundle extends PluginBundle
 
     public function getRequiredFixturesDirectory($environment)
     {
-        return 'DataFixtures/Required';
+        return 'DataFixtures/ORM';
     }
 }

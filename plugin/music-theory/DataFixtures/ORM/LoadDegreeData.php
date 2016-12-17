@@ -1,6 +1,6 @@
 <?php
 
-namespace TheoryBundle\DataFixtures\ORM;
+namespace Claroline\MusicTheoryBundle\DataFixtures\ORM;
 
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;

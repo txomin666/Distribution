@@ -1,6 +1,6 @@
 <?php
 
-namespace TuningBundle\DataFixtures\ORM;
+namespace Claroline\MusicInstrumentBundle\DataFixtures\ORM;
 
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 use Claroline\MusicInstrumentBundle\Entity\Tuning\Tuning;

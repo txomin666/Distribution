@@ -1,6 +1,6 @@
 <?php
 
-namespace InstrumentBundle\DataFixtures\ORM;
+namespace Claroline\MusicInstrumentBundle\DataFixtures\ORM;
 
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType;

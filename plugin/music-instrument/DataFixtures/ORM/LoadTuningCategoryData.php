@@ -1,6 +1,6 @@
 <?php
 
-namespace TuningBundle\DataFixtures\ORM;
+namespace Claroline\MusicInstrumentBundle\DataFixtures\ORM;
 
 use Claroline\MusicInstrumentBundle\Entity\Tuning\TuningCategory;
 use Doctrine\Common\DataFixtures\AbstractFixture;
