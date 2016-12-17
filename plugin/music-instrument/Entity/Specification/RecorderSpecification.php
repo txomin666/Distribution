@@ -5,13 +5,13 @@ namespace Claroline\MusicInstrumentBundle\Entity\Specification;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Flute.
- * Used to store the configuration of a Flute.
+ * Recorder.
+ * Used to store the configuration of a Recorder.
  *
  * @ORM\Entity()
- * @ORM\Table(name="claro_music_instrument_flute")
+ * @ORM\Table(name="claro_music_instrument_recorder")
  */
-class FluteSpecification extends AbstractSpecification
+class RecorderSpecification extends AbstractSpecification
 {
     /**
      * Type of the fingering.
@@ -80,12 +80,9 @@ class FluteSpecification extends AbstractSpecification
     public function jsonSerialize()
     {
         return [
-            'type' => 'instrument_specifications',
             'id' => $this->id,
-            'attributes' => [
-                'range' => $this->range,
-                'fingering' => $this->fingering,
-            ],
+            'range' => $this->range,
+            'fingering' => $this->fingering,
         ];
     }
 }

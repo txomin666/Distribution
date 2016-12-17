@@ -1,3 +1,12 @@
+/* global process, require */
+
+import {
+  applyMiddleware,
+  combineReducers,
+  compose,
+  createStore as baseCreate
+} from 'redux'
+import thunk from 'redux-thunk'
 import invariant from 'invariant'
 
 // generator for very simple action creators (see redux doc)
@@ -20,4 +29,30 @@ export function makeReducer(initialState, handlers) {
       return state
     }
   }
+}
+
+// Set some common used middleware
+const defaultStoreMiddleware = [thunk]
+if (process.env.NODE_ENV !== 'production') {
+  const freeze = require('redux-freeze')
+  defaultStoreMiddleware.push(freeze)
+}
+
+export function createStore(reducers, initialState, enhancers = []) {
+  // Add dev tools
+  if (process.env.NODE_ENV !== 'production') {
+    // Register browser extension
+    if (window.devToolsExtension) {
+      enhancers.push(window.devToolsExtension())
+    }
+  }
+
+  return baseCreate(
+    reducers,
+    initialState,
+    compose(
+      applyMiddleware(...defaultStoreMiddleware),
+      ...enhancers
+    )
+  )
 }

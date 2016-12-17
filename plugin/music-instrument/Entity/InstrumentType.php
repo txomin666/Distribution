@@ -39,13 +39,13 @@ class InstrumentType implements \JsonSerializable
     private $icon;
 
     /**
-     * Prefix used to retrieve corresponding Specification class.
+     * Specification class name.
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(name="class_name", type="string")
      *
      * @var string
      */
-    private $prefix;
+    private $class;
 
     /**
      * Is the instrument can play several notes simultaneously ? (to play chords).
@@ -120,37 +120,27 @@ class InstrumentType implements \JsonSerializable
     }
 
     /**
-     * Get prefix.
-     *
-     * @return string
-     */
-    public function getPrefix()
-    {
-        return $this->prefix;
-    }
-
-    /**
-     * Set prefix.
-     *
-     * @param string $prefix
-     *
-     * @return $this
-     */
-    public function setPrefix($prefix)
-    {
-        $this->prefix = $prefix;
-
-        return $this;
-    }
-
-    /**
      * Get Specification class name.
      *
      * @return string
      */
     public function getClass()
     {
-        return '\\Claroline\\MusicInstrumentBundle\\Entity\\Specification\\'.$this->prefix.'Specification';
+        return $this->class;
+    }
+
+    /**
+     * Set Specification class name.
+     *
+     * @param string $class
+     *
+     * @return $this
+     */
+    public function setClass($class)
+    {
+        $this->class = $class;
+
+        return $this;
     }
 
     /**
@@ -212,7 +202,6 @@ class InstrumentType implements \JsonSerializable
             'id' => $this->id,
             'name' => $this->name,
             'icon' => $this->icon,
-            'prefix' => $this->prefix,
             'polyphonic' => $this->polyphonic,
         ];
     }

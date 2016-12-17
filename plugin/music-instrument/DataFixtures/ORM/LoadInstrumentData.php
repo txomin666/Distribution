@@ -36,7 +36,7 @@ class LoadInstrumentData extends AbstractFixture implements OrderedFixtureInterf
                 $entity = new Instrument();
 
                 $entity->setName($instrument['name']);
-                $entity->setInstrumentType($type);
+                $entity->setType($type);
 
                 $specificationClass = $type->getClass();
 

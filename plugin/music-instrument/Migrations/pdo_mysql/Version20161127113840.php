@@ -30,15 +30,15 @@ class Version20161127113840 extends AbstractMigration
             CREATE TABLE claro_music_instrument_type (
                 id INT AUTO_INCREMENT NOT NULL, 
                 name VARCHAR(255) NOT NULL,
+                icon VARCHAR(255) NOT NULL,
                 enabled TINYINT(1) NOT NULL, 
-                icon VARCHAR(255) NOT NULL, 
-                prefix VARCHAR(255) NOT NULL, 
+                class_name VARCHAR(255) NOT NULL, 
                 polyphonic TINYINT(1) NOT NULL, 
                 PRIMARY KEY(id)
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ");
         $this->addSql("
-            CREATE TABLE claro_music_instrument_flute (
+            CREATE TABLE claro_music_instrument_recorder (
                 id INT AUTO_INCREMENT NOT NULL, 
                 instrument_id INT DEFAULT NULL, 
                 fingering VARCHAR(255) NOT NULL, 
@@ -113,7 +113,7 @@ class Version20161127113840 extends AbstractMigration
             ON DELETE CASCADE
         ");
         $this->addSql("
-            ALTER TABLE claro_music_instrument_flute 
+            ALTER TABLE claro_music_instrument_recorder 
             ADD CONSTRAINT FK_B2D92D0FCF11D9C FOREIGN KEY (instrument_id) 
             REFERENCES claro_music_instrument (id) 
             ON DELETE CASCADE
@@ -164,7 +164,7 @@ class Version20161127113840 extends AbstractMigration
     public function down(Schema $schema)
     {
         $this->addSql("
-            ALTER TABLE claro_music_instrument_flute 
+            ALTER TABLE claro_music_instrument_recorder 
             DROP FOREIGN KEY FK_B2D92D0FCF11D9C
         ");
         $this->addSql("
@@ -202,7 +202,7 @@ class Version20161127113840 extends AbstractMigration
             DROP TABLE claro_music_instrument_type
         ");
         $this->addSql("
-            DROP TABLE claro_music_instrument_flute
+            DROP TABLE claro_music_instrument_recorder
         ");
         $this->addSql("
             DROP TABLE claro_music_instrument_guitar

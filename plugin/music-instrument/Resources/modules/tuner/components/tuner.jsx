@@ -8,7 +8,6 @@ import InstrumentMenu from './../../instrument/components/menu.jsx'
 import TuningMenu from './tuning-menu.jsx'
 import Placeholder from './../../components/placeholder.jsx'
 
-
 const T = React.PropTypes
 
 class Tuner extends Component {

@@ -6,6 +6,7 @@
 
     {# Custom styles #}
     {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusictheory/chord-grid.css'
+        '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
         '@ClarolineMusicTheoryBundle/Resources/styles/chord-grid/main.less'
     %}
     <link rel="stylesheet" media="screen" href="{{ asset_url }}" />

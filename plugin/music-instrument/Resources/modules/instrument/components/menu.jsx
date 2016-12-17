@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 
 import Placeholder from './../../components/placeholder.jsx'
-import InstrumentPreview from './preview.jsx'
+import InstrumentItem from './item.jsx'
 import InstrumentModal from './modal.jsx'
 
 const T = React.PropTypes
@@ -18,7 +18,7 @@ export default class InstrumentMenu extends Component {
 
   renderPreview() {
     return (
-      <InstrumentPreview
+      <InstrumentItem
         instrument={this.props.selected}
       />
     )

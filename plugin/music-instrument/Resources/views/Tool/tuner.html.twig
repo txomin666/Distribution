@@ -6,6 +6,7 @@
 
     {# Tool styles #}
     {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusicinstrument/tuner.css'
+        '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
         '@ClarolineMusicInstrumentBundle/Resources/styles/instrument/main.less'
         '@ClarolineMusicInstrumentBundle/Resources/styles/tuner/main.less'
     %}

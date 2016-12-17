@@ -14,6 +14,39 @@ use Doctrine\ORM\Mapping as ORM;
 class PianoSpecification extends AbstractSpecification
 {
     /**
+     * Number of keys of the piano.
+     *
+     * @ORM\Column(type="integer")
+     *
+     * @var int
+     */
+    private $keys = 88;
+
+    /**
+     * Get number of keys.
+     *
+     * @return int
+     */
+    public function getKeys()
+    {
+        return $this->keys;
+    }
+
+    /**
+     * Set number of keys.
+     *
+     * @param int $keys
+     *
+     * @return $this
+     */
+    public function setKeys($keys)
+    {
+        $this->keys = $keys;
+
+        return $this;
+    }
+
+    /**
      * Serialize the Entity.
      *
      * @return array
@@ -21,11 +54,8 @@ class PianoSpecification extends AbstractSpecification
     public function jsonSerialize()
     {
         return [
-            'type' => 'instrument_specifications',
             'id' => $this->id,
-            'attributes' => [
-
-            ],
+            'keys' => $this->keys,
         ];
     }
 }

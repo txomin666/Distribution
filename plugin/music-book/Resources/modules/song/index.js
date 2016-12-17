@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import {Provider} from 'react-redux'
-import {createStore} from './store'
+import songReducer from './reducers'
+import {createStore} from '#/main/core/utilities/redux'
 import Song from './components/song.jsx'
 
-const store = createStore({
+const store = createStore(songReducer, {
   song: {
     name: "this is my song",
     artists: [

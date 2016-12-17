@@ -68,7 +68,7 @@ class Instrument extends AbstractResource implements \JsonSerializable
      *
      * @return Instrument
      */
-    public function setInstrumentType(InstrumentType $type)
+    public function setType(InstrumentType $type)
     {
         $this->type = $type;
 

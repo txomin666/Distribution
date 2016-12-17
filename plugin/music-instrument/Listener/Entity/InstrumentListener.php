@@ -25,7 +25,7 @@ class InstrumentListener
         $specification = $instrument->getSpecification();
 
         if (null === $specification) {
-            $class = $instrument->getInstrumentType()->getClass();
+            $class = $instrument->getType()->getClass();
             $specification = new $class();
             $instrument->setSpecification($specification);
         }
@@ -59,7 +59,7 @@ class InstrumentListener
      */
     public function postLoad(Instrument $instrument, LifecycleEventArgs $event)
     {
-        $type = $instrument->getInstrumentType();
+        $type = $instrument->getType();
 
         if (!empty($type)) {
             $repository = $event

@@ -2,7 +2,7 @@ import {makeReducer} from '#/main/core/utilities/redux'
 
 import {
   SONG_SET
-} from './../actions/index'
+} from './actions'
 
 function setSong(songState, action = {}) {
   return action.song

@@ -31,7 +31,7 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
 
             $entity->setName($type['name']);
             $entity->setIcon($type['icon']);
-            $entity->setPrefix($type['prefix']);
+            $entity->setClass($type['class']);
             $entity->setPolyphonic($type['polyphonic']);
             $entity->setEnabled(true);
 
@@ -50,35 +50,35 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
             [
                 'name' => 'Guitar',
                 'icon' => 'instrument/guitar.svg',
-                'prefix' => 'Guitar',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Ukulele',
                 'icon' => 'instrument/ukulele.svg',
-                'prefix' => 'Guitar',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Bass',
                 'icon' => 'instrument/bass.svg',
-                'prefix' => 'Guitar',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Recorder',
                 'icon' => 'instrument/recorder.svg',
-                'prefix' => 'Recorder',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\RecorderSpecification',
                 'polyphonic' => false,
             ],
 
             [
                 'name' => 'Piano',
                 'icon' => 'instrument/piano.svg',
-                'prefix' => 'Piano',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\PianoSpecification',
                 'polyphonic' => true,
             ],
         ];

@@ -10,12 +10,16 @@
         "type": {
           "enum": ["application/x.choice+json"]
         },
-        "keys": {
-          "type": "number",
-          "default": 88
+        "range": {
+
+        },
+        "fingering": {
+          "type": {
+            "enum": []
+          }
         }
       },
-      "required": ["strings", "keys"]
+      "required": ["range", "fingering"]
     }
   ]
 }

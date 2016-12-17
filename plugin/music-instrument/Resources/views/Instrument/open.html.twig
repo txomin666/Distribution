@@ -6,6 +6,8 @@
 
     {# Custom styles #}
     {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusicinstrument/instrument.css'
+        '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
+        '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
         '@ClarolineMusicInstrumentBundle/Resources/styles/instrument/main.less'
     %}
     <link rel="stylesheet" media="screen" href="{{ asset_url }}" />
@@ -18,7 +20,7 @@
 {# Content of the Page #}
 {% block section_panel %}
     {# The react UI will be attached to this element #}
-    <div id="sheet-music"></div>
+    <div id="instrument"></div>
 {% endblock %}
 
 {% block javascripts %}

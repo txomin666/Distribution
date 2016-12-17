@@ -2,6 +2,9 @@ import React, { Component } from 'react'
 
 const T = React.PropTypes
 
+/**
+ * Renders a small representation of an instrument.
+ */
 export default class InstrumentItem extends Component {
   render() {
     return (

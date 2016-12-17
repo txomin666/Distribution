@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 
 import { tex } from '#/main/core/translation/index'
 import ResourceHeader from '#/main/core/layout/resource/components/resource-header.jsx'
-import { actions } from './../actions/index'
+import { actions } from './../actions'
 import AudioPlayer from '../../audio/components/audio-player.jsx'
 
 const T = React.PropTypes
@@ -84,9 +84,7 @@ class Song extends Component {
   render() {
     return (
       <div>
-        <ResourceHeader
-          resourceNode={node}
-        />
+        <ResourceHeader resourceNode={node} />
 
         <div className="row">
           <div className="col-md-3 col-sm-3">

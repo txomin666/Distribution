@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import {Provider} from 'react-redux'
-import {createStore} from './store'
+import {createStore} from '#/main/core/utilities/redux'
+import tunerReducer from './reducers'
 import Tuner from './components/tuner.jsx'
 
-const store = createStore({
+const store = createStore(tunerReducer, {
   tuning: null,
   tunings: []
 })
