@@ -23,46 +23,44 @@ class GuitarSpecification extends AbstractSpecification
     /**
      * Shape of the guitar's headstock (in-line or top-bottom).
      *
-     * @var string
-     *
      * @ORM\Column(type="string")
      * @Assert\Choice(
      *      choices = {"in-line", "top-bottom"},
      *      message = "Choose a valid headstock shape."
      * )
+     *
+     * @var string
      */
     private $headstock = 'top-bottom';
 
     /**
      * Shape of the guitar's body (hollow, semi-hollow, solid).
      *
-     * @var string
-     *
      * @ORM\Column(type="string")
      * @Assert\Choice(
      *      choices = {"hollow", "semi-hollow", "solid"},
      *      message = "Choose a valid body shape."
      * )
+     *
+     * @var string
      */
     private $body = 'hollow';
 
     /**
      * Amplification type of the Guitar (acoustic, electro-acoustic, electric).
      *
-     * @var string
-     *
      * @ORM\Column(type="string")
      * @Assert\Choice(
      *      choices = {"acoustic", "electro-acoustic", "electric"},
      *      message = "Choose a valid amplification type."
      * )
+     *
+     * @var string
      */
     private $amplification = 'acoustic';
 
     /**
      * Number of strings.
-     *
-     * @var int
      *
      * @ORM\Column(type="integer")
      * @Assert\Range(
@@ -71,24 +69,26 @@ class GuitarSpecification extends AbstractSpecification
      *      minMessage = "A Guitar must have at least {{ limit }} strings.",
      *      maxMessage = "A Guitar cannot have more than {{ limit }} strings."
      * )
+     *
+     * @var int
      */
     private $strings = 6;
 
     /**
      * Number of frets.
      *
-     * @var int
-     *
      * @ORM\Column(type="integer")
+     *
+     * @var int
      */
     private $frets = 19;
 
     /**
      * Is the Guitar left-handed ?
      *
-     * @var bool
-     *
      * @ORM\Column(type="boolean")
+     *
+     * @var bool
      */
     private $leftHanded = false;
 
@@ -244,21 +244,14 @@ class GuitarSpecification extends AbstractSpecification
     public function jsonSerialize()
     {
         return [
-            'type' => 'instrument_specifications',
             'id' => $this->id,
-            'attributes' => [
-                'leftHanded' => $this->leftHanded,
-                'headstock' => $this->headstock,
-                'body' => $this->body,
-                'amplification' => $this->amplification,
-                'strings' => $this->strings,
-                'frets' => $this->frets,
-            ],
-            'relationships' => [
-                'tuning' => [
-                    'data' => $this->tuning,
-                ],
-            ],
+            'leftHanded' => $this->leftHanded,
+            'headstock' => $this->headstock,
+            'body' => $this->body,
+            'amplification' => $this->amplification,
+            'strings' => $this->strings,
+            'frets' => $this->frets,
+            'tuning' => $this->tuning,
         ];
     }
 }
