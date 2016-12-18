@@ -1,6 +1,6 @@
-import GuitarEditor from './components/editor'
-import GuitarPlayer from './components/player'
-import GuitarTuner from './components/tuner'
+import GuitarEditor from './components/editor.jsx'
+import GuitarPlayer from './components/player.jsx'
+import GuitarTuner from './components/tuner.jsx'
 
 const GUITAR_TYPE = 'guitar'
 

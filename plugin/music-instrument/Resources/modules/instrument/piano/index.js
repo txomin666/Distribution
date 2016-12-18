@@ -1,5 +1,5 @@
-import PianoEditor from './components/editor'
-import PianoPlayer from './components/player'
+import PianoEditor from './components/editor.jsx'
+import PianoPlayer from './components/player.jsx'
 
 const PIANO_TYPE = 'piano'
 

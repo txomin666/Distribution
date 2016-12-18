@@ -3,7 +3,9 @@ import { connect } from 'react-redux'
 
 import { tex } from '#/main/core/translation/index'
 import ResourceHeader from '#/main/core/layout/resource/components/resource-header.jsx'
+
 import { actions } from './../actions'
+import { getDefinition } from './../types'
 
 const T = React.PropTypes
 
@@ -36,6 +38,12 @@ class Instrument extends Component {
     return (
       <div>
         <ResourceHeader resourceNode={node} />
+
+        {React.createElement(
+          getDefinition(this.props.instrument.type).player, {
+            instrument: this.props.instrument
+          }
+        )}
       </div>
     )
   }

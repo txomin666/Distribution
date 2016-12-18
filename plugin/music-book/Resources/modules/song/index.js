@@ -12,6 +12,10 @@ const store = createStore(songReducer, {
       {
         "id": "123",
         "name": "Anaal Nathrakh"
+      },
+      {
+        "id": "1234",
+        "name": "Belphegor"
       }
     ]
   }

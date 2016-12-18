@@ -35,7 +35,7 @@ const node = {
 class ArtistLink extends Component {
   render() {
     return (
-      <a href="">{this.props.artist.name}</a>
+      <a href="" className="list-group-item">{this.props.artist.name}</a>
     )
   }
 }
@@ -52,10 +52,9 @@ class Artists extends Component {
    */
   render() {
     return (
-      <div>
+      <div className="list-group">
         {this.props.artists.map((artist, index) => (
-          (index === this.props.artists.length - 1) ?
-            <ArtistLink key={artist.id} artist={artist} /> : [<ArtistLink key={artist.id} artist={artist} />, ", "]
+          <ArtistLink key={artist.id} artist={artist} />
         ))}
       </div>
     )
@@ -91,9 +90,6 @@ class Song extends Component {
             <div className="panel panel-default">
                 <img className="img-responsive" src="/CodexNecro.jpg" />
                 <div className="panel-body">
-                  <Artists
-                    artists={this.props.song.artists}
-                  />
                   <div className="text-muted">
                     2009
                   </div>
@@ -102,9 +98,19 @@ class Song extends Component {
                   </div>
                 </div>
             </div>
+
+            <div className="panel panel-default">
+              <Artists
+                artists={this.props.song.artists}
+              />
+            </div>
           </div>
           <div className="col-md-9">
-            <AudioPlayer />
+            <div className="panel panel-default">
+              <div className="panel-body">
+                <AudioPlayer />
+              </div>
+            </div>
           </div>
         </div>
       </div>
