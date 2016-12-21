@@ -2,3 +2,4 @@
 * [ ] manage rating of songs
 * [ ] manage start date of learning a song
 * [ ] manage mastery of a song
+* [ ] store instrument midi code (https://en.wikipedia.org/wiki/General_MIDI)
