@@ -1,13 +1,11 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes as T } from 'react'
 import { connect } from 'react-redux'
 
 import { tex } from '#/main/core/translation/index'
-import ResourceHeader from '#/main/core/layout/resource/components/resource-header.jsx'
+import {ResourceHeader} from '#/main/core/layout/resource/components/resource-header.jsx'
 
 import { actions } from './../actions'
 import { getDefinition } from './../types'
-
-const T = React.PropTypes
 
 const node = {
   name: 'My awesome piano',

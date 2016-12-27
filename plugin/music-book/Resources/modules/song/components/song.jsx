@@ -1,127 +1,78 @@
-import React, { Component } from 'react'
+import React, { PropTypes as T } from 'react'
 import { connect } from 'react-redux'
 
 import { tex } from '#/main/core/translation/index'
-import ResourceHeader from '#/main/core/layout/resource/components/resource-header.jsx'
 import { actions } from './../actions'
-import AudioPlayer from '../../audio/components/audio-player.jsx'
 
-const T = React.PropTypes
+import { ResourceHeader } from '#/main/core/layout/resource/components/resource-header.jsx'
+import { AudioPlayer } from './../../audio/components/audio-player.jsx'
+import { Cover } from './../player/components/cover.jsx'
+import { Tracks } from './../player/components/tracks.jsx'
+import { Tags } from './../player/components/tags.jsx'
+import { Artists } from './../player/components/artists.jsx'
 
-const node = {
-  name: "Pandemonic Hyperblast",
-  actions: [
-    {
-      icon: 'fa fa-fw fa-pencil',
-      label: 'Edit',
-      handleAction: () => true,
-      primary: true
-    },
-    {
-      icon: 'fa fa-fw fa-download',
-      label: 'Import QTI questions',
-      handleAction: () => true,
-      primary: false
-    },
-    {
-      icon: 'fa fa-fw fa-file',
-      label: 'Manage medias',
-      handleAction: () => true,
-      primary: false
-    }
-  ]
-}
+const Song = props =>
+  <div className="resource">
+    <ResourceHeader resourceNode={props.node} />
 
-class ArtistLink extends Component {
-  render() {
-    return (
-      <a href="" className="list-group-item">{this.props.artist.name}</a>
-    )
-  }
-}
-
-ArtistLink.propTypes = {
-  artist: T.object.isRequired
-}
-
-class Artists extends Component {
-  /**
-   * Creates a list of links to artist page separated by ",".
-   *
-   * @returns {XML}
-   */
-  render() {
-    return (
-      <div className="list-group">
-        {this.props.artists.map((artist, index) => (
-          <ArtistLink key={artist.id} artist={artist} />
-        ))}
-      </div>
-    )
-  }
-}
-
-Artists.propTypes = {
-  artists: T.array
-}
-
-Artists.defaultProps = {
-  artists: []
-}
-
-class Cover extends Component {
-  render() {
-    return (
-      <div className="song-cover">
-        <span className="fa fa-ban"></span>
-      </div>
-    )
-  }
-}
-
-class Song extends Component {
-  render() {
-    return (
-      <div>
-        <ResourceHeader resourceNode={node} />
-
+    <div className="row">
+      <div className="col-md-3 col-sm-12">
         <div className="row">
-          <div className="col-md-3 col-sm-3">
+          <div className="col-md-12 col-sm-5">
+            <Cover img={props.song.cover} />
+          </div>
+
+          <div className="col-md-12 col-sm-7">
+            <h2 className="sr-only">Artists</h2>
             <div className="panel panel-default">
-                <img className="img-responsive" src="/CodexNecro.jpg" />
-                <div className="panel-body">
-                  <div className="text-muted">
-                    2009
-                  </div>
-                  <div className="label label-default">
-                    black metal
-                  </div>
-                </div>
+              <Artists artists={props.song.artists} />
             </div>
 
-            <div className="panel panel-default">
-              <Artists
-                artists={this.props.song.artists}
-              />
-            </div>
-          </div>
-          <div className="col-md-9">
-            <div className="panel panel-default">
+            <h2 className="sr-only">Info</h2>
+            <div className="meta panel panel-default">
               <div className="panel-body">
-                <AudioPlayer />
+                <div className="form-group">
+                  <label>Release date</label>
+                  <div className="text-muted pull-right">{props.song.releaseDate}</div>
+                </div>
+
+                <div className="form-group">
+                  <label>Tempo</label>
+                  <div className="text-muted pull-right">{props.song.tempo}</div>
+                </div>
               </div>
             </div>
+
+            <h2 className="sr-only">Tags</h2>
+            <Tags tags={props.song.tags} />
           </div>
         </div>
       </div>
-    )
-  }
-}
+      <div className="col-md-9 col-sm-12">
+        <div className="panel panel-default">
+          <AudioPlayer audioFile={props.song.audio} />
+        </div>
+
+        <h2 className="h3">
+          <span className="fa fa-fw fa-list"></span> Pistes
+        </h2>
+        <Tracks tracks={props.song.tracks} />
+      </div>
+    </div>
+  </div>
 
 function mapStateToProps(state) {
   return {
+    node: state.node,
     song: state.song
   }
 }
 
-export default connect(mapStateToProps, actions)(Song)
+Song.propTypes = {
+  node: T.object.isRequired,
+  song: T.object.isRequired
+}
+
+const ConnectedSong = connect(mapStateToProps, actions)(Song)
+
+export {ConnectedSong as Song}

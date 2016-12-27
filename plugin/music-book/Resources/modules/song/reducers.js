@@ -8,8 +8,8 @@ function setSong(songState, action = {}) {
   return action.song
 }
 
-const songReducer = makeReducer({}, {
+const reducers = makeReducer({}, {
   [SONG_SET]: setSong
 })
 
-export default songReducer
+export {reducers}
