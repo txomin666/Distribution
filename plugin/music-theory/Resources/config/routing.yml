@@ -10,7 +10,7 @@ claro_music_theory_resource:
     type:     annotation
     prefix:   /resource
 
-# Register API
+# API
 claro_music_theory_api:
     resource: "@ClarolineMusicTheoryBundle/Controller/Api"
     type:     annotation

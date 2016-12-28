@@ -23,8 +23,6 @@ class Song extends AbstractResource implements \JsonSerializable
      */
     private $artist;
 
-    private $album;
-
     /**
      * URL to the cover of the Song.
      *
@@ -153,25 +151,10 @@ class Song extends AbstractResource implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            // Identifier of the Resource
-            'type' => 'songs',
             'id' => $this->id,
-
-            // Attributes of the Resource
-            'attributes' => [
-                'name' => $this->name,
-                'artist' => $this->artist,
-            ],
-
-            // Relationships with other Resources
-            'relationships' => [
-                'cover' => [
-                    'data' => $this->cover,
-                ],
-                'sheetMusic' => [
-                    'data' => $this->sheetMusic,
-                ],
-            ],
+            'name' => $this->name,
+            'artist' => $this->artist,
+            'cover' => $this->cover,
         ];
     }
 }

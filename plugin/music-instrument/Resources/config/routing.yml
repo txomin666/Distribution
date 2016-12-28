@@ -16,7 +16,7 @@ claro_music_instrument_widget:
     type:     annotation
     prefix:   /widget
 
-# Register API
+# API
 claro_music_instrument_api:
     resource: "@ClarolineMusicInstrumentBundle/Controller/Api"
     type:     annotation
