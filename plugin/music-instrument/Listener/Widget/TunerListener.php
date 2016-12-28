@@ -6,6 +6,7 @@ use Claroline\CoreBundle\Event\ConfigureWidgetEvent;
 use Claroline\CoreBundle\Event\DisplayWidgetEvent;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Tuner widget.
@@ -42,6 +43,13 @@ class TunerListener
      */
     public function onDisplay(DisplayWidgetEvent $event)
     {
+        $subRequest = $this->container->get('request_stack')->getCurrentRequest()->duplicate([], null, [
+            '_controller' => 'ClarolineMusicInstrumentBundle:Widget\Tuner:display',
+        ]);
+
+        $response = $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        $event->setContent($response);
         $event->stopPropagation();
     }
 
@@ -54,6 +62,13 @@ class TunerListener
      */
     public function onConfigure(ConfigureWidgetEvent $event)
     {
+        $subRequest = $this->container->get('request_stack')->getCurrentRequest()->duplicate([], null, [
+            '_controller' => 'ClarolineMusicInstrumentBundle:Widget\Tuner:configure',
+        ]);
+
+        $response = $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        $event->setContent($response);
         $event->stopPropagation();
     }
 }

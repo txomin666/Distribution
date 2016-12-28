@@ -1,7 +1,21 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Corum
- * Date: 26/11/2016
- * Time: 12:50
- */
+
+namespace Claroline\MusicInstrumentBundle\Controller\Widget;
+
+class InstrumentPreviewController
+{
+    public function displayAction()
+    {
+
+    }
+
+    public function configureAction()
+    {
+
+    }
+
+    public function updateConfigurationAction()
+    {
+
+    }
+}

@@ -6,6 +6,7 @@ use Claroline\CoreBundle\Event\ConfigureWidgetEvent;
 use Claroline\CoreBundle\Event\DisplayWidgetEvent;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Instrument preview widget.
@@ -42,6 +43,13 @@ class InstrumentPreviewListener
      */
     public function onDisplay(DisplayWidgetEvent $event)
     {
+        $subRequest = $this->container->get('request_stack')->getCurrentRequest()->duplicate([], null, [
+            '_controller' => 'ClarolineMusicInstrumentBundle:Widget\InstrumentPreview:display',
+        ]);
+
+        $response = $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        $event->setContent($response);
         $event->stopPropagation();
     }
 
@@ -54,6 +62,13 @@ class InstrumentPreviewListener
      */
     public function onConfigure(ConfigureWidgetEvent $event)
     {
+        $subRequest = $this->container->get('request_stack')->getCurrentRequest()->duplicate([], null, [
+            '_controller' => 'ClarolineMusicInstrumentBundle:Widget\InstrumentPreview:configure',
+        ]);
+
+        $response = $this->container->get('http_kernel')->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        $event->setContent($response);
         $event->stopPropagation();
     }
 }
