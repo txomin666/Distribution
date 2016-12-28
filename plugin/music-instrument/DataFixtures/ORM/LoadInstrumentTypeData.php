@@ -49,35 +49,30 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
         return [
             [
                 'name' => 'Guitar',
-                'icon' => 'instrument/guitar.svg',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Ukulele',
-                'icon' => 'instrument/ukulele.svg',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Bass',
-                'icon' => 'instrument/bass.svg',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
                 'polyphonic' => true,
             ],
 
             [
                 'name' => 'Recorder',
-                'icon' => 'instrument/recorder.svg',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\RecorderSpecification',
                 'polyphonic' => false,
             ],
 
             [
                 'name' => 'Piano',
-                'icon' => 'instrument/piano.svg',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\PianoSpecification',
                 'polyphonic' => true,
             ],

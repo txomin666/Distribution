@@ -20,10 +20,10 @@ class SheetMusicController
     /**
      * Lists all SheetMusic.
      *
-     * @return JsonResponse
-     *
      * @EXT\Route("")
      * @EXT\Method("GET")
+     *
+     * @return JsonResponse
      */
     public function listAction()
     {
@@ -38,12 +38,12 @@ class SheetMusicController
     /**
      * Gets a SheetMusic entity.
      *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("GET")
+     *
      * @param SheetMusic $sheetMusic
      *
      * @return JsonResponse
-     *
-     * @EXT\Route("/{id}")
-     * @EXT\Method("GET")
      */
     public function getAction(SheetMusic $sheetMusic)
     {
@@ -53,12 +53,12 @@ class SheetMusicController
     /**
      * Creates a new SheetMusic.
      *
+     * @EXT\Route("")
+     * @EXT\Method("POST")
+     *
      * @param Request $request
      *
      * @return JsonResponse
-     *
-     * @EXT\Route("")
-     * @EXT\Method("POST")
      */
     public function createAction(Request $request)
     {
@@ -82,13 +82,13 @@ class SheetMusicController
     /**
      * Edits a SheetMusic.
      *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("PUT")
+     *
      * @param SheetMusic $sheetMusic
      * @param Request $request
      *
      * @return JsonResponse
-     *
-     * @EXT\Route("/{id}")
-     * @EXT\Method("PUT")
      */
     public function updateAction(SheetMusic $sheetMusic, Request $request)
     {
@@ -113,12 +113,12 @@ class SheetMusicController
     /**
      * Deletes a SheetMusic.
      *
+     * @EXT\Route("/{id}")
+     * @EXT\Method("DELETE")
+     *
      * @param SheetMusic $sheetMusic
      *
      * @return JsonResponse
-     *
-     * @EXT\Route("/{id}")
-     * @EXT\Method("DELETE")
      */
     public function deleteAction(SheetMusic $sheetMusic)
     {

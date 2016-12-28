@@ -93,7 +93,7 @@ class AudioPlayer extends Component {
     this.waveform.load(this.props.audioFile);
 
     this.waveform.on('ready', () => {
-      this.setState((prevState) => ({
+      this.setState(() => ({
         loading: false,
         totalTime: this.waveform.getDuration()
       }))
@@ -129,9 +129,9 @@ class AudioPlayer extends Component {
 
   renderLoading() {
     return (
-      <span>
+      <div>
         Loading audio file...
-      </span>
+      </div>
     )
   }
 

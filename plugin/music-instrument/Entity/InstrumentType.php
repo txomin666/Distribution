@@ -30,15 +30,6 @@ class InstrumentType implements \JsonSerializable
     private $name;
 
     /**
-     * Icon of the Instrument Type.
-     *
-     * @ORM\Column(type="string")
-     *
-     * @var string
-     */
-    private $icon;
-
-    /**
      * Specification class name.
      *
      * @ORM\Column(name="class_name", type="string")
@@ -93,30 +84,6 @@ class InstrumentType implements \JsonSerializable
     public function setName($name)
     {
         $this->name = $name;
-    }
-
-    /**
-     * Get icon.
-     *
-     * @return string
-     */
-    public function getIcon()
-    {
-        return $this->icon;
-    }
-
-    /**
-     * Set icon.
-     *
-     * @param string $icon
-     *
-     * @return $this
-     */
-    public function setIcon($icon)
-    {
-        $this->icon = $icon;
-
-        return $this;
     }
 
     /**
@@ -201,7 +168,6 @@ class InstrumentType implements \JsonSerializable
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'icon' => $this->icon,
             'polyphonic' => $this->polyphonic,
         ];
     }
