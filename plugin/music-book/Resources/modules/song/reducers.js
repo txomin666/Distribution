@@ -1,15 +1,47 @@
-import {makeReducer} from '#/main/core/utilities/redux'
+import { makeReducer, combineReducers } from '#/main/core/utilities/redux'
+import update from 'immutability-helper'
 
 import {
-  SONG_SET
+  META_UPDATE,
+  ARTIST_ADD,
+  ARTIST_REMOVE,
+  TRACK_ADD,
+  TRACK_REMOVE
 } from './actions'
 
-function setSong(songState, action = {}) {
-  return action.song
+function updateMeta(songState, action) {
+  return update(songState, {[action.propName]: {$set: action.propValue}})
 }
 
-const reducers = makeReducer({}, {
-  [SONG_SET]: setSong
+function addTrack(tracksState, action) {
+  return tracksState
+}
+
+function removeTrack(tracksState, action) {
+  return tracksState
+}
+
+function addArtist(artistsState, action) {
+  return artistsState
+}
+
+function removeArtist(artistsState, action) {
+  return artistsState
+}
+
+const reducers = combineReducers({
+  node: makeReducer({}),
+  song: makeReducer({}, {
+    [META_UPDATE]: updateMeta
+  }),
+  tacks: makeReducer({}, {
+    [TRACK_ADD]: addTrack,
+    [TRACK_REMOVE]: removeTrack
+  }),
+  artists: makeReducer({}, {
+    [ARTIST_ADD]: addArtist,
+    [ARTIST_REMOVE]: removeArtist
+  })
 })
 
 export {reducers}

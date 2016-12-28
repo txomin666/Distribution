@@ -72,6 +72,22 @@ class Version20161127113840 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ");
         $this->addSql("
+            CREATE TABLE claro_music_instrument_drums (
+                id INT AUTO_INCREMENT NOT NULL, 
+                instrument_id INT DEFAULT NULL, 
+                UNIQUE INDEX UNIQ_170B428ACF11D9C (instrument_id), 
+                PRIMARY KEY(id)
+            ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
+        ");
+        $this->addSql("
+            CREATE TABLE claro_music_instrument_vocals (
+                id INT AUTO_INCREMENT NOT NULL, 
+                instrument_id INT DEFAULT NULL, 
+                UNIQUE INDEX UNIQ_7128A16DCF11D9C (instrument_id), 
+                PRIMARY KEY(id)
+            ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
+        ");
+        $this->addSql("
             CREATE TABLE claro_music_tuning (
                 id INT AUTO_INCREMENT NOT NULL, 
                 category_id INT DEFAULT NULL, 
@@ -138,6 +154,18 @@ class Version20161127113840 extends AbstractMigration
             ON DELETE CASCADE
         ");
         $this->addSql("
+            ALTER TABLE claro_music_instrument_drums 
+            ADD CONSTRAINT FK_170B428ACF11D9C FOREIGN KEY (instrument_id) 
+            REFERENCES claro_music_instrument (id) 
+            ON DELETE CASCADE
+        ");
+        $this->addSql("
+            ALTER TABLE claro_music_instrument_vocals 
+            ADD CONSTRAINT FK_7128A16DCF11D9C FOREIGN KEY (instrument_id) 
+            REFERENCES claro_music_instrument (id) 
+            ON DELETE CASCADE
+        ");
+        $this->addSql("
             ALTER TABLE claro_music_tuning 
             ADD CONSTRAINT FK_BF20D8012469DE2 FOREIGN KEY (category_id) 
             REFERENCES claro_music_tuning_category (id)
@@ -177,6 +205,14 @@ class Version20161127113840 extends AbstractMigration
             DROP FOREIGN KEY FK_2170A776CF11D9C
         ");
         $this->addSql("
+            ALTER TABLE claro_music_instrument_vocals 
+            DROP FOREIGN KEY FK_7128A16DCF11D9C
+        ");
+        $this->addSql("
+            ALTER TABLE claro_music_instrument_piano 
+            DROP FOREIGN KEY FK_170B428ACF11D9C
+        ");
+        $this->addSql("
             ALTER TABLE claro_music_instrument 
             DROP FOREIGN KEY FK_2D9D7CD8C54C8C93
         ");
@@ -210,6 +246,12 @@ class Version20161127113840 extends AbstractMigration
         ");
         $this->addSql("
             DROP TABLE claro_music_instrument_piano
+        ");
+        $this->addSql("
+            DROP TABLE claro_music_instrument_drums
+        ");
+        $this->addSql("
+            DROP TABLE claro_music_instrument_vocals
         ");
         $this->addSql("
             DROP TABLE claro_music_tuning

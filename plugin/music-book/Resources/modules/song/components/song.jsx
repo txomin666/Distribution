@@ -1,78 +1,69 @@
 import React, { PropTypes as T } from 'react'
 import { connect } from 'react-redux'
-
-import { tex } from '#/main/core/translation/index'
-import { actions } from './../actions'
+import { hashHistory } from 'react-router'
 
 import { ResourceHeader } from '#/main/core/layout/resource/components/resource-header.jsx'
-import { AudioPlayer } from './../../audio/components/audio-player.jsx'
-import { Cover } from './../player/components/cover.jsx'
-import { Tracks } from './../player/components/tracks.jsx'
-import { Tags } from './../player/components/tags.jsx'
-import { Artists } from './../player/components/artists.jsx'
 
-const Song = props =>
-  <div className="resource">
-    <ResourceHeader resourceNode={props.node} />
+const playerActions = [
+  {
+    icon: 'fa fa-fw fa-pencil',
+    label: 'Edit',
+    handleAction: () => hashHistory.push('/edit'),
+    primary: true
+  },
+  {
+    icon: 'fa fa-fw fa-trash-o',
+    label: 'Delete',
+    handleAction: () => true,
+    primary: false
+  }
+]
 
-    <div className="row">
-      <div className="col-md-3 col-sm-12">
-        <div className="row">
-          <div className="col-md-12 col-sm-5">
-            <Cover img={props.song.cover} />
-          </div>
+const editorActions = [
+  {
+    icon: 'fa fa-fw fa-save',
+    label: 'Save',
+    handleAction: () => hashHistory.push('/'),
+    primary: true
+  },
+  {
+    icon: 'fa fa-fw fa-ban',
+    label: 'Cancel',
+    handleAction: () => hashHistory.push('/'),
+    primary: true
+  },
+  {
+    icon: 'fa fa-fw fa-trash-o',
+    label: 'Delete',
+    handleAction: () => true,
+    primary: false
+  }
+]
 
-          <div className="col-md-12 col-sm-7">
-            <h2 className="sr-only">Artists</h2>
-            <div className="panel panel-default">
-              <Artists artists={props.song.artists} />
-            </div>
-
-            <h2 className="sr-only">Info</h2>
-            <div className="meta panel panel-default">
-              <div className="panel-body">
-                <div className="form-group">
-                  <label>Release date</label>
-                  <div className="text-muted pull-right">{props.song.releaseDate}</div>
-                </div>
-
-                <div className="form-group">
-                  <label>Tempo</label>
-                  <div className="text-muted pull-right">{props.song.tempo}</div>
-                </div>
-              </div>
-            </div>
-
-            <h2 className="sr-only">Tags</h2>
-            <Tags tags={props.song.tags} />
-          </div>
-        </div>
-      </div>
-      <div className="col-md-9 col-sm-12">
-        <div className="panel panel-default">
-          <AudioPlayer audioFile={props.song.audio} />
-        </div>
-
-        <h2 className="h3">
-          <span className="fa fa-fw fa-list"></span> Pistes
-        </h2>
-        <Tracks tracks={props.song.tracks} />
-      </div>
+const Song = props => {
+  return (
+    <div className="resource">
+      <ResourceHeader
+        resourceNode={props.node}
+        subtitle={'/edit' === props.location.pathname ? 'edit' : null}
+        actions={'/edit' === props.location.pathname ? editorActions : playerActions}
+      />
+      {props.children}
     </div>
-  </div>
+  )
+}
+
 
 function mapStateToProps(state) {
   return {
-    node: state.node,
-    song: state.song
+    node: state.node
   }
 }
 
 Song.propTypes = {
-  node: T.object.isRequired,
-  song: T.object.isRequired
+  node: T.object.isRequired
 }
 
-const ConnectedSong = connect(mapStateToProps, actions)(Song)
+const ConnectedSong = connect(mapStateToProps)(Song)
 
 export {ConnectedSong as Song}

@@ -1,35 +1,23 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
-import {Provider} from 'react-redux'
+import { render } from 'react-dom'
+import { Provider } from 'react-redux'
+import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 
-import {reducers} from './reducers'
-import {createStore} from '#/main/core/utilities/redux'
-import {Song} from './components/song.jsx'
+import { reducers } from './reducers'
+import { createStore } from '#/main/core/utilities/redux'
+import { Song } from './components/song.jsx'
+import { Player } from './player/components/player.jsx'
+import { Editor } from './editor/components/editor.jsx'
 
 const store = createStore(reducers, {
-  viewMode: 'player',
   node: {
-    name: 'Pandemonic Hyperblast',
-    actions: [
-      {
-        icon: 'fa fa-fw fa-pencil',
-        label: 'Edit',
-        handleAction: () => true,
-        primary: true
-      },
-      {
-        icon: 'fa fa-fw fa-trash-o',
-        label: 'Delete',
-        handleAction: () => true,
-        primary: false
-      }
-    ]
+    name: 'Pandemonic Hyperblast'
   },
   song: {
     tempo: 120,
     audio: '/04 - Pandemonic Hyperblast.mp3',
     cover: '/CodexNecro.jpg',
-    releaseDate: 2009,
+    releaseDate: '2009',
     artists: [
       { id: '123', name: 'Anaal Nathrakh' },
       { id: '234', name: 'Belphegor' }
@@ -38,7 +26,10 @@ const store = createStore(reducers, {
       {
         id: '1',
         name: 'Vocals',
-        instrument: null
+        instrument: null,
+        sheetMusic: [
+
+        ]
       },
       {
         id: '2',
@@ -61,15 +52,22 @@ const store = createStore(reducers, {
         instrument: null
       }
     ],
-    tags: ['black metal', 'grindcore']
+    tags: [
+      'black metal',
+      'grindcore'
+    ]
   }
 })
 
-ReactDOM.render(
-  React.createElement(
-    Provider,
-    {store},
-    React.createElement(Song)
+render((
+  <Provider store={store}>
+    <Router history={hashHistory}>
+      <Route path="/" component={Song}>
+        <IndexRoute component={Player} />
+        <Route path="/edit" component={Editor} />
+      </Route>
+    </Router>
+  </Provider>
   ),
   document.getElementById('song')
 )

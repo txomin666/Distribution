@@ -6,6 +6,6 @@ export function t(message) {
   return trans(message, {}, 'platform')
 }
 
-export function tex(message) {
-  return trans(message, {}, 'ujm_exo')
+export function tex(message, domain = 'message') {
+  return trans(message, {}, domain)
 }

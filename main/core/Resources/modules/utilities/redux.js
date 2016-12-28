@@ -9,6 +9,8 @@ import {
 import thunk from 'redux-thunk'
 import invariant from 'invariant'
 
+export {combineReducers}
+
 // generator for very simple action creators (see redux doc)
 export function makeActionCreator(type, ...argNames) {
   return (...args) => {
@@ -21,7 +23,7 @@ export function makeActionCreator(type, ...argNames) {
   }
 }
 
-export function makeReducer(initialState, handlers) {
+export function makeReducer(initialState, handlers = {}) {
   return function reducer(state = initialState, action) {
     if (handlers.hasOwnProperty(action.type)) {
       return handlers[action.type](state, action)

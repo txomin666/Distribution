@@ -14,3 +14,5 @@ song_artists: Artists
 song_meta: Information
 song_tags: Tags
 song_tracks: Tracks
+song_release_date: Release date
+song_tempo: Tempo

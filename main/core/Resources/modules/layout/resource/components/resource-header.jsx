@@ -6,14 +6,22 @@ import PageActions from '#/main/core/layout/page/components/page-actions.jsx'
 const ResourceHeader = props =>
   <PageHeader
     title={props.resourceNode.name}
+    subtitle={props.subtitle}
   >
     <PageActions
-      actions={props.resourceNode.actions}
+      actions={props.actions}
     />
   </PageHeader>
 
 ResourceHeader.propTypes = {
-  resourceNode: T.object.isRequired
+  resourceNode: T.object.isRequired,
+  subtitle: T.string,
+  actions: T.array
+}
+
+ResourceHeader.defaultProps = {
+  subtitle: null,
+  actions: []
 }
 
 export {ResourceHeader}

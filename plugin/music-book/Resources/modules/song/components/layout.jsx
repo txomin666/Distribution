@@ -11,13 +11,13 @@ const Layout = props =>
         </div>
 
         <div className="col-md-12 col-sm-7">
-          <h2 className="sr-only">{tex('song_artists')}</h2>
+          <h2 className="sr-only">{tex('song_artists', 'resource')}</h2>
           {props.artists}
 
-          <h2 className="sr-only">{tex('song_meta')}</h2>
+          <h2 className="sr-only">{tex('song_meta', 'resource')}</h2>
           {props.meta}
 
-          <h2 className="sr-only">{tex('song_tags')}</h2>
+          <h2 className="sr-only">{tex('song_tags', 'resource')}</h2>
           {props.tags}
         </div>
       </div>
@@ -27,7 +27,8 @@ const Layout = props =>
       {props.audio}
 
       <h2 className="h3">
-        <span className="fa fa-fw fa-list"></span> {tex('song_tracks')}
+        <span className="fa fa-fw fa-list"></span>
+        {tex('song_tracks', 'resource')}
       </h2>
       {props.tracks}
     </div>
