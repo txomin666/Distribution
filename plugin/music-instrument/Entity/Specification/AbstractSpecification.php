@@ -64,4 +64,6 @@ abstract class AbstractSpecification implements \JsonSerializable
 
         return $this;
     }
+
+    abstract public function jsonSerialize();
 }

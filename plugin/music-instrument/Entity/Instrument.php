@@ -27,6 +27,15 @@ class Instrument extends AbstractResource implements \JsonSerializable
     private $type;
 
     /**
+     * Midi number of the Instrument.
+     *
+     * @ORM\Column(type="integer")
+     *
+     * @var int
+     */
+    private $midi;
+
+    /**
      * Specification of the Instrument.
      *
      * @var AbstractSpecification
@@ -71,6 +80,30 @@ class Instrument extends AbstractResource implements \JsonSerializable
     public function setType(InstrumentType $type)
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get midi number.
+     *
+     * @return int
+     */
+    public function getMidi()
+    {
+        return $this->midi;
+    }
+
+    /**
+     * Set midi number.
+     *
+     * @param int $midi
+     *
+     * @return Instrument
+     */
+    public function setMidi($midi)
+    {
+        $this->midi = $midi;
 
         return $this;
     }

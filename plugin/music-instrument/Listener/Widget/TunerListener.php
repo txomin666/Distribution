@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\EventListener\Widget;
+namespace Claroline\MusicInstrumentBundle\Listener\Widget;
 
 use Claroline\CoreBundle\Event\ConfigureWidgetEvent;
 use Claroline\CoreBundle\Event\DisplayWidgetEvent;

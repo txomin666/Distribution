@@ -14,6 +14,8 @@ use Doctrine\ORM\Mapping as ORM;
 class InstrumentType implements \JsonSerializable
 {
     /**
+     * Identifier of the type.
+     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")

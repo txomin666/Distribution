@@ -1,7 +1,7 @@
-import React from 'react'
+import { createElement } from 'react'
 import { render } from 'react-dom'
 import { Provider } from 'react-redux'
-import { Router, Route, IndexRoute, hashHistory } from 'react-router'
+import { Router, hashHistory } from 'react-router'
 
 import { reducers } from './reducers'
 import { createStore } from '#/main/core/utilities/redux'
@@ -26,30 +26,37 @@ const store = createStore(reducers, {
       {
         id: '1',
         name: 'Vocals',
-        instrument: null,
-        sheetMusic: [
-
-        ]
+        type: {
+          name: 'vocals'
+        }
       },
       {
         id: '2',
         name: 'Lead guitar',
-        instrument: null
+        type: {
+          name: 'guitar'
+        }
       },
       {
         id: '3',
         name: 'Rhythm guitar',
-        instrument: null
+        type: {
+          name: 'guitar'
+        }
       },
       {
         id: '4',
         name: 'Bass',
-        instrument: null
+        type: {
+          name: 'bass'
+        }
       },
       {
         id: '5',
         name: 'Drums',
-        instrument: null
+        type: {
+          name: 'drums'
+        }
       }
     ],
     tags: [
@@ -59,15 +66,26 @@ const store = createStore(reducers, {
   }
 })
 
-render((
-  <Provider store={store}>
-    <Router history={hashHistory}>
-      <Route path="/" component={Song}>
-        <IndexRoute component={Player} />
-        <Route path="/edit" component={Editor} />
-      </Route>
-    </Router>
-  </Provider>
+const routes = {
+  path: '/',
+  component: Song,
+  indexRoute: { component: Player },
+  childRoutes: [
+    { path: 'edit', component: Editor }
+  ]
+}
+
+render(
+  createElement(
+    Provider, {
+      store: store
+    },
+    createElement(
+      Router, {
+        routes: routes,
+        history: hashHistory
+      }
+    )
   ),
   document.getElementById('song')
 )

@@ -7,6 +7,7 @@
     {# Custom styles #}
     {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusicbook/song.css'
         '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
+        '@ClarolineMusicInstrumentBundle/Resources/styles/instrument/main.less'
         '@ClarolineMusicBookBundle/Resources/styles/song/main.less'
     %}
     <link rel="stylesheet" media="screen" href="{{ asset_url }}" />

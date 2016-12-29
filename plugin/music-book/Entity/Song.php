@@ -33,24 +33,26 @@ class Song extends AbstractResource implements \JsonSerializable
     private $cover;
 
     /**
-     * The list of associated sheet music.
+     * The list of tracks of the song.
      *
-     * @ORM\ManyToMany(targetEntity="Claroline\MusicBookBundle\Entity\SheetMusic")
-     * @ORM\JoinTable(name="claro_music_song_sheet_music",
-     *     joinColumns        = {@ORM\JoinColumn(name="song_id", referencedColumnName="id")},
-     *     inverseJoinColumns = {@ORM\JoinColumn(name="sheet_music_id", referencedColumnName="id", unique=true)}
+     * @ORM\OneToMany(
+     *     targetEntity="Claroline\MusicInstrumentBundle\Entity\Tuning\TuningNote",
+     *     mappedBy="song",
+     *     orphanRemoval=true,
+     *     cascade={"all"}
      * )
+     * @ORM\OrderBy({"order" = "ASC"})
      *
-     * @var \Doctrine\Common\Collections\ArrayCollection
+     * @var ArrayCollection
      */
-    private $sheetMusic;
+    private $tracks;
 
     /**
      * Entity constructor.
      */
     public function __construct()
     {
-        $this->sheetMusic = new ArrayCollection();
+        $this->tracks = new ArrayCollection();
     }
 
     /**
@@ -92,7 +94,7 @@ class Song extends AbstractResource implements \JsonSerializable
      *
      * @param string $cover
      *
-     * @return $this
+     * @return Song
      */
     public function setCover($cover)
     {
@@ -102,42 +104,43 @@ class Song extends AbstractResource implements \JsonSerializable
     }
 
     /**
-     * Get the list of sheet music.
+     * Get tracks.
      *
      * @return ArrayCollection
      */
-    public function getSheetMusic()
+    public function getTracks()
     {
-        return $this->sheetMusic;
+        return $this->tracks;
     }
 
     /**
-     * Add a sheet music.
+     * Add a track.
      *
-     * @param SheetMusic $sheetMusic
+     * @param SongTrack $track
      *
-     * @return $this
+     * @return Song
      */
-    public function addSheetMusic(SheetMusic $sheetMusic)
+    public function addTrack(SongTrack $track)
     {
-        if (!$this->sheetMusic->contains($sheetMusic)) {
-            $this->sheetMusic->add($sheetMusic);
+        if (!$this->tracks->contains($track)) {
+            $this->tracks->add($track);
+            $track->setSong($this);
         }
 
         return $this;
     }
 
     /**
-     * Remove a sheet music.
+     * Remove a track.
      *
-     * @param SheetMusic $sheetMusic
+     * @param SongTrack $track
      *
-     * @return $this
+     * @return Song
      */
-    public function removeSheetMusic(SheetMusic $sheetMusic)
+    public function removeTrack(SongTrack $track)
     {
-        if ($this->sheetMusic->contains($sheetMusic)) {
-            $this->sheetMusic->removeElement($sheetMusic);
+        if ($this->tracks->contains($track)) {
+            $this->tracks->removeElement($track);
         }
 
         return $this;
@@ -155,6 +158,7 @@ class Song extends AbstractResource implements \JsonSerializable
             'name' => $this->name,
             'artist' => $this->artist,
             'cover' => $this->cover,
+            'tracks' => $this->tracks->toArray()
         ];
     }
 }
