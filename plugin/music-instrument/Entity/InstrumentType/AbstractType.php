@@ -2,8 +2,8 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
-use Doctrine\ORM\Mapping as ORM;
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Base class for all types of instrument.

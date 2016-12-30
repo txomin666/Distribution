@@ -1,47 +1,31 @@
-import React, { Component } from 'react'
+import React, { PropTypes as T } from 'react'
 
 import { Placeholder } from './../../components/placeholder.jsx'
 import InstrumentItem from './item.jsx'
 import InstrumentModal from './modal.jsx'
 
-const T = React.PropTypes
-
-export default class InstrumentMenu extends Component {
-  renderPlaceholder() {
-    return (
-      <Placeholder
-        title="no instrument selected"
-        help="click here to select one and start the tuner."
-      />
-    )
-  }
-
-  renderPreview() {
-    return (
-      <InstrumentItem
-        instrument={this.props.selected}
-      />
-    )
-  }
-
-  render() {
-    return (
-      <div>
-        <button
-          type="button"
-          className="instrument-select btn btn-block"
-          onClick={() => this.props.handleSelect()}
-        >
-          {null === this.props.selected ? this.renderPlaceholder() : this.renderPreview()}
-        </button>
-        <InstrumentModal
-          show={false}
-          onSelect={() => true}
+const InstrumentMenu = props =>
+  <div>
+    <button
+      type="button"
+      className="instrument-select btn btn-block"
+      onClick={() => this.props.handleSelect()}
+    >
+      {null === this.props.selected ?
+        <Placeholder
+          title="no instrument selected"
+          help="click here to select one and start the tuner."
+        /> :
+        <InstrumentItem
+          instrument={this.props.selected}
         />
-      </div>
-    )
-  }
-}
+      }
+    </button>
+    <InstrumentModal
+      show={false}
+      onSelect={() => true}
+    />
+  </div>
 
 InstrumentMenu.propTypes = {
   selected: T.object,
@@ -51,3 +35,5 @@ InstrumentMenu.propTypes = {
 InstrumentMenu.defaultProps = {
   selected: null
 }
+
+export default InstrumentMenu

@@ -12,7 +12,7 @@ import {
 } from './../enums'
 import { actions as editorActions } from './../actions'
 import { getDefinition } from './../../../instrument-type'
-import { Icon as InstrumentIcon } from './../../components/icon.jsx'
+import { Icon as InstrumentIcon } from './../../../instrument-type/components/icon.jsx'
 import { Placeholder } from './../../../components/placeholder.jsx'
 
 const Thumbnail = props =>

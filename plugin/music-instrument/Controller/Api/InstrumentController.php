@@ -2,13 +2,13 @@
 
 namespace Claroline\MusicInstrumentBundle\Controller\Api;
 
+use Claroline\MusicInstrumentBundle\Entity\Instrument;
 use Claroline\MusicInstrumentBundle\Form\Type\InstrumentType;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Form\FormInterface;
-use Claroline\MusicInstrumentBundle\Entity\Instrument;
 
 /**
  * Instrument CRUD Controller.

@@ -6,16 +6,13 @@ class TunerController
 {
     public function displayAction()
     {
-
     }
 
     public function configureAction()
     {
-
     }
 
     public function updateConfigurationAction()
     {
-
     }
 }

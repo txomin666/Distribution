@@ -42,7 +42,7 @@ class Artist extends AbstractResource
     private $beginDate;
 
     /**
-     * The date on which the artist ended his career
+     * The date on which the artist ended his career.
      *
      * @var \DateTime
      */

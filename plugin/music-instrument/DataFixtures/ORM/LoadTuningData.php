@@ -100,7 +100,7 @@ class LoadTuningData extends AbstractFixture implements OrderedFixtureInterface
                 'default' => false,
                 'name' => 'Low G',
                 'notes' => [['G', 3], ['C', 4], ['E', 4], ['A', 4]],
-            ]
+            ],
         ];
     }
 }

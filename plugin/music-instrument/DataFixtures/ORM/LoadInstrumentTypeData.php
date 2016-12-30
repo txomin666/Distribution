@@ -32,6 +32,8 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
             $entity->setName($type['name']);
             $entity->setClass($type['class']);
             $entity->setPolyphonic($type['polyphonic']);
+
+            // Auto enable all instrument types
             $entity->setEnabled(true);
 
             $manager->persist($entity);

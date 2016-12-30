@@ -33,7 +33,7 @@ class SongBookListener
 
     /**
      * Displays the song book tool.
-     * 
+     *
      * @DI\Observe("open_tool_desktop_claro_song_book")
      *
      * @param DisplayToolEvent $event

@@ -2,9 +2,9 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity\Tuning;
 
+use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 /**
  * Tuning.
@@ -250,7 +250,7 @@ class Tuning implements \JsonSerializable
                 ],
                 'notes' => [
                     'data' => $this->notes->toArray(),
-                ]
+                ],
             ],
         ];
     }

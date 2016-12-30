@@ -11,7 +11,7 @@ class SongManagerTest extends TransactionalTestCase
     protected function setUp()
     {
         parent::setUp();
-        
+
         $this->manager = $this->client->getContainer()->get('claro_music_book.manager.song');
     }
 }

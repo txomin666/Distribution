@@ -53,7 +53,7 @@ class SongTrack implements \JsonSerializable
     private $song;
 
     /**
-     * Instrument of the track
+     * Instrument of the track.
      *
      * @ORM\ManyToOne(targetEntity="Claroline\MusicInstrumentBundle\Entity\Instrument")
      * @ORM\JoinColumn(name="instrument_id", referencedColumnName="id", onDelete="CASCADE")

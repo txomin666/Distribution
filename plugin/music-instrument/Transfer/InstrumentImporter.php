@@ -65,11 +65,9 @@ class InstrumentImporter extends Importer implements ConfigurationInterface
 
     public function import(array $data, $name, $created)
     {
-
     }
 
     public function export(Workspace $workspace, array &$files, $object)
     {
-
     }
 }

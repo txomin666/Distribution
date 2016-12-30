@@ -3,8 +3,8 @@
 namespace Claroline\MusicInstrumentBundle\Controller\Api;
 
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -27,9 +27,7 @@ class InstrumentTypeController extends Controller
         $entities = $this->container
             ->get('doctrine.orm.entity_manager')
             ->getRepository('InstrumentBundle:InstrumentType')
-            ->findBy([], [
-                'name' => 'ASC',
-            ]);
+            ->findBy(['enabled' => true], ['name' => 'ASC']);
 
         return new JsonResponse($entities);
     }

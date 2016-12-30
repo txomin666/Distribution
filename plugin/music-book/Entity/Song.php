@@ -3,8 +3,8 @@
 namespace Claroline\MusicBookBundle\Entity;
 
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Song.
@@ -158,7 +158,7 @@ class Song extends AbstractResource implements \JsonSerializable
             'name' => $this->name,
             'artist' => $this->artist,
             'cover' => $this->cover,
-            'tracks' => $this->tracks->toArray()
+            'tracks' => $this->tracks->toArray(),
         ];
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Claroline\MusicInstrumentBundle\Tests\Controller\Api;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class TuningControllerTest extends WebTestCase
 {
     /**
-     * A Client instance
+     * A Client instance.
      *
      * @var Client
      */

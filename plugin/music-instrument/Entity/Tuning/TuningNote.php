@@ -74,7 +74,8 @@ class TuningNote implements \JsonSerializable
     /**
      * Set order.
      *
-     * @param  int $order
+     * @param int $order
+     *
      * @return TuningNote
      */
     public function setOrder($order)
@@ -98,6 +99,7 @@ class TuningNote implements \JsonSerializable
      * Set Tuning.
      *
      * @param Tuning $tuning
+     *
      * @return TuningNote
      */
     public function setTuning(Tuning $tuning)
@@ -121,6 +123,7 @@ class TuningNote implements \JsonSerializable
      * Set Note.
      *
      * @param Note $note
+     *
      * @return TuningNote
      */
     public function setNote(Note $note)

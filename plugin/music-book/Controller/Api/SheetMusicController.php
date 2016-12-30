@@ -4,7 +4,6 @@ namespace Claroline\MusicBookBundle\Controller\Api;
 
 use Claroline\MusicBookBundle\Entity\SheetMusic;
 use Claroline\MusicBookBundle\Form\Type\SheetMusicType;
-use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -86,7 +85,7 @@ class SheetMusicController
      * @EXT\Method("PUT")
      *
      * @param SheetMusic $sheetMusic
-     * @param Request $request
+     * @param Request    $request
      *
      * @return JsonResponse
      */

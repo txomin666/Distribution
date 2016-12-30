@@ -1,20 +1,15 @@
-import React, { Component } from 'react'
-
-const T = React.PropTypes
+import React, { PropTypes as T } from 'react'
 
 /**
  * Renders a small representation of an instrument.
  */
-export default class InstrumentItem extends Component {
-  render() {
-    return (
-      <div className="instrument-item">
+const InstrumentItem = props =>
+  <div className="instrument-item">
 
-      </div>
-    )
-  }
-}
+  </div>
 
 InstrumentItem.propTypes = {
   instrument: T.object.isRequired
 }
+
+export default InstrumentItem

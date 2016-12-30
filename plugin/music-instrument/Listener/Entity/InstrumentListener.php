@@ -2,8 +2,8 @@
 
 namespace Claroline\MusicInstrumentBundle\Listener\Entity;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 
 /**
  * Instrument Listener
@@ -67,9 +67,9 @@ class InstrumentListener
                 ->getRepository($type->getClass());
 
             /** @var \Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType $specification */
-            $specification = $repository->findOneBy(array(
+            $specification = $repository->findOneBy([
                 'instrument' => $instrument,
-            ));
+            ]);
 
             if (!empty($specification)) {
                 $instrument->setSpecification($specification);

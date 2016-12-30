@@ -11,5 +11,4 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
  */
 class ArtistController
 {
-
 }

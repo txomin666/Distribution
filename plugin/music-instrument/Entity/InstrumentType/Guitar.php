@@ -2,9 +2,9 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
+use Claroline\MusicInstrumentBundle\Library\Model\TuningTrait;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Claroline\MusicInstrumentBundle\Library\Model\TuningTrait;
 
 /**
  * Guitar.

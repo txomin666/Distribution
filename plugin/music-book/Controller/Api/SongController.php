@@ -8,9 +8,9 @@ use Claroline\CoreBundle\Library\Validation\ValidationException;
 use Claroline\MusicBookBundle\Entity\Song;
 use Claroline\MusicBookBundle\Manager\SongManager;
 use JMS\DiExtraBundle\Annotation as DI;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
@@ -40,7 +40,7 @@ class SongController
      * })
      *
      * @param AuthorizationCheckerInterface $authorization
-     * @param SongManager $songManager
+     * @param SongManager                   $songManager
      */
     public function __construct(
         AuthorizationCheckerInterface $authorization,
