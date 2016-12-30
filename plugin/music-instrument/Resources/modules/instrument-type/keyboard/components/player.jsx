@@ -81,42 +81,10 @@ PianoOctave.defaultProps = {
   number: 0
 }
 
-function testMidi() {
-  MIDI.loadPlugin({
-    soundfontUrl: './soundfont/',
-    onprogress: function(state, progress) {
-      /*MIDI.loader.setValue(progress * 100);*/
-    },
-    onsuccess: function() {
-      /// this sets up the MIDI.Player and gets things going...
-      let player = MIDI.Player;
-      player.timeWarp = 1; // speed the song is played back
-      player.loadFile(song[songid++ % song.length], player.start);
-
-      player.addListener(function(data) {
-        var pianoKey = data.note - 21;
-        var d = colorElements[pianoKey];
-        if (d) {
-          if (data.message === 144) {
-            var map = colorMap[data.note - 27];
-            if (map) d.style.background = map.hex;
-            d.style.color = "#fff";
-          } else {
-            d.style.background = "";
-            d.style.color = "";
-          }
-        }
-      });
-      ///
-      MIDIPlayerPercentage(player);
-    }
-  });
-}
-
 /**
- * Renders a playable piano visualization.
+ * Renders a playable keyboard.
  */
-const PianoPlayer = props =>
+const Player = props =>
   <div>
     <div className="panel piano-keyboard">
       <PianoOctave number={0} />
@@ -132,8 +100,8 @@ const PianoPlayer = props =>
     </div>
   </div>
 
-PianoPlayer.propTypes = {
+Player.propTypes = {
   instrument: T.object.isRequired
 }
 
-export {PianoPlayer}
+export {Player}

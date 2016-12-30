@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 const T = React.PropTypes
 
-export default class Placeholder extends Component {
+export class Placeholder extends Component {
   renderIcon() {
     return (
       <span className={`placeholder-icon ${this.props.icon}`}></span>

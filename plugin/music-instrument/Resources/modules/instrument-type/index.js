@@ -1,15 +1,14 @@
 import invariant from 'invariant'
 import difference from 'lodash/difference'
 
-import Guitar from './guitar'
-import Piano from './piano'
+import { Guitar } from './guitar'
+import { Keyboard } from './keyboard'
 
 let registeredTypes = {}
 let defaultRegistered = false
 
 const typeProperties = [
   'type',
-  'icon',
   'editor',
   'player',
   'tuner'
@@ -27,7 +26,7 @@ export function registerInstrumentType(definition) {
 
 export function registerDefaultInstrumentTypes() {
   if (!defaultRegistered) {
-    [Guitar, Piano].forEach(registerInstrumentType)
+    [Guitar, Keyboard].forEach(registerInstrumentType)
     defaultRegistered = true
   }
 }
@@ -47,7 +46,7 @@ function assertValidInstrumentType(definition) {
   )
   invariant(
     typeof definition.type === 'string',
-    makeError('mime type must be a string', definition)
+    makeError('type must be a string', definition)
   )
   invariant(
     definition.editor,

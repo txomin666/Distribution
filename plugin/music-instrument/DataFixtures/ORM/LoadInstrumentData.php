@@ -4,7 +4,7 @@ namespace Claroline\MusicInstrumentBundle\DataFixtures\ORM;
 
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
-use Claroline\MusicInstrumentBundle\Entity\Specification\AbstractSpecification;
+use Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType;
 use Doctrine\Common\DataFixtures\AbstractFixture;
 use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
@@ -40,7 +40,7 @@ class LoadInstrumentData extends AbstractFixture implements OrderedFixtureInterf
 
                 $specificationClass = $type->getClass();
 
-                /** @var AbstractSpecification $specification */
+                /** @var AbstractType $specification */
                 $specification = new $specificationClass();
 
                 // Set template properties

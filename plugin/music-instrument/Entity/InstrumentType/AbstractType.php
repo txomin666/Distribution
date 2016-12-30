@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\Entity\Specification;
+namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 use Doctrine\ORM\Mapping as ORM;
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
@@ -10,7 +10,7 @@ use Claroline\MusicInstrumentBundle\Entity\Instrument;
  *
  * @ORM\MappedSuperclass()
  */
-abstract class AbstractSpecification implements \JsonSerializable
+abstract class AbstractType implements \JsonSerializable
 {
     /**
      * @ORM\Id
@@ -56,7 +56,7 @@ abstract class AbstractSpecification implements \JsonSerializable
      *
      * @param Instrument $instrument
      *
-     * @return AbstractSpecification
+     * @return AbstractType
      */
     public function setInstrument(Instrument $instrument)
     {

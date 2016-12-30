@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\Entity\Specification;
+namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_instrument_recorder")
  */
-class RecorderSpecification extends AbstractSpecification
+class Recorder extends AbstractType
 {
     /**
      * Type of the fingering.

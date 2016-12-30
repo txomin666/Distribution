@@ -41,7 +41,7 @@ class InstrumentTypeController extends Controller
      *
      * @return JsonResponse
      *
-     * @EXT\Route("/{id}")
+     * @EXT\Route("/{id}", name="music_instrument_type_list")
      * @EXT\Method("GET")
      */
     public function getAction(InstrumentType $instrumentType)
@@ -56,19 +56,17 @@ class InstrumentTypeController extends Controller
      *
      * @return JsonResponse
      *
-     * @EXT\Route("/{id}/instruments")
+     * @EXT\Route("/{id}/instruments", name="music_instrument_list_generic")
      * @EXT\Method("GET")
      */
-    public function listInstrumentsAction(InstrumentType $instrumentType)
+    public function listGenericInstrumentsAction(InstrumentType $instrumentType)
     {
         $entities = $this->container
             ->get('doctrine.orm.entity_manager')
-            ->getRepository('InstrumentBundle:Instrument')
+            ->getRepository('ClarolineMusicInstrumentBundle:Instrument')
             ->findBy([
-                'instrumentType' => $instrumentType,
-                'owner' => null, // Only get the platform generic Instruments
-            ], [
-                'name' => 'ASC',
+                'type' => $instrumentType,
+                'resourceNode' => null, // Only get the platform generic Instruments
             ]);
 
         return new JsonResponse($entities);

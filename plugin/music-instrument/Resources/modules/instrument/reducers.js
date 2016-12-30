@@ -1,15 +1,17 @@
-import {makeReducer} from '#/main/core/utilities/redux'
+import {makeReducer, combineReducers} from '#/main/core/utilities/redux'
+
+import {reducers as editorReducers} from './editor/reducers'
 
 /*import {
  TUNING_SELECT
  } from './actions'*/
 
-function selectInstrument(instrumentState, action = {}) {
-  return action.instrument
-}
+const reducers = combineReducers({
+  node: makeReducer({}),
+  instrument: makeReducer({}, {
 
-const instrumentReducer = makeReducer({}, {
-  /*[SONG_SET]: setSong*/
+  }),
+  editor: editorReducers
 })
 
-export default instrumentReducer
+export {reducers}

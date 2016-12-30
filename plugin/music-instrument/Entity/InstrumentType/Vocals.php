@@ -1,17 +1,17 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\Entity\Specification;
+namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Drums.
+ * Vocals.
  * Used to store the configuration of Drums.
  *
  * @ORM\Entity()
- * @ORM\Table(name="claro_music_instrument_drums")
+ * @ORM\Table(name="claro_music_instrument_vocals")
  */
-class DrumsSpecification extends AbstractSpecification
+class Vocals extends AbstractType
 {
     /**
      * Serialize the Entity.

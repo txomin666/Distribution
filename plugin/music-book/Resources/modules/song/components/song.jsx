@@ -48,6 +48,7 @@ const Song = props => {
         subtitle={'/edit' === props.location.pathname ? 'edit' : null}
         actions={'/edit' === props.location.pathname ? editorActions : playerActions}
       />
+
       {props.children}
     </div>
   )
@@ -61,7 +62,11 @@ function mapStateToProps(state) {
 }
 
 Song.propTypes = {
-  node: T.object.isRequired
+  node: T.object.isRequired,
+  children: T.node.isRequired,
+  location: T.shape({
+    pathname: T.string
+  }).isRequired
 }
 
 const ConnectedSong = connect(mapStateToProps)(Song)

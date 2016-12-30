@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import Placeholder from './../../components/placeholder.jsx'
+import { Placeholder } from './../../components/placeholder.jsx'
 import InstrumentItem from './item.jsx'
 import InstrumentModal from './modal.jsx'
 

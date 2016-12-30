@@ -6,7 +6,7 @@ import PageHeader from '#/main/core/layout/page/components/page-header.jsx'
 import { actions } from './../actions'
 import InstrumentMenu from './../../instrument/components/menu.jsx'
 import TuningMenu from './tuning-menu.jsx'
-import Placeholder from './../../components/placeholder.jsx'
+import { Placeholder } from './../../components/placeholder.jsx'
 
 const T = React.PropTypes
 

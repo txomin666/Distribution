@@ -5,7 +5,7 @@ namespace Claroline\MusicInstrumentBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * InstrumentType Entity
+ * InstrumentType Entity.
  * Stores the default configuration for each instrument type (e.g. guitar, bass, recorder, piano).
  *
  * @ORM\Entity()

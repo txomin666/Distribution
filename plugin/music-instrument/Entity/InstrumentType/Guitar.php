@@ -1,6 +1,6 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\Entity\Specification;
+namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,7 +13,7 @@ use Claroline\MusicInstrumentBundle\Library\Model\TuningTrait;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_instrument_guitar")
  */
-class GuitarSpecification extends AbstractSpecification
+class Guitar extends AbstractType
 {
     /*
      * Tuning of the Guitar

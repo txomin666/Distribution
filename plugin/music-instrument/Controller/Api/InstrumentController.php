@@ -18,24 +18,12 @@ use Claroline\MusicInstrumentBundle\Entity\Instrument;
 class InstrumentController extends Controller
 {
     /**
-     * List all generic Instruments of the platform.
-     *
-     * @return JsonResponse
-     *
-     * @EXT\Route("/generic")
-     * @EXT\Method("GET")
-     */
-    public function listGenericAction()
-    {
-    }
-
-    /**
      * List all Instruments of a User.
      *
      * @return JsonResponse
      *
      * @EXT\Route("")
-     * @EXT\Method({"OPTIONS", "GET"})
+     * @EXT\Method("GET")
      */
     public function listAction()
     {

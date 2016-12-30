@@ -1,6 +1,20 @@
 // Bootstrap variables
-@import "../../../../../../../../web/packages/bootstrap/less/variables.less";
+@import "./../../../../../../../../web/packages/bootstrap/less/variables.less";
 
 @import "./../common";
 @import "./icon";
 @import "./piano";
+
+.instrument-type {
+    display: flex;
+    align-items: center;
+
+    & > div {
+        padding-left: floor(@grid-gutter-width / 2);
+
+        .h4 {
+            margin-top: 0;
+            display: block;
+        }
+    }
+}

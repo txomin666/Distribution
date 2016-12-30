@@ -1,79 +1,69 @@
-import React, { Component, PropTypes as T } from 'react'
+import React, { PropTypes as T } from 'react'
 import { connect } from 'react-redux'
+import { hashHistory } from 'react-router'
 
 import { tex } from '#/main/core/translation/index'
-import {ResourceHeader} from '#/main/core/layout/resource/components/resource-header.jsx'
+import { ResourceHeader } from '#/main/core/layout/resource/components/resource-header.jsx'
+import { Midi } from '#/plugin/music-book/audio/midi'
 
-import { actions } from './../actions'
-import { getDefinition } from './../types'
+/*const midiInterface = new Midi()
 
-const node = {
-  name: 'My awesome piano',
-  actions: [
-    {
-      icon: 'fa fa-fw fa-pencil',
-      label: 'Edit',
-      handleAction: () => true,
-      primary: true
-    },
-    {
-      icon: 'fa fa-fw fa-download',
-      label: 'Import QTI questions',
-      handleAction: () => true,
-      primary: false
-    },
-    {
-      icon: 'fa fa-fw fa-file',
-      label: 'Manage medias',
-      handleAction: () => true,
-      primary: false
-    }
-  ]
-}
+midiInterface.getAccess().then(() => {
+  const input = midiInterface.getInputs()[0]
+  midiInterface.onInputMessage(input, (event) => {
+    console.log(event.data)
+  })
+})*/
 
-class Instrument extends Component {
-  componentDidMount() {
-    this.midi = null  // global MIDIAccess object
-
-    function onMIDISuccess( midiAccess ) {
-      console.log( "MIDI ready!" )
-      this.midi = midiAccess  // store in the global (in real usage, would probably keep in an object instance)
-    }
-
-    function onMIDIFailure(msg) {
-      console.log( "Failed to get MIDI access - " + msg )
-    }
-
-    navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure)
+const playerActions = [
+  {
+    icon: 'fa fa-fw fa-pencil',
+    label: 'Edit',
+    handleAction: () => hashHistory.push('/edit'),
+    primary: true
   }
+]
 
-  render() {
-    return (
-      <div>
-        <ResourceHeader resourceNode={node} />
-
-        {React.createElement(
-          getDefinition(this.props.instrument.type).player, {
-            instrument: this.props.instrument
-          }
-        )}
-      </div>
-    )
+const editorActions = [
+  {
+    icon: 'fa fa-fw fa-save',
+    label: 'Save',
+    handleAction: () => hashHistory.push('/'),
+    primary: true
+  },
+  {
+    icon: 'fa fa-fw fa-ban',
+    label: 'Cancel',
+    handleAction: () => hashHistory.push('/'),
+    primary: true
   }
-}
+]
+
+const Instrument = props =>
+  <div className="resource">
+    <ResourceHeader
+      resourceNode={props.node}
+      subtitle={'/edit' === props.location.pathname ? 'edit' : null}
+      actions={'/edit' === props.location.pathname ? editorActions : playerActions}
+    />
+
+    {props.children}
+  </div>
 
 Instrument.propTypes = {
-  instrument: T.object.isRequired
-}
-
-Instrument.defaultProps = {
-
+  node: T.object.isRequired,
+  children: T.node.isRequired,
+  location: T.shape({
+    pathname: T.string
+  }).isRequired
 }
 
 function mapStateToProps(state) {
   return {
-    instrument: state.instrument
+    node: state.node
   }
 }
 
-export default connect(mapStateToProps, actions)(Instrument)
+const ConnectedInstrument = connect(mapStateToProps)(Instrument)
+
+export {ConnectedInstrument as Instrument}

@@ -48,37 +48,37 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
         return [
             [
                 'name' => 'Guitar',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
             ],
             [
                 'name' => 'Ukulele',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
             ],
             [
                 'name' => 'Bass',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\GuitarSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
             ],
             [
                 'name' => 'Recorder',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\RecorderSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Recorder',
                 'polyphonic' => false,
             ],
             [
-                'name' => 'Piano',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\PianoSpecification',
+                'name' => 'Keyboard',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Keyboard',
                 'polyphonic' => true,
             ],
             [
                 'name' => 'Drums',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\DrumsSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Drums',
                 'polyphonic' => false,
             ],
             [
                 'name' => 'Vocals',
-                'class' => '\Claroline\MusicInstrumentBundle\Entity\Specification\VocalsSpecification',
+                'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Vocals',
                 'polyphonic' => false,
             ],
         ];

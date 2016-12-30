@@ -66,7 +66,7 @@ class InstrumentListener
                 ->getEntityManager()
                 ->getRepository($type->getClass());
 
-            /** @var \Claroline\MusicInstrumentBundle\Entity\Specification\AbstractSpecification $specification */
+            /** @var \Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType $specification */
             $specification = $repository->findOneBy(array(
                 'instrument' => $instrument,
             ));

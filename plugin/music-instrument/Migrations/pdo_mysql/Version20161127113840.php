@@ -20,6 +20,7 @@ class Version20161127113840 extends AbstractMigration
                 type_id INT DEFAULT NULL, 
                 manufacturer VARCHAR(255) DEFAULT NULL, 
                 model VARCHAR(255) DEFAULT NULL, 
+                midi INT NOT NULL,
                 resourceNode_id INT DEFAULT NULL, 
                 INDEX IDX_2D9D7CD8C54C8C93 (type_id), 
                 UNIQUE INDEX UNIQ_2D9D7CD8B87FAB32 (resourceNode_id), 
@@ -30,7 +31,6 @@ class Version20161127113840 extends AbstractMigration
             CREATE TABLE claro_music_instrument_type (
                 id INT AUTO_INCREMENT NOT NULL, 
                 name VARCHAR(255) NOT NULL,
-                icon VARCHAR(255) NOT NULL,
                 enabled TINYINT(1) NOT NULL, 
                 class_name VARCHAR(255) NOT NULL, 
                 polyphonic TINYINT(1) NOT NULL, 

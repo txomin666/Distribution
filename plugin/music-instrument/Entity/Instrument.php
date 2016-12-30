@@ -3,11 +3,11 @@
 namespace Claroline\MusicInstrumentBundle\Entity;
 
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
-use Claroline\MusicInstrumentBundle\Entity\Specification\AbstractSpecification;
+use Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Instrument Entity
+ * Instrument Entity.
  * Used to store the common configuration of all types of instrument.
  *
  * @ORM\Entity()
@@ -33,12 +33,12 @@ class Instrument extends AbstractResource implements \JsonSerializable
      *
      * @var int
      */
-    private $midi;
+    private $midi = 10; // FIXME
 
     /**
      * Specification of the Instrument.
      *
-     * @var AbstractSpecification
+     * @var AbstractType
      */
     private $specification;
 
@@ -111,7 +111,7 @@ class Instrument extends AbstractResource implements \JsonSerializable
     /**
      * Get specification.
      *
-     * @return AbstractSpecification
+     * @return AbstractType
      */
     public function getSpecification()
     {
@@ -121,11 +121,11 @@ class Instrument extends AbstractResource implements \JsonSerializable
     /**
      * Set specification.
      *
-     * @param AbstractSpecification $specification
+     * @param AbstractType $specification
      *
      * @return Instrument
      */
-    public function setSpecification(AbstractSpecification $specification)
+    public function setSpecification(AbstractType $specification)
     {
         $this->specification = $specification;
 

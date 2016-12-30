@@ -1,17 +1,17 @@
 <?php
 
-namespace Claroline\MusicInstrumentBundle\Entity\Specification;
+namespace Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Piano.
+ * Keyboard.
  * Used to store the configuration of a Piano.
  *
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_instrument_piano")
  */
-class PianoSpecification extends AbstractSpecification
+class Keyboard extends AbstractType
 {
     /**
      * Number of keys of the piano.
