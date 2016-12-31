@@ -82,7 +82,7 @@ class Version20161127113707 extends AbstractMigration
                 id INT AUTO_INCREMENT NOT NULL, 
                 song_id INT DEFAULT NULL, 
                 instrument_id INT DEFAULT NULL, 
-                name VARCHAR(255) DEFAULT NULL, 
+                `name` VARCHAR(255) DEFAULT NULL, 
                 `order` INT NOT NULL, 
                 midiFile VARCHAR(255) DEFAULT NULL, 
                 midiTrack INT DEFAULT NULL, 

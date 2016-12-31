@@ -27,8 +27,8 @@ class Version20161127113725 extends AbstractMigration
             CREATE TABLE claro_music_chord_interval (
                 chord_id INT NOT NULL, 
                 interval_id INT NOT NULL, 
-                INDEX IDX_B41E83BDD4EB08E5 (chord_id), 
-                INDEX IDX_B41E83BD505A342E (interval_id), 
+                INDEX IDX_604D2F39D4EB08E5 (chord_id), 
+                INDEX IDX_604D2F39505A342E (interval_id), 
                 PRIMARY KEY(chord_id, interval_id)
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ");

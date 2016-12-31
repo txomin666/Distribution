@@ -6,17 +6,17 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Keyboard.
- * Used to store the configuration of a Piano.
+ * Used to store the configuration of a Keyboard.
  *
  * @ORM\Entity()
- * @ORM\Table(name="claro_music_instrument_piano")
+ * @ORM\Table(name="claro_music_instrument_keyboard")
  */
 class Keyboard extends AbstractType
 {
     /**
-     * Number of keys of the piano.
+     * Number of keys of the keyboard.
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(name="nb_keys", type="integer")
      *
      * @var int
      */

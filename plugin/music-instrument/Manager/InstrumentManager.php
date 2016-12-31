@@ -4,6 +4,7 @@ namespace Claroline\MusicInstrumentBundle\Manager;
 
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use Claroline\MusicInstrumentBundle\Entity\Instrument;
+use Claroline\MusicInstrumentBundle\Serializer\Serializer;
 use JMS\DiExtraBundle\Annotation as DI;
 
 /**
@@ -13,6 +14,9 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class InstrumentManager
 {
+    /** @var Serializer */
+    private $serializer;
+
     private $om;
 
     /**
@@ -27,6 +31,16 @@ class InstrumentManager
     public function __construct(ObjectManager $om)
     {
         $this->om = $om;
+    }
+
+    public function export(Instrument $instrument, $format)
+    {
+        return $this->serializer->serialize($instrument, $format);
+    }
+
+    public function import(\stdClass $instrumentData, $format)
+    {
+
     }
 
     /**

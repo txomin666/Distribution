@@ -3,6 +3,7 @@
 namespace Claroline\MusicInstrumentBundle\Entity;
 
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
+use Claroline\MusicInstrumentBundle\Annotation\ApiDefinition;
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -13,6 +14,8 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\EntityListeners({"\Claroline\MusicInstrumentBundle\Listener\Entity\InstrumentListener"})
  * @ORM\Table(name="claro_music_instrument")
+ *
+ * @ApiDefinition("Claroline\MusicInstrumentBundle\Definitions\InstrumentDefinition")
  */
 class Instrument extends AbstractResource implements \JsonSerializable
 {

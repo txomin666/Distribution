@@ -16,7 +16,7 @@ import { Editor } from './editor/components/editor.jsx'
 registerDefaultInstrumentTypes()
 const store = createStore(reducers, {
   node: {
-    name: 'My awesome piano'
+    name: 'My awesome keyboard'
   },
   instrument: {
     id: '123',

@@ -7,6 +7,13 @@ use Claroline\KernelBundle\Bundle\ConfigurationBuilder;
 
 class ClarolineMusicBookBundle extends PluginBundle
 {
+    public function getRequiredPlugins()
+    {
+        return [
+            'Claroline\\MusicInstrumentBundle\\ClarolineMusicInstrumentBundle',
+        ];
+    }
+
     public function getConfiguration($environment)
     {
         $config = new ConfigurationBuilder();
