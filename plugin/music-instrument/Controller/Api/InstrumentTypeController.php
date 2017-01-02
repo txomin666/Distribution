@@ -19,7 +19,7 @@ class InstrumentTypeController extends Controller
      *
      * @return JsonResponse
      *
-     * @EXT\Route("")
+     * @EXT\Route("", name="music_instrument_type")
      * @EXT\Method("GET")
      */
     public function listAction()
@@ -39,7 +39,7 @@ class InstrumentTypeController extends Controller
      *
      * @return JsonResponse
      *
-     * @EXT\Route("/{id}", name="music_instrument_type_list")
+     * @EXT\Route("/{id}", name="music_instrument_types")
      * @EXT\Method("GET")
      */
     public function getAction(InstrumentType $instrumentType)
@@ -54,7 +54,7 @@ class InstrumentTypeController extends Controller
      *
      * @return JsonResponse
      *
-     * @EXT\Route("/{id}/instruments", name="music_instrument_list_generic")
+     * @EXT\Route("/{id}/instruments", name="music_instrument_type_instruments")
      * @EXT\Method("GET")
      */
     public function listGenericInstrumentsAction(InstrumentType $instrumentType)
@@ -65,6 +65,28 @@ class InstrumentTypeController extends Controller
             ->findBy([
                 'type' => $instrumentType,
                 'resourceNode' => null, // Only get the platform generic Instruments
+            ]);
+
+        return new JsonResponse($entities);
+    }
+
+    /**
+     * List generic Instruments for an Instrument Type entity.
+     *
+     * @param InstrumentType $instrumentType
+     *
+     * @return JsonResponse
+     *
+     * @EXT\Route("/{id}/tunings", name="music_instrument_type_tunings")
+     * @EXT\Method("GET")
+     */
+    public function listTunings(InstrumentType $instrumentType)
+    {
+        $entities = $this->container
+            ->get('doctrine.orm.entity_manager')
+            ->getRepository('ClarolineMusicInstrumentBundle:Tuning\Tuning')
+            ->findBy([
+                'instrumentType' => $instrumentType,
             ]);
 
         return new JsonResponse($entities);

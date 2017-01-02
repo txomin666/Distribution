@@ -230,28 +230,11 @@ class Tuning implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            // Identifier of the Resource
-            'type' => 'tunings',
             'id' => $this->id,
-
-            // Attributes of the Resource
-            'attributes' => [
-                'name' => $this->name,
-                'default' => $this->default,
-            ],
-
-            // Relationships with other Resources
-            'relationships' => [
-                'instrumentType' => [
-                    'data' => $this->instrumentType,
-                ],
-                'category' => [
-                    'data' => $this->category,
-                ],
-                'notes' => [
-                    'data' => $this->notes->toArray(),
-                ],
-            ],
+            'name' => $this->name,
+            'default' => $this->default,
+            'category' => $this->category,
+            'notes' => $this->notes->toArray(),
         ];
     }
 }
