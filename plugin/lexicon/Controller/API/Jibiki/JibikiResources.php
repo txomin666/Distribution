@@ -24,7 +24,7 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class JibikiResources
 {
-    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api/';
+    public  $base_api_uri = 'totoro.imag.fr/lexinnova/api/';
 	public  $header 	  = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
 	private $CLIENT_RESOURCES;
 
@@ -38,12 +38,20 @@ class JibikiResources
 	}
 
 
-    public function get_article_volume($dictname)
+    public function get_volume_entries($dictname, $lang, $strategy)
     {
-        $ContentResource = new JibikiContentResource();
-        $resultContent   = $ContentResource->get_articles($dictname, 'esp', 'cdm-headword', 'a', 'GREATER_THAN OR EQUAL');
-        
-        return $resultContent;
+        $entries  = '';
+        $response = $this->CLIENT_RESOURCES->request('GET', $dictname.'/'.$lang.'/cdm-headword/a/', ['query' => ['strategy' => $strategy], 'http_errors' => false]);
+        $code = $response->getStatusCode();
+        if ($code != 200) {
+            $reason = $response->getReasonPhrase();
+            echo "<p class='alert alert-danger'>JIBIKI REST API GET ENTRIES ERROR: $code $reason</p>\n";
+        } else {
+            $entries = simplexml_load_string($response->getBody());
+        }
+        //$resultContent   = $ContentResource->get_entries($dictname,'GREATER_THAN OR EQUAL');
+        var_dump($entries);
+        return $entries;
     }
 
 
@@ -54,12 +62,12 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API GET VOLUME ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API GET VOLUME ERROR: $code $reason</p>\n";
         } else {
             $volumexml = simplexml_load_string($response->getBody());
             $volume = JibikiContentResource::fromXML($volumexml);
         }
-
+        #var_dump($volume);
         return $volume;
     }
 
@@ -72,13 +80,11 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
             $xml = (string) $response->getBody();
-            //echo $xml;
             $dictlist = simplexml_load_string($xml);
             foreach ($dictlist as $dictxml) {
-                echo $dictxml;
                 $dict = JibikiContentResource::fromXML($dictxml);
                 foreach ($dict->src as $volumelang) {
                     $volume = $this->get_volume($dict->name, $volumelang);
@@ -102,7 +108,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='alert alert-danger'>REST API GET DICTLIST ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
             $dictlist = simplexml_load_string($response->getBody());
             foreach ($dictlist as $dictxml) {
@@ -114,7 +120,6 @@ class JibikiResources
                 $answer[$dict->name] = $dict;
             }
         }
-
         return $answer;
     }
 
@@ -125,7 +130,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='alert alert-danger'>REST API POST VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API POST VOLUME ERROR : $code $reason</p>\n";
             echo $response->getBody();
         }
 
@@ -140,7 +145,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='alert alert-danger'>REST API PUT VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API PUT VOLUME ERROR : $code $reason</p>\n";
         } else {
             $volumexml = simplexml_load_string($response->getBody());
             $volume = ContentResource::fromXML($volumexml);
@@ -156,7 +161,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 204) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='alert alert-danger'>REST API DELETE VOLUME ERROR : $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>JIBIKI REST API DELETE VOLUME ERROR : $code $reason</p>\n";
         }
 
         return $code;

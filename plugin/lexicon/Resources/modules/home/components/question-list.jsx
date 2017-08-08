@@ -120,7 +120,7 @@ const QuestionRow = props =>
       <small className="text-muted" style={{marginLeft:1}}> {props.question.type}</small>
     </TableCell>
     <TableCell>
-      <span onClick={() => window.location.assign(origin="/app_dev.php/lexicon/content/"+props.question.id)}>{props.question.title || props.question.content}</span>
+      <span onClick={() => window.location.assign(origin="/app_dev.php/lexicon/content/"+props.question.id+"/"+props.question.lang)}>{props.question.title || props.question.content}</span>
     </TableCell>
     <TableCell>
       {props.question.meta.category && props.question.meta.category.name ? props.question.meta.category.name : '-'}
@@ -167,7 +167,7 @@ const QuestionRow = props =>
 
 QuestionRow.propTypes = {
   question: T.shape({
-    id: T.string.isRequired,
+    id: T.string,
     type: T.string.isRequired,
     title: T.string,
     content: T.string.isRequired,
@@ -186,8 +186,7 @@ QuestionRow.propTypes = {
   isSelected: T.bool,
   toggleSelect: T.func.isRequired,
   onShare: T.func.isRequired,
-  onDelete: T.func.isRequired,
-  goContent: T.func.isRequired
+  onDelete: T.func.isRequired
 }
 
 QuestionRow.defaultProps = {
@@ -227,7 +226,6 @@ export default class QuestionList extends Component {
             onShare={(items) => this.props.onShare(items)}
             onDelete={this.props.onDelete}
             toggleSelect={this.props.toggleSelect}
-            goContent={question.id}
           />
         ))}
         </tbody>
@@ -245,6 +243,5 @@ QuestionList.propTypes = {
   onShare: T.func.isRequired,
   toggleSelect: T.func.isRequired,
   toggleSelectPage: T.func.isRequired,
-  toggleSelectAll: T.func.isRequired,
-  goContent: T.func.isRequired
+  toggleSelectAll: T.func.isRequired
 }

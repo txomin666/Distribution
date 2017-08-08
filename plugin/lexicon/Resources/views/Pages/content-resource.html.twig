@@ -1,5 +1,6 @@
  {% extends 'ClarolineCoreBundle:Workspace:layout.html.twig' %}
 
+ {% set resourceTitle = "{{ resourceName }}" %}
 
  {% block stylesheets %}
      {# Claroline CSS #}
@@ -18,10 +19,10 @@
          macros.desktopBreadcrumbs([
              {
                  'name': 'claroline_lexicon'|trans({}, 'tools'),
-                 'href': ''
+                 'href': path('claro_desktop_open')
              },
              {
-                'name': 'content resource'|trans({}, 'tools'),
+                'name': resourceTitle,
                 'href': ''
              }
          ])

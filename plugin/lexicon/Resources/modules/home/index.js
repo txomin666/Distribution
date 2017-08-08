@@ -10,7 +10,7 @@ import {MODAL_CREATE_LEXICON, CreateLexiconModal} from './components/modal/creat
 import {Bank} from './components/bank.jsx'
 
  
-// Load question typeset et toi 
+// Load question typeset et toi  et oiok
 
 
 // Register needed modals

@@ -1,5 +1,5 @@
 import React from 'react'
-//import axios from 'axios'
+import axios from 'axios'
 
 //const listResources = JSON.parse(document.getElementById('lexicon_content').dataset.resources)
 
@@ -23,18 +23,18 @@ const initialState = {
 	]
 }
 
-/*
+
 axios.defaults.baseURL = 'http://totoro.imag.fr/lexinnova/api';
 axios.defaults.headers.common['Authorization'] = 'levis0045';
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+axios.defaults.headers.get['Content-Type'] = 'application/json';
 
 // http://totoro.imag.fr/lexinnova/api/Lexinnova/esp/handle/1014504
 axios.get('http://totoro.imag.fr/lexinnova/api/Lexinnova/esp/cdm-headword/a/?strategy=GREATER_THAN OR EQUAL')
   .then(function(response){
-    console.log(response.data); // ex.: { user: 'Your User'}
+    console.log(JSON.stringify(response.data)); // ex.: { user: 'Your User'}
     console.log(response.status); // ex.: 200
 }); 
-*/
+
 
 export default (state= initialState, action, item=['Nouveau', {}]) => {
 	switch(action.type) {

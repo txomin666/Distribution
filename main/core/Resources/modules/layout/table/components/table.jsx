@@ -93,9 +93,7 @@ TableSortingCell.defaultProps = {
 
 const TableHeader = props =>
   <thead>
-    <tr>
       {props.children}
-    </tr>
   </thead>
 
 TableHeader.propTypes = {

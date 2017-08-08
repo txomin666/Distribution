@@ -24,7 +24,7 @@ use JMS\DiExtraBundle\Annotation as DI;
 class JibikiContentResource
 {
     public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';
-    public  $header       = ['Content-Type' => 'application/json;charset=UTF-8', 'Accept' => 'application/json'];
+    public  $header       = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
     //public $guzzleclient  = new Client(['base_uri' => $base_api_uri, 'headers'  => $header]);
     public $name;
     public $fullname;
@@ -71,19 +71,37 @@ class JibikiContentResource
         $instance = new self();
         $instance->loadByID($id);
 
-        return $instance;
+        return $instance;   
     }
 
 
-    public function get_articles($dictname, $src, $key, $value, $strategy)
+    public function get_entries($dictname, $strategy)
     {
         $article = '';
-        //echo 'url:',JIBIKI_API, $dictname . '/' . $src.'/'.$key.'/'.$value.'/entries';
+        //Lexinnova/esp/cdm-headword/a/?strategy=GREATER_THAN OR EQUAL
+        //echo 'url:',JIBIKI_API, $dictname . '/' . $src.'/'.$key.'/'.$value.'/entries'; et moi 
+        $response = $this->RESOURCE_CONTENT->request('GET', '/Lexinnova/esp/cdm-headword/a/', ['query' => ['strategy' => $strategy], 'http_errors' => false]);
+        $code = $response->getStatusCode();
+        if ($code != 200) {
+            $reason = $response->getReasonPhrase();
+            echo "<p class='alert alert-danger'>JIBIKI REST API GET ENTRIES ERROR: $code $reason</p>\n";
+        } else {
+            $article = simplexml_load_string($response->getBody());
+        }
+
+        return $article;
+    }
+
+
+    public function get_articlesold($dictname, $src, $key, $value, $strategy)
+    {
+        $article = '';
+        //echo 'url:',JIBIKI_API, $dictname . '/' . $src.'/'.$key.'/'.$value.'/entries'; et moi 
         $response = $this->RESOURCE_CONTENT->request('GET', $dictname.'/'.$src.'/'.$key.'/'.$value.'/entries', ['query' => ['strategy' => $strategy], 'http_errors' => false]);
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API GET ARTICLE ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API GET ARTICLE ERROR: $code $reason</p>\n";
         } else {
             $article = simplexml_load_string($response->getBody());
         }
@@ -99,7 +117,7 @@ class JibikiContentResource
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API POST ARTICLE ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API POST ARTICLE ERROR: $code $reason</p>\n";
         } else {
             $article = simplexml_load_string($response->getBody());
         }
@@ -114,7 +132,7 @@ class JibikiContentResource
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API PUT ARTICLE ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API PUT ARTICLE ERROR: $code $reason</p>\n";
         } else {
             $article = simplexml_load_string($response->getBody());
         }
@@ -129,7 +147,7 @@ class JibikiContentResource
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API PUT ARTICLE PART ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API PUT ARTICLE PART ERROR: $code $reason</p>\n";
         } else {
             $article = simplexml_load_string($response->getBody());
         }
@@ -143,7 +161,7 @@ class JibikiContentResource
         $code = $response->getStatusCode();
         if ($code != 204) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='apierror'>REST API DELETE ARTICLE ERROR: $code $reason</p>\n";
+            echo "<p class='alert alert-danger'>REST API DELETE ARTICLE ERROR: $code $reason</p>\n";
         } else {
             echo "<p> L'article $dictname a bien été supprimé !</p>";
         }
@@ -155,7 +173,7 @@ class JibikiContentResource
     {
         $shortname = preg_replace('/[^A-Za-z0-9\-]/', '', $shortname);
         if (!preg_match('/^[A-Z][a-zA-Z0-9\-]+$/', $shortname)) {
-            echo '<p class="erreur">','Le nom abrégé du dictionnaire contient des caractères non autorisés !','</p>';
+            echo '<p class="alert alert-danger">','Le nom abrégé du dictionnaire contient des caractères non autorisés !','</p>';
         }
         $instance = new self($shortname, $category, $type, $authors);
         $instance->fullname = $name;
@@ -174,6 +192,7 @@ class JibikiContentResource
         $instance = new self((string) $xmldata->{'dictionary-metadata'}['name'], (string) $xmldata->{'dictionary-metadata'}['category'], (string) $xmldata->{'dictionary-metadata'}['type'], (string) $xmldata->{'dictionary-metadata'}->authors);
         $instance->xml = $xmldata->{'dictionary-metadata'};
         $instance->fullname = (string) $instance->xml['fullname'];
+        $instance->name = (string) $instance->xml['name'];
         $instance->owner = (string) $instance->xml['owner'];
         $instance->lastModifdate = (string) $instance->xml['last-modification-date'];
         $instance->createdate = (string) $instance->xml['creation-date'];
@@ -187,16 +206,19 @@ class JibikiContentResource
         $instance->access = (string) $instance->xml->access || 'private';
         $instance->comments = (string) $instance->xml->comments;
         
+        //var_dump($instance->source);
         //echo var_dump($instance->xml->administrators);
         $admin = $instance->xml->administrators;
         if (isset($admin)) {
             foreach ($admin->{'user-ref'} as $user) {
                array_push($instance->administrators, (string) $user['name']);
+               #echo($user['name']);
             }
         }else {
+            echo($admin['name']);
             array_push($instance->administrators, (string) $admin['name']);
         }
-
+        //var_dump($instance->administrators);
         $srclangs = array();
        // echo $instance->xml->languages->children();
        
@@ -211,7 +233,6 @@ class JibikiContentResource
             array_push($instance->src, $langsrc['source-language']);
         }
 
-        $trglangs = array();
         $langtg = $instance->xml->languages;
         if (isset($langtg)) {
             foreach ($langtg->{"target-language"} as $trglangXML) {
@@ -287,7 +308,7 @@ class JibikiContentResource
     {
         $shortname = preg_replace('/[^A-Za-z0-9\-]/', '', $name);
         if (!preg_match('/^[A-Z][a-zA-Z0-9\-]+$/', $shortname)) {
-            echo '<p class="erreur">','Le nom abrégé du dictionnaire contient des caractères non autorisés !','</p>';
+            echo '<p class="alert alert-danger">','Le nom abrégé du dictionnaire contient des caractères non autorisés !','</p>';
         }
         $this->fullname = $name;
         $this->xml['fullname'] = $name;

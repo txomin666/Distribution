@@ -150,9 +150,11 @@ class DictionariesManager
      */
     public function resourcesToJson($dico) 
     {  
+        //var_dump($dico->src[0]);
         $resourcejsondata                    = new \stdClass();
         $resourcejsondata->id                = $dico->name; 
-        $resourcejsondata->type              = $dico->name; 
+        $resourcejsondata->type              = $dico->name;
+        $resourcejsondata->lang              = $dico->src; 
         $resourcejsondata->title             = "";
         $resourcejsondata->category          = $dico->category;
         $resourcejsondata->content           = $dico->fullname;
@@ -224,12 +226,13 @@ class DictionariesManager
      * 
      * @return $ResourceContent  (json format)
      */
-    public function getContentResource($nameResource)
+    public function getContentResource($nameResource, $lang, $strategy)
     {
-        $oooo                            = $this->JBKresources->get_article_volume($nameResource);
+        $oooo                            = $this->JBKresources->get_volume_entries($nameResource, $lang, $strategy);
         echo($oooo);
         $ResourceContent                 = new \stdClass();
-        $ResourceContent->id             = $nameResource;
+        $ResourceContent->idname         = $nameResource;
+        $ResourceContent->lang           = $lang;
         $ResourceContent->titleResource  = $nameResource;
         $ResourceContent->dataItems      = [];
 
