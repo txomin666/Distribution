@@ -9,7 +9,7 @@ import paginationReducer   from './pagination'
 import searchReducer       from './search'
 import totalResultsReducer from './total-results'
 
-export const bankApp = combineReducers({
+export const lexiconApp = combineReducers({
   modal: modalReducer,
   currentRequests: apiReducers.currentRequests,
   questions: questionsReducer,

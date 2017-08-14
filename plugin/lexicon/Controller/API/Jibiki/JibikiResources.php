@@ -40,17 +40,21 @@ class JibikiResources
 
     public function get_volume_entries($dictname, $lang, $strategy)
     {
-        $entries  = '';
-        $response = $this->CLIENT_RESOURCES->request('GET', $dictname.'/'.$lang.'/cdm-headword/a/', ['query' => ['strategy' => $strategy], 'http_errors' => false]);
+        $entries    = '';
+        $urlRequest = $dictname.'/'.$lang.'/cdm-headword/a/';
+
+        
+        //echo ($requesto);
+        $response = $this->CLIENT_RESOURCES->request('GET', $urlRequest, ['http_errors' => false, 'query' => ['strategy' => $strategy, 'sortBy' => 'asc']]);
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
             echo "<p class='alert alert-danger'>JIBIKI REST API GET ENTRIES ERROR: $code $reason</p>\n";
         } else {
-            $entries = simplexml_load_string($response->getBody());
+            $entries = simplexml_load_string((string) $response->getBody());
         }
-        //$resultContent   = $ContentResource->get_entries($dictname,'GREATER_THAN OR EQUAL');
-        var_dump($entries);
+        
+        var_dump($response->getBody()->getContents());
         return $entries;
     }
 

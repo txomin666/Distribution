@@ -58,17 +58,20 @@ class AuthUsersManager
     {
 
 		$currentUser                      = $this->container->get('security.token_storage')->getToken()->getUser();
-		$userProprieties              	  = array();
-		$userProprieties['username']      = $currentUser->getUsername();
-		$userProprieties['firstName']     = $currentUser->getFirstName();
-		$userProprieties['LastName']      = $currentUser->getLastName();
-		$userProprieties['email']         = $currentUser->getMail();
-		$userProprieties['id']            = $currentUser->getId();
-		$userProprieties['password']      = $currentUser->getPassword();
-		$userProprieties['makepassword']  = $this->makePassword($currentUser);
+		if (is_string($currentUser)) {
+            echo "<span class='alert alert-danger'>Vous n'êtes plus connecté ! Veuillez vous reconnecter pour continuer ! </span>\n";
+        }else{
+			$userProprieties              	  = array();
+			$userProprieties['username']      = $currentUser->getUsername();
+			$userProprieties['firstName']     = $currentUser->getFirstName();
+			$userProprieties['LastName']      = $currentUser->getLastName();
+			$userProprieties['email']         = $currentUser->getMail();
+			$userProprieties['id']            = $currentUser->getId();
+			$userProprieties['password']      = $currentUser->getPassword();
+			$userProprieties['makepassword']  = $this->makePassword($currentUser);
 
-		return $userProprieties;
-
+			return $userProprieties;
+		}
 	}
 
 

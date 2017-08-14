@@ -19,7 +19,7 @@ registerModalType(MODAL_ADD_ITEM, AddItemModal)
 registerModalType(MODAL_SHARE, ShareModal)
 
 // Get initial data
-const container = document.getElementById('questions-bank')
+const container   = document.getElementById('questions-bank')
 const initialData = JSON.parse(container.dataset['initial'])
 const currentUser = JSON.parse(container.dataset['user'])
 

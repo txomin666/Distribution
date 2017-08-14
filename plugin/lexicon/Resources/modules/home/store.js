@@ -7,7 +7,7 @@ import {
 } from 'redux'
 import thunk from 'redux-thunk'
 import {apiMiddleware} from './api/middleware'
-import {bankApp} from './reducers/index'
+import {lexiconApp} from './reducers/index'
 
 const middleware = [apiMiddleware, thunk]
 
@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 export function createStore(initialState) {
   return baseCreate(
-    bankApp,
+    lexiconApp,
     initialState,
     compose(
       applyMiddleware(...middleware),

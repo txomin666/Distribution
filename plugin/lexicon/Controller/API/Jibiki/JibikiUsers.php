@@ -47,7 +47,7 @@ class JibikiUsers
         $code = $response->getStatusCode();
         if ($code != 201) {
             $reason = $response->getReasonPhrase();
-            echo "<span className='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
+            echo "<span class='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
             return False;
     	}else {
         	return True; 
@@ -62,7 +62,7 @@ class JibikiUsers
 
         if ($code != 204) {
             $reason = $response->getReasonPhrase();
-            echo "<span className='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
+            echo "<span class='alert alert-danger'>REST API DELETE DICT ERROR: $code $reason</span>";
         }else {
         	$message = $code."<span className='alert alert-success'>L'utilisateur : ".$name."a bien été supprimé!</span>";
         	return $message; 
@@ -78,7 +78,7 @@ class JibikiUsers
     
         $reason = $response->getReasonPhrase();
         if ($code != 200) {
-            //echo "<span class='alert alert-danger'>REST API POST USER ERROR: $code $reason</span>\n";
+            echo "<span class='alert alert-danger'>REST API POST USER ERROR: $code $reason</span>\n";
         }
 
         return $body;
