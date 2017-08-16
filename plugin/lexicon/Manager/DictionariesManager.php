@@ -229,7 +229,7 @@ class DictionariesManager
     public function getContentResource($nameResource, $lang, $strategy)
     {
         $oooo                            = $this->JBKresources->get_volume_entries($nameResource, $lang, $strategy);
-        echo($oooo);
+        //echo($oooo);
         $ResourceContent                 = new \stdClass();
         $ResourceContent->idname         = $nameResource;
         $ResourceContent->lang           = $lang;

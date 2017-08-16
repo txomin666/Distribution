@@ -154,4 +154,5 @@ function mapDispatchToProps(dispatch) {
 
 const ConnectedBank = connect(mapStateToProps, mapDispatchToProps)(Bank)
 
+
 export {ConnectedBank as Bank}

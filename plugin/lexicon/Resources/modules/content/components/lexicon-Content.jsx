@@ -1,69 +1,64 @@
 import React, { Component } from 'react';
-//sssimport {PropTypes as T} from 'prop-types'
-import LexiconContentHeader from './header/LexiconContentHeader.jsx';
-import LexiconContentBody from './body/LexiconContentBody.jsx';
-import { createEntry, searchEntry, editEntry, consultEntry, editTitle, scrollEntries} from './../actions'
+import {PropTypes as T} from 'prop-types'
+import {connect} from 'react-redux'
+import {LexiconContentHeader} from './LexiconContentHeader.jsx'
+import {ConnectedLexiconBody} from './LexiconContentBody.jsx'
+import select from './../selectors/ContentBody' 
+import {action as actionHeader} from './../actions/actionHeader' 
 
-
-class LexiconContent extends Component {
-
-  constructor(props) {
-    super(props);
-    this.store = this.props.store;
-    this.state = this.props.store.getState();
-  }
-
-
-  handleEditEntry() {
-    alert(this.store);
-    alert(this.store);
-    this.store.dispatch(editEntry());
-  }
-
-  handleCreateEntry(){
-    alert(this.store);
-    alert(this.state );
-    this.store.dispatch(createEntry());
-  }
-
-  handleSearchEntry() {
-    this.store.dispatch(searchEntry());
-  }
-
-  handleConsultEntry(){
-    this.store.dispatch(consultEntry());
-  }
-
-  handleEditTitle(){
-    this.store.dispatch(editTitle());
-  }
-
-  handleScrollEntries(){
-    this.store.dispatch(scrollEntries());
-  }
-
+console.log(select)
+export default class LexiconContent extends Component {
 
   render() {
     return (
       <div className="">
           <LexiconContentHeader
-            lexiconStore={this.store}
-            hEditT={this.handleEditTitle}
-            hCreateE={this.handleCreateEntry}
+            titleResource   = {this.props.titleResource}
+            actionAddEntry  = {this.props.actionAddEntry}
+            actionTitleEdit = {this.props.actionTitleEdit}
+            clickeditTitle  = {this.props.clickeditTitle}
+            actionSaveTitleEdit = {this.props.actionSaveTitleEdit}
           />
-          <LexiconContentBody
-            listItems={this.state.dataItems}
-            contentStore={this.store}
-            hSearchE={this.handleSearchEntry}
-            hConsultE={this.handleConsultEntry}
-            hEditE={this.handleEditEntry}
-            hScrollE={this.handleScrollEntries}
-          />
+          <ConnectedLexiconBody/>
       </div>
     );
   }
 
 }
 
+LexiconContent.propTypes = {
+  titleResource: T.string.isRequired,
+  actionAddEntry: T.func.isRequired,
+  actionTitleEdit: T.func.isRequired,
+  clickeditTitle: T.bool,
+  actionSaveTitleEdit: T.func.isRequired
+}
 
-export default LexiconContent;
+
+function mapStateToProps(state) {
+  return {
+    clickeditTitle: select.titleResource(state),
+    titleResource: select.ResourceTitle(state)
+  }
+}
+
+
+function mapDispatchToProps(dispatch) {
+  return {
+    actionAddEntry() {
+      dispatch(actionHeader.addEntry())
+    },
+    actionTitleEdit() {
+      dispatch(actionHeader.editTitle())
+    },
+    actionSaveTitleEdit(titleResource) {
+      dispatch(actionHeader.saveEditTitle(titleResource))
+    }
+  }
+}
+
+
+const ConnectedLexiconResource = connect(mapStateToProps, mapDispatchToProps)(LexiconContent)
+
+
+export {ConnectedLexiconResource}
