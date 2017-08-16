@@ -60,4 +60,5 @@ export function routedApp(routesConfig, basePath = '') {
 
     return RoutedApp
   }
+
 }

@@ -40,4 +40,5 @@ export function bootstrap(containerSelector, rootComponent, reducers, transformD
     ),
     container
   )
+
 }
