@@ -3,7 +3,7 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import {LexiconContentHeader} from './LexiconContentHeader.jsx'
 import {ConnectedLexiconBody} from './LexiconContentBody.jsx'
-import select from './../selectors/ContentBody' 
+import select from './../selectors' 
 import {action as actionHeader} from './../actions/actionHeader' 
 
 console.log(select)
@@ -37,7 +37,7 @@ LexiconContent.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    clickeditTitle: select.titleResource(state),
+    clickeditTitle: select.getTitleResource(state),
     titleResource: select.ResourceTitle(state)
   }
 }

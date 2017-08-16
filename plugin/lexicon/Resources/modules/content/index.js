@@ -9,11 +9,9 @@ console.log(store)
 
 
 ReactDOM.render(
-    React.createElement(
-      Provider,
-      {store},
-      React.createElement(ConnectedLexiconResource)
-    ),
+      <Provider store={store}>
+        <ConnectedLexiconResource />
+      </Provider>,
     document.getElementById("lexicon_content")
   )
 
