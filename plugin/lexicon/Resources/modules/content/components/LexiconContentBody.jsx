@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import index from './../css/index.css'
-import select from './../selectors/ContentBody'
-import {action as actionBody} from './../actions/actionBody'
 
 
 {/* Liste des entrées d'une ressource lexicale */}
@@ -200,38 +198,3 @@ LexiconContentBody.propTypes = {
 	contentEntry: T.func.isRequired
 }
 
-console.log(select, actionBody, index)
-function mapStateToProps(state) {
-  return {
-    dataEntries: select.AllEntries(state),
-    titleResource: select.titleResource(state),
-    clicksearchEntry: select.clicksearchEntry(state),
-    author: select.getTotalResults(state),
-    clickeditContent: select.clickeditContent(state),
-    typeResource: select.typeResource(state)
-  }
-}
-
-
-function mapDispatchToProps(dispatch) {
-  return {
-    editContentEntry(handle) {
-      dispatch(actionBody.editContentEntry(handle))
-    },
-    searchEntry(entryToSearch) {
-      dispatch(actionBody.searchEntry(entryToSearch))
-    },
-    goSearchEntry() {
-      dispatch(actionBody.goSearchEntry())
-    },
-    contentEntry(handle) {
-      dispatch(actionBody.contentEntry(handle))
-    }
-  }
-}
-
-
-const ConnectedBody = connect(mapStateToProps, mapDispatchToProps)(LexiconContentBody)
-
-
-export {ConnectedBody as ConnectedLexiconBody}

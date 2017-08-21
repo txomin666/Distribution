@@ -3,7 +3,7 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import classes from 'classnames'
 
-import {tex, transChoice, trans} from '#/main/core/translation'
+import {tex, transChoice, trans, translex} from '#/main/core/translation'
 import {makeModal} from '#/main/core/layout/modal'
 import {actions as modalActions} from '#/main/core/layout/modal/actions'
 import { Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
@@ -31,12 +31,12 @@ const Bank = props =>
     hideModal={props.hideModal}
   >
     <PageHeader
-      title={tex('claroline_lexicon')}
+      title={translex('claroline_lexicon')}
     >
       <PageActions>
         <PageAction
           id="lexicon-create"
-          title={transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'claroline_lexicon')}
+          title={transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-plus text-primary"
           action={() => props.openCreateLexiconModal()}
         >
@@ -45,7 +45,7 @@ const Bank = props =>
         <span className="text-muted" style={{fontSize:30}}><span className="text-muted" style={{width:140, margin:10}}></span></span>
         <PageAction
           id="bank-search"
-          title={transChoice('active_filters', props.activeFilters, {count: props.activeFilters}, 'claroline_lexicon')}
+          title={transChoice('active_filters', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-search"
           action={() => props.openSearchModal(props.searchFilters)}
         >
@@ -69,7 +69,7 @@ const Bank = props =>
         <div className="panel panel-body">
           <div className="empty-list">
             &nbsp;&nbsp;Ousp ! No results found <small className="fa fa-frown-o" style={{fontSize:20}}></small><br/><br/>&nbsp;&nbsp;
-            Vous n'avez pas encore créer de ressource(s) ou aucune(s) ressource(s) n'a été partagée avec vous !
+            Vous n'avez pas encore crée de ressource(s) lexicale(s) ou aucune(s) ressource(s) lexicale(s) n'a été partagée avec vous &#9785; &#9785; !
           </div>
         </div>
       }
@@ -93,10 +93,9 @@ const Bank = props =>
   </Page>
 
 Bank.propTypes = {
-  totalResults: T.number.isRequired,
+  totalResults: T.number,
   searchFilters: T.object.isRequired,
   activeFilters: T.number.isRequired,
- // dataLexicon: T.object.isRequired,
   modal: T.shape({
     type: T.string,
     fading: T.bool.isRequired,
@@ -105,7 +104,7 @@ Bank.propTypes = {
   pages: T.number.isRequired,
   pagination: T.shape({
     current: T.number.isRequired,
-    pageSize: T.number.isRequired
+    pageSize: T.number
   }),
   createModal: T.func.isRequired,
   fadeModal: T.func.isRequired,
@@ -141,7 +140,7 @@ function mapDispatchToProps(dispatch) {
     },
     openSearchModal(searchFilters) {
       dispatch(modalActions.showModal(MODAL_SEARCH, {
-        title: tex('search'),
+        title: translex('search'),
         filters: searchFilters,
         handleSearch: (searchFilters) => dispatch(searchActions.search(searchFilters)),
         clearFilters: () => dispatch(searchActions.clearFilters()),
@@ -150,7 +149,7 @@ function mapDispatchToProps(dispatch) {
     },
     openCreateLexiconModal() {
       dispatch(modalActions.showModal(MODAL_CREATE_LEXICON, {
-        title: tex('Créer une nouvelle ressource lexicale'),
+        title: translex('Créer une nouvelle ressource lexicale'),
         handleCreateLexicon: () => dispatch(createLexiconAction.createLexicon(dataLexicon)),
         dataSave : () => dispatch(createLexiconAction.saveResource()),
         fadeModal: () => dispatch(modalActions.fadeModal())
@@ -172,5 +171,6 @@ function mapDispatchToProps(dispatch) {
 }
 
 const ConnectedBank = connect(mapStateToProps, mapDispatchToProps)(Bank)
+
 
 export {ConnectedBank as Bank}

@@ -1,6 +1,7 @@
 lexicon_home : Home
 state_resources : State of resource
 resources_title  : Title of resource
+claroline_lexicon : Lexical resources
 # A
 actions: Actions
 active_filters: "{0} There is no active filter|{1} There is 1 active filter|]1,Inf[ There are %count% active filters"

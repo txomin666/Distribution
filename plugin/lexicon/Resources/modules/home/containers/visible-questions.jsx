@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 
-import {tex, transChoice} from '#/main/core/translation'
+import {tex, transChoice, translex} from '#/main/core/translation'
 import QuestionList from './../components/question-list.jsx'
 import {getVisibleQuestions} from './../selectors/questions'
 import {actions as sortActions} from './../actions/sort-by'
@@ -44,7 +44,7 @@ const mapDispatchToProps = (dispatch) => {
 
     onShare: (items) => {
       dispatch(modalActions.showModal(MODAL_SHARE, {
-        title: transChoice('share_items', items.length, {count: items.length}, 'claroline_lexicon'),
+        title: transChoice('share_items', items.length, {count: items.length}, 'lexicon'),
         fadeModal: () => dispatch(modalActions.fadeModal()),
         handleShare: (users, adminRights) => {
           dispatch(modalActions.fadeModal())
@@ -55,8 +55,8 @@ const mapDispatchToProps = (dispatch) => {
 
     onDelete: (items) => {
       dispatch(modalActions.showModal(MODAL_DELETE_CONFIRM, {
-        title: transChoice('delete_items', items.length, {count: items.length}, 'claroline_lexicon'),
-        question: tex('remove_question_confirm_message'),
+        title: transChoice('delete_items', items.length, {count: items.length}, 'lexicon'),
+        question: translex('remove_question_confirm_message'),
         handleConfirm: () => dispatch(questionsActions.deleteQuestions(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))

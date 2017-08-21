@@ -91,6 +91,18 @@ export function tex(message, domain = 'ujm_exo') {
 }
 
 /**
+ * Shortcut to access simple translation without placeholders.
+ *
+ * @param {string} message
+ * @param {string} domain
+ *
+ * @returns {string}
+ */
+export function translex(message, domain = 'lexicon') {
+  return trans(message, {}, domain)
+}
+
+/**
  * Returns if the translation is loaded for the current locale
  *
  * @returns {boolean}

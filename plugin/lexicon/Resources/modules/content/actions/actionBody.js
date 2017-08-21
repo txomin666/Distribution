@@ -1,3 +1,4 @@
+import React, { Component } from 'react'
 import {makeActionCreator} from '#/main/core/utilities/redux'
 
 import {REQUEST_SEND} from './actionsApi'

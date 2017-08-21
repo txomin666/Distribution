@@ -1,3 +1,4 @@
+import React, { Component } from 'react'
 import {createSelector} from 'reselect'
 import size from 'lodash/size'
 
@@ -8,8 +9,8 @@ const currentUser   = (state) => state.currentUser
 const typeResource  = (state) => state.typeResource
 const author        = (state) => state.author
 const titleResource = (state) => state.titleResource
-const clicksearchEntry  = (state) => state.clicksearchEntry
-const clickeditContent  = (state) => state.clickeditContent
+const getClicksearchEntry  = (state) => state.clicksearchEntry
+const getClickeditContent  = (state) => state.clickeditContent
 
 
 const getCountEntries = createSelector(
@@ -26,5 +27,6 @@ export const select = {
 	author,
 	typeResource,
 	titleResource,
-	clickeditContent
+	getClickeditContent,
+	getClicksearchEntry
 }

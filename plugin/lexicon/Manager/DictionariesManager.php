@@ -151,6 +151,7 @@ class DictionariesManager
     public function resourcesToJson($dico) 
     {  
         //var_dump($dico->src[0]);
+        $ClaroUser                           = $this->userClaro->generateAuth();
         $resourcejsondata                    = new \stdClass();
         $resourcejsondata->id                = $dico->name; 
         $resourcejsondata->type              = $dico->name;
@@ -158,6 +159,7 @@ class DictionariesManager
         $resourcejsondata->title             = "";
         $resourcejsondata->category          = $dico->category;
         $resourcejsondata->content           = $dico->fullname;
+        $resourcejsondata->userClaro         = $ClaroUser['username'];
         $resourcejsondata->meta              = new \stdClass(); 
         $resourcejsondata->meta->created     = $dico->creationDate;
         $resourcejsondata->meta->updated     = $dico->lastModifdate;
@@ -182,7 +184,7 @@ class DictionariesManager
         $ClaroUser     = $this->userClaro->generateAuth();
         $author        = new \stdClass();
         $author->id    = (string) $ClaroUser['id'];
-        $author->name  = $dico->authors;
+        $author->name  = $dico->owner;
         $author->email = $dico->owner.'@yahoo.fr';
         return $author;
     }

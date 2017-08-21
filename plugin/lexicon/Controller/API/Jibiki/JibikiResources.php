@@ -54,7 +54,7 @@ class JibikiResources
             $entries = simplexml_load_string((string) $response->getBody());
         }
         
-        var_dump($response->getBody()->getContents());
+        //var_dump($response->getBody()->getContents());
         return $entries;
     }
 

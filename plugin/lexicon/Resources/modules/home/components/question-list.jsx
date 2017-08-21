@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 import { DropdownButton, MenuItem } from 'react-bootstrap'
-import {tex, trans, transChoice} from '#/main/core/translation'
+import {tex, trans, transChoice, translex} from '#/main/core/translation'
 
 import {
   Table,
@@ -13,6 +13,9 @@ import {
   TableSortingCell
 } from '#/main/core/layout/table/components/table.jsx'
 
+
+
+
 const SelectedRow = props =>
   <tr className="selected-rows active">
     <td className="text-left" >
@@ -21,7 +24,7 @@ const SelectedRow = props =>
     <td
       className="text-left"
       colSpan={5}
-      dangerouslySetInnerHTML={{ __html: tex('questions_selected', props.selected.length, {count: props.selected.length})}}
+      dangerouslySetInnerHTML={{ __html: translex('questions_selected', props.selected.length, {count: props.selected.length})}}
     >
     </td>
     <td className="table-actions text-right">
@@ -31,7 +34,7 @@ const SelectedRow = props =>
         onClick={() => props.onShare(props.selected)}
       >
         <span className="fa fa-fw fa-share" />
-        <span className="sr-only">{tex('questions_share')}</span>
+        <span className="sr-only">{translex('questions_share')}</span>
       </button>
       <button
         role="button"
@@ -39,7 +42,7 @@ const SelectedRow = props =>
         onClick={() => props.onDelete(props.selected)}
       >
         <span className="fa fa-fw fa-trash-o" />
-        <span className="sr-only">{tex('questions_delete')}</span>
+        <span className="sr-only">{translex('questions_delete')}</span>
       </button>
     </td>
   </tr>
@@ -61,32 +64,32 @@ const QuestionTableHeader = props =>
         direction={'type' === props.sortBy.property ? props.sortBy.direction : 0}
         onSort={() => props.onSort('type')}
       >
-        {tex('type')}
+        {translex('type')}
       </TableSortingCell>
       <TableSortingCell
         direction={'content' === props.sortBy.property ? props.sortBy.direction : 0}
         onSort={() => props.onSort('content')}
       >
-        {tex('resources_title')}
+        {translex('resources_title')}
       </TableSortingCell>
       <TableSortingCell
         direction={'category' === props.sortBy.property ? props.sortBy.direction : 0}
         onSort={() => props.onSort('category')}
       >
-        {tex('state_resources')}
+        {translex('state_resources')}
       </TableSortingCell>
       <TableSortingCell
         align="left"
         direction={'updated' === props.sortBy.property ? props.sortBy.direction : 0}
         onSort={() => props.onSort('updated')}
       >
-        {tex('last_modified')}
+        {translex('last_modified')}
       </TableSortingCell>
       <TableSortingCell
         direction={'author' === props.sortBy.property ? props.sortBy.direction : 0}
         onSort={() => props.onSort('author')}
       >
-        {tex('creator')}
+        {translex('creator')}
       </TableSortingCell>
       <TableHeaderCell align="right">&nbsp;</TableHeaderCell>
     </tr>
@@ -110,20 +113,39 @@ QuestionTableHeader.propTypes = {
   onShare: T.func.isRequired,
   onDelete: T.func.isRequired
 }
+
 // a revoir (dynamiser la mise ne couleur)
+function glossaryCliked(dict, lang) {
+  return window.location.assign(origin="/app_dev.php/lexicon/content/"+dict+"/"+lang);
+}
+
+
+const StatusDict = props => 
+    <span>
+        <span className="fa fa-eye text-primary" style={{marginRight:20}} />
+        <span className="fa fa-pencil" style={{marginRight:20, 'cursor':'not-allowed'}} />
+        <span className="fa fa-trash-o" style={{marginRight:20, 'cursor':'not-allowed'}} />
+        <span className="fa fa-comments-o text-primary" style={{marginRight:1}} />
+    </span>
+
 const QuestionRow = props =>
   <TableRow className={props.isSelected ? 'selected' : null}>
-    <TableCell align="center" className="bg-primary"> 
-      <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
-    </TableCell>
+    {props.question.userClaro == props.question.meta.authors[0].name ? 
+        (<TableCell align="center" className="bg-primary"> 
+             <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
+         </TableCell>) :
+        (<TableCell align="center"> 
+             <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
+         </TableCell>)
+    }
     <TableCell align="left" className=""> 
       <small className="text-muted" style={{marginLeft:1}}> {props.question.type}</small>
     </TableCell>
     <TableCell>
-      <span onClick={() => window.location.assign(origin="/app_dev.php/lexicon/content/"+props.question.id+"/"+props.question.lang)}>{props.question.title || props.question.content}</span>
+      <span style={{'cursor':'pointer'}} onClick={() => glossaryCliked(props.question.id, props.question.lang)}>{props.question.title || props.question.content}</span>
     </TableCell>
     <TableCell>
-      {props.question.meta.category && props.question.meta.category.name ? props.question.meta.category.name : '-'}
+      <StatusDict/>
     </TableCell>
     <TableCell align="left">
       {props.question.meta.updated ?
@@ -150,7 +172,7 @@ const QuestionRow = props =>
           onClick={() => props.onShare([props.question.id])}
         >
           <span className="fa fa-fw fa-share" />&nbsp;
-          {tex('question_share')}
+          {translex('question_share')}
         </MenuItem>
         <MenuItem divider />
 
@@ -159,7 +181,7 @@ const QuestionRow = props =>
           onClick={() => props.onDelete([props.question.id])}
         >
           <span className="fa fa-fw fa-trash-o" />&nbsp;
-          {tex('question_delete')}
+          {translex('question_delete')}
         </MenuItem>
       </DropdownButton>
     </TableCell>

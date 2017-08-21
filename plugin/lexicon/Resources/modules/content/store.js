@@ -1,9 +1,9 @@
-import React from 'react';
+import React from 'react'
 import ReactDOM from 'react-dom'
 import {createStore} from '#/main/core/utilities/redux'
 import {Provider} from 'react-redux'
 import axios from 'axios'
-import {lexiconApp} from './reducers/index';
+import {lexiconApp} from './reducers/index'
 import {makeId} from './utils'
 
 const container   = document.getElementById('lexicon_content')
@@ -15,16 +15,17 @@ const dictname    = newurl.split('/')[0];
 
 const urljibiki = 'http://totoro.imag.fr/lexinnova/api/'+dictname+'/'+dictlang+'/cdm-headword/a/?strategy=GREATER_THAN&sortBy=asc';
 
-let stateData = {}
-stateData.id = makeId()
-stateData.titleResource = dictname
-stateData.typeResource = ''
-stateData.author = ''
+let stateData              = {}
+stateData.id               = makeId()
+stateData.titleResource    = dictname
+stateData.typeResource     = ''
+stateData.author           = ''
 stateData.clickeditTitle   = false
 stateData.clicksearchEntry = false
 stateData.clickeditContent = false
-stateData.currentUser  = currentUser
-stateData.dataEntries  = []
+stateData.currentUser      = currentUser
+stateData.dataEntries      = []
+stateData.lang             = dictlang
 
 
 axios.get(urljibiki)
