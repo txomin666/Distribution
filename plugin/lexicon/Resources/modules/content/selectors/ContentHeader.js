@@ -1,10 +1,9 @@
-import React, { Component } from 'react'
 import {createSelector} from 'reselect'
 //import {size} from 'lodash/size'
 
 
 const ResourceTitle  = (state) => state.titleResource
-const clickeditTitle = (state) => state.clickeditTitle
+const getClickeditTitle = (state) => state.clickeditTitle
 const getAuthor      = (state) => state.author
 
 const getResourceTitle = createSelector(
@@ -14,8 +13,9 @@ const getResourceTitle = createSelector(
 
 export const select = {     
 	getResourceTitle, 
-	clickeditTitle,
-	ResourceTitle,
+	getClickeditTitle,
 	getAuthor
 }
        
+
+console.log(select)

@@ -1,4 +1,3 @@
-import React, { Component } from 'react'
 import {makeActionCreator} from '#/main/core/utilities/redux'
 import {REQUEST_SEND} from './actionsApi'
 
@@ -7,10 +6,10 @@ export const SAVE_TITLE_EDIT = 'SAVE_TITLE_EDIT'
 export const TITLE_EDIT      = 'TITLE_EDIT'
 export const ADD_NEW_ENTRY   = 'ADD_NEW_ENTRY'
 
-export const actions = {}
+export const actions  = {}
 
 actions.saveEditTitle = makeActionCreator(SAVE_TITLE_EDIT, 'titleResource')
-actions.addEntry      = makeActionCreator(ADD_NEW_ENTRY, 'entryId', 'entry', 'category', 'definition', 'example')
+actions.addEntry      = makeActionCreator(ADD_NEW_ENTRY, 'entry')
 actions.editTitle     = makeActionCreator(TITLE_EDIT, 'clickeditTitle')
 
 actions.saveTitleResource = (titleResource) => ({
@@ -28,13 +27,16 @@ actions.saveTitleResource = (titleResource) => ({
   }
 })
 
-actions.addNewEntry = (entryId, entry, category, definition, example) => ({
+actions.addNewEntry = (entry) => ({
   [REQUEST_SEND]: {
     route: ['add_new_entry'],
     request: {
       method: 'POST',
       body: JSON.stringify(questions)
     },
-    success: () => actions.addEntry(entryId, entry, category, definition, example)
+    success: () => actions.addEntry(entry)
   }
 })
+
+
+console.log(actions)

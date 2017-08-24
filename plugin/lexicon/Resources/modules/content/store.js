@@ -1,5 +1,4 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import {createStore} from '#/main/core/utilities/redux'
 import {Provider} from 'react-redux'
 import axios from 'axios'
@@ -24,7 +23,6 @@ stateData.clickeditTitle   = false
 stateData.clicksearchEntry = false
 stateData.clickeditContent = false
 stateData.currentUser      = currentUser
-stateData.dataEntries      = []
 stateData.lang             = dictlang
 
 
@@ -42,24 +40,27 @@ axios.get(urljibiki)
 
 
 function generateInitialData(parseData, stateData) {
-     const getTitle = parseData.dentrylist;
-     const countEntry = parseData.dentrylist.dentry.length;
-     stateData.totalEntries = countEntry;
+     const getTitle = parseData.dentrylist
+     const countEntry = parseData.dentrylist.dentry.length
+     stateData.totalEntries = countEntry
+     const tabentries = []
      getTitle.dentry.map( (entry) => { 
-           const nameDict = entry.ddictionary;
-           const langDict = entry.dlang;
-           const entryhandle = entry.dhandle;
-           const nameEntry = entry.dcriteria.content;
-           const entryCriteria = entry.dcriteria;
+           const nameDict = entry.ddictionary
+           const langDict = entry.dlang
+           const entryhandle = entry.dhandle
+           const nameEntry = entry.dcriteria.content
+           const entryCriteria = entry.dcriteria
            const buildEntries = [nameEntry, entryhandle, nameDict, langDict, entryCriteria]
-           stateData.dataEntries.push(buildEntries);
+           tabentries.push(buildEntries)
       });
+      stateData.dataEntries = tabentries
+
 }
 
 
 const initialData = stateData
 
-//console.log(initialData);
+console.log(initialData)
 
 
 let lexiconStore = createStore(

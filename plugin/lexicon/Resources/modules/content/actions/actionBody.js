@@ -1,4 +1,3 @@
-import React, { Component } from 'react'
 import {makeActionCreator} from '#/main/core/utilities/redux'
 
 import {REQUEST_SEND} from './actionsApi'
@@ -10,13 +9,12 @@ export const CLICK_SEARCH_ENTRY  = 'CLICK_SEARCH_ENTRY'
 
 export const actions = {}
 
-actions.searchEntry      = makeActionCreator(SEARCH_ENTRY, 'entryToSearch')
-actions.goSearchEntry    = makeActionCreator(CLICK_SEARCH_ENTRY, 'clickToSearch')
+actions.searchEntry      = makeActionCreator(SEARCH_ENTRY, 'entrySearch')
+actions.goSearchEntry    = makeActionCreator(CLICK_SEARCH_ENTRY, 'clicksearchEntry')
 actions.contentEntry     = makeActionCreator(CONTENT_ENTRY, 'handle')
-actions.editContentEntry = makeActionCreator(EDIT_CONTENT_ENTRY, 'entryId', 'entry', 'category', 'definition', 'example')
+actions.editContentEntry = makeActionCreator(EDIT_CONTENT_ENTRY, 'handle') //'entryId', 'entry', 'category', 'definition', 'example'
 
-
-actions.search = (entryToSearch) => ({
+actions.search = (event) => ({
   [REQUEST_SEND]: {
     route: ['search_entry'],
     request: {
@@ -25,7 +23,7 @@ actions.search = (entryToSearch) => ({
         adminRights,
       })
     },
-    success: () => actions.searchEntry(entryToSearch)
+    success: () => actions.searchEntry(event)
   }
 })
 
@@ -51,3 +49,6 @@ actions.editContent = (handle) => ({
     success: () => actions.editContentEntry(handle)
   }
 })
+
+
+console.log(actions)

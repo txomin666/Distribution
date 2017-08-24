@@ -15,7 +15,7 @@ const AddEntry = props =>
 
 AddEntry.propTypes = {
   titleResource: T.string.isRequired,
-  actionAddEntry: T.func.isRequired
+  actionAddEntry: T.func  //à revoir
 }
 
 
@@ -32,7 +32,7 @@ const TitleHeader = props =>
 			    </span>
 				 </span>
 			  ) : (
-				 <span id="titre-up" onClick={props.actionTitleEdit}>
+				 <span id="titre-up" onClick={props.actionTitleEdit(props.titleResource)}>
 					{props.titleResource}
 				 </span>
 			  )
@@ -40,10 +40,10 @@ const TitleHeader = props =>
 	</span>
 
 TitleHeader.propTypes = {
-  titleResource: T.string.isRequired,
-  actionTitleEdit: T.func.isRequired,
+  titleResource: T.string,
+  actionTitleEdit: T.func, //a revoir
   clickeditTitle: T.bool,
-  actionSaveTitleEdit: T.func.isRequired
+  actionSaveTitleEdit: T.func 
 }
 
 
@@ -55,12 +55,12 @@ export default class LexiconContentHeader extends Component {
 			<span className="row"  id="lexiconheader">
 				<TitleHeader
 					titleResource ={this.props.titleResource}
-					actionAddEntry={this.props.actionAddEntry}
+					actionAddEntry={this.props.actionAddEntry(this.props.titleResource)}
 					actionSaveTitleEdit={this.props.actionSaveTitleEdit}
 				/>
 				<AddEntry
 					titleResource={this.props.titleResource}
-					actionTitleEdit={this.props.actionTitleEdit}
+					actionTitleEdit={this.props.actionTitleEdit(this.props.titleResource)}
 					clickeditTitle={this.props.clickeditTitle}
 				/>
 		    </span>
@@ -72,8 +72,8 @@ export default class LexiconContentHeader extends Component {
 
 LexiconContentHeader.propTypes = {
 	titleResource: T.string.isRequired,
-  	actionAddEntry: T.func.isRequired,
-    actionTitleEdit: T.func.isRequired,
+  	actionAddEntry: T.func,  // a revoir
+    actionTitleEdit: T.func,
     clickeditTitle: T.bool,
-    actionSaveTitleEdit: T.func.isRequired
+    actionSaveTitleEdit: T.func
 }

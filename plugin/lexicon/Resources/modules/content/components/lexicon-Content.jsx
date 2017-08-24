@@ -4,11 +4,11 @@ import { connect } from 'react-redux'
 import LexiconContentHeader from './LexiconContentHeader.jsx'
 import LexiconContentBody from './LexiconContentBody.jsx'
 import {select as selectHeader} from './../selectors/ContentHeader' 
-import {action as actionHead} from './../actions/actionHeader' 
+import {actions as actionsHeader} from './../actions/actionHeader' 
 import {select as selectBody}  from './../selectors/ContentBody'
-import {action as actionBod} from './../actions/actionBody'
+import {actions as actionsBody} from './../actions/actionBody'
 
-console.log(actionHead)
+console.log(actionsHeader)
 
 class LexiconContent extends Component {
 
@@ -20,7 +20,7 @@ class LexiconContent extends Component {
             actionAddEntry  = {this.props.actionAddEntry(this.props.titleResource)}
             actionTitleEdit = {this.props.actionTitleEdit(this.props.titleResource)}
             clickeditTitle  = {this.props.clickeditTitle}
-            actionSaveTitleEdit = {this.props.actionSaveTitleEdit()}
+            actionSaveTitleEdit = {this.props.actionSaveTitleEdit(this.props.titleResource)}
           />
           <LexiconContentBody
             typeResource  = {this.props.typeResource}
@@ -28,11 +28,11 @@ class LexiconContent extends Component {
             author        = {this.props.author}
             clickeditContent  = {this.props.clickeditContent}
             dataEntries       = {this.props.dataEntries}
-            editContentEntry  = {this.props.editContentEntry}
+            editContentEntry  = {this.props.editContentEntry(this.props.dataEntries)}
             clicksearchEntry  = {this.props.clicksearchEntry}
-            searchEntry       = {this.props.searchEntry}
-            goSearchEntry     = {this.props.goSearchEntry}
-            contentEntry      = {this.props.contentEntry}
+            searchEntry       = {this.props.searchEntry(this.props.entrySearch)}
+            goSearchEntry     = {this.props.goSearchEntry(this.props.clicksearchEntry)}
+            contentEntry      = {this.props.contentEntry(this.props.dataEntries)}
           />
       </div>
     );
@@ -45,6 +45,7 @@ LexiconContent.propTypes = {
   actionAddEntry: T.func.isRequired,
   actionTitleEdit: T.func.isRequired,
   clickeditTitle: T.bool,
+  entrySearch: T.string,
   actionSaveTitleEdit: T.func.isRequired,
   typeResource: T.string,
   author: T.string,
@@ -60,39 +61,40 @@ LexiconContent.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    clickeditTitle: selectHeader.clickeditTitle(state),
-    titleResource: selectHeader.ResourceTitle(state),
-    dataEntries: selectBody.AllEntries(state),
+    entrySearch: selectBody.getEntrySearch(state),
+    clickeditTitle: selectHeader.getClickeditTitle(state),
+    titleResource: selectHeader.getResourceTitle(state),
+    dataEntries: selectBody.getAllEntries(state),
     clicksearchEntry: selectBody.getClicksearchEntry(state),
     author: selectHeader.getAuthor(state),
     clickeditContent: selectBody.getClickeditContent(state),
-    typeResource: selectBody.typeResource(state)
+    typeResource: selectBody.getTypeResource(state)
   }
 }
 
 
 function mapDispatchToProps(dispatch) {
   return {
-    actionAddEntry(entryId, entry, category, definition, example) {
-      dispatch(actionHead.addEntry(entryId, entry, category, definition, example))
+    actionAddEntry(entry) {
+      dispatch(actionsHeader.addEntry(entry))
     },
-    actionTitleEdit() {
-      dispatch(actionHead.editTitle())
+    actionTitleEdit(clickeditTitle) {
+      dispatch(actionsHeader.editTitle(clickeditTitle))
     },
     actionSaveTitleEdit(titleResource) {
-      dispatch(actionHead.saveEditTitle(titleResource))
+      dispatch(actionsHeader.saveEditTitle(titleResource))
     },
     editContentEntry(handle) {
-      dispatch(actionBod.editContentEntry(handle))
+      dispatch(actionsBody.editContentEntry(handle))
     },
-    searchEntry(entryToSearch) {
-      dispatch(actionBod.searchEntry(entryToSearch))
+    searchEntry(entrySearch) {
+      dispatch(actionsBody.searchEntry(entrySearch))
     },
-    goSearchEntry() {
-      dispatch(actionBod.goSearchEntry())
+    goSearchEntry(clicksearchEntry) {
+      dispatch(actionsBody.goSearchEntry(clicksearchEntry))
     },
     contentEntry(handle) {
-      dispatch(actionBod.contentEntry(handle))
+      dispatch(actionsBody.contentEntry(handle))
     }
   }
 }

@@ -15,9 +15,10 @@ function addEntry (state, action) {
 
 
 function editTitle(state, action) {
+	console.log(action)
 	let newState   = state
-	clickeditTitle = state.find(clickeditTitle)
-	clickeditTitle = true
+	//newState.clickeditTitle = action.clickeditTitle
+	const clickeditTitle = true
 	newState = update(newState, {$set: clickeditTitle})
 	return newState
 }

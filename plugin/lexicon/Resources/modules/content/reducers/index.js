@@ -6,7 +6,7 @@ import headerReducer  from './ContentHeader'
 
 
 export const lexiconApp = combineReducers({
-  //modal: modalReducer,
+  totalEntries: bodyReducer,
   dataEntries: bodyReducer,
   typeResource: bodyReducer,
   author: bodyReducer,
