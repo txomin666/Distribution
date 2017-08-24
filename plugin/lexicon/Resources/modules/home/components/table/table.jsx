@@ -1,4 +1,5 @@
-import React, {PropTypes as T} from 'react'
+import React from 'react'
+import {PropTypes as T} from 'prop-types'
 import classes from 'classnames'
 
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
@@ -44,14 +45,13 @@ TableTooltipCell.defaultProps = {
 }
 
 const TableHeaderCell = props =>
-  <th scope="col" className={classes(props.className, `text-${props.align}`)}>
+  <th scope="col" className={`text-${props.align}`}>
     {props.children}
   </th>
 
 TableHeaderCell.propTypes = {
   align: T.oneOf(['left', 'center', 'right']),
-  children: T.node,
-  className: T.string
+  children: T.node
 }
 
 TableHeaderCell.defaultProps = {
@@ -93,7 +93,7 @@ TableSortingCell.defaultProps = {
 
 const TableHeader = props =>
   <thead>
-      {props.children}
+    {props.children}
   </thead>
 
 TableHeader.propTypes = {
@@ -110,13 +110,13 @@ TableRow.propTypes = {
 }
 
 const Table = props =>
-  <table className={classes('table table-striped table-hover', props.className)}>
+  <table className="table table-striped table-hover">
     {props.children}
   </table>
 
 Table.propTypes = {
-  children: T.array.isRequired,
-  className: T.string
+  emptyText: T.string,
+  children: T.array.isRequired
 }
 
 export {
