@@ -1,6 +1,6 @@
  {% extends 'ClarolineCoreBundle:Workspace:layout.html.twig' %}
 
- {% set resourceTitle = "{{ resourceName }}" %}
+ {% set resourceName = '{{ resourceName }}' %}
 
  {% block stylesheets %}
      {# Claroline CSS #}
@@ -22,7 +22,7 @@
                  'href': path('claro_desktop_open')
              },
              {
-                'name': resourceTitle,
+                'name': '{{ resourceName }}',
                 'href': ''
              }
          ])

@@ -11,8 +11,8 @@ export const actions  = {}
 
 actions.cancelAddArticle = makeActionCreator(CANCEL_ADD_ARTICLE, 'open')
 actions.saveNewArticle   = makeActionCreator(SAVE_NEW_ARTICLE, 'type')
-actions.openModal        = makeActionCreator(OPEN_MODAL)
-actions.closeModal       = makeActionCreator(CLOSE_MODAL)
+actions.openModal        = makeActionCreator(OPEN_MODAL, 'open')
+actions.closeModal       = makeActionCreator(CLOSE_MODAL, 'open')
 
 actions.saveArticle = (type) => ({
   [REQUEST_SEND]: {

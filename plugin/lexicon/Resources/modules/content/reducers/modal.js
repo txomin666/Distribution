@@ -11,12 +11,14 @@ import {
 
 function openModal(state, action) {
 	let newState   = state
+	newState = update(newState, {open: {$set: true}})
 	return newState
 }
 
 
 function closeModal (state, action) {
 	let newState   = state
+	newState = update(newState, {open: {$set: false}})
 	return newState
 }
 

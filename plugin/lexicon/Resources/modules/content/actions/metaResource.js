@@ -6,17 +6,17 @@ export const SAVE_EDIT_TITLE  = 'SAVE_EDIT_TITLE'
 
 export const actions  = {}
 
-actions.saveEditTitle  = makeActionCreator(SAVE_EDIT_TITLE, 'titleResource')
+actions.saveEditTitle  = makeActionCreator(SAVE_EDIT_TITLE, 'old', 'newT')
 actions.clickEditTitle = makeActionCreator(CLICK_EDIT_TITLE, 'editable')
 
-actions.saveTitle = (titleResource) => ({
+actions.saveTitle = (old, newT) => ({
   [REQUEST_SEND]: {
-    route: ['edit_entry'],
+    route: ['edit_title_resource'],
     request: {
       method: 'PUT',
-      body: JSON.stringify({titleResource})
+      body: JSON.stringify({old, newT})
     },
-    success: () => actions.saveEditTitle(titleResource)
+    success: () => actions.saveEditTitle(old, newT)
   }
 })
 

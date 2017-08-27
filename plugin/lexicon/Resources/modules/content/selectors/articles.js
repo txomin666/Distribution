@@ -4,7 +4,7 @@ import {size} from 'lodash/size'
 
 const getArticles       = (state) => state.articles
 const getTotalArticles  = (state) => state.totalArticles
-
+const getCurrentContentArticle = (state) => state.currentContentArticle
 
 const getSearchArticle  = createSelector(
   [getArticles],
@@ -16,7 +16,8 @@ const getSearchArticle  = createSelector(
 export const select = {     
 	getArticles, 
 	getSearchArticle,
-	getTotalArticles
+	getTotalArticles,
+	getCurrentContentArticle
 }
        
 

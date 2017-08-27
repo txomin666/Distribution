@@ -1,4 +1,5 @@
 import {makeActionCreator} from '#/main/core/utilities/redux'
+import axios from 'axios'
 
 import {REQUEST_SEND} from './actionsApi'
 
@@ -15,8 +16,21 @@ actions.setArticles     = makeActionCreator(ARTICLES_SET, 'articles')
 actions.saveEditArticle = makeActionCreator(SAVE_EDIT_ARTICLE, 'handle','articles')
 actions.deleteArticle   = makeActionCreator(DELETE_ARTICLE, 'handle')
 actions.shareArticle    = makeActionCreator(SHARE_ARTICLE, 'handle')
-actions.consultArticle  = makeActionCreator(CONSULT_ARTICLE, 'handle')
+actions.consultArticle  = makeActionCreator(CONSULT_ARTICLE, 'title', 'lang', 'handle', 'currentContentArticle')
 actions.addNewArticle   = makeActionCreator(ADD_NEW_ARTICLE, 'articles')
+
+
+/*
+actions.viewArticle = (handle, currentContentArticle) => ({
+  [REQUEST_SEND]: {
+    route: ['consult_article'],
+    request: {
+      method: 'GET',
+      body: JSON.stringify({old, newT})
+    },
+    success: () => actions.consultArticle(handle, currentContentArticle)
+  }
+}) */
 
 
 console.log(actions)

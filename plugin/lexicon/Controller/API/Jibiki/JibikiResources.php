@@ -115,6 +115,7 @@ class JibikiResources
             echo "<p class='alert alert-danger'>JIBIKI REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
             $dictlist = simplexml_load_string($response->getBody());
+            var_dump($dictlist);
             foreach ($dictlist as $dictxml) {
                 $dict = JibikiContentResource::fromXML($dictxml);
                 foreach ($dict->src as $volumelang) {

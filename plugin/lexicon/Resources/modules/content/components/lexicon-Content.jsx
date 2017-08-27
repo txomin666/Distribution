@@ -28,6 +28,7 @@ class LexiconContent extends Component {
             clickEditTitle      = {this.props.clickEditTitle}
             modalAddArticle     = {this.props.modalAddArticle}
             actionSaveTitleEdit = {this.props.actionSaveTitleEdit}
+            modal               = {this.props.modal}
           />
           <LexiconContentBody
             metaResource      = {this.props.metaResource}
@@ -40,6 +41,9 @@ class LexiconContent extends Component {
             searchArticle       = {this.props.searchArticle}
             consultArticle      = {this.props.consultArticle}
             articleEditable     = {this.props.articleEditable}
+            shareArticle        = {this.props.shareArticle}
+            deleteArticle       = {this.props.deleteArticle}
+            currentContentArticle = {this.props.currentContentArticle}
           />
       </div>
     );
@@ -54,15 +58,16 @@ LexiconContent.propTypes = {
     lang: T.string.isRequired,
     title: T.string.isRequired,
     author: T.string.isRequired,
-    editable: T.bool
+    editable: T.bool,
+    searchable: T.bool,
+    articleEditable: T.bool
   }).isRequired,
   articles: T.array.isRequired,
-  totalArticles: T.number.isRequired,
   search: T.shape({
-    searchable: T.bool,
-    valueSearch: T.string,
+  //  searchable: T.bool,
+    value: T.string,
   }).isRequired,
-  articleEditable: T.bool,
+  //articleEditable: T.bool,
   actionAddArticle: T.func.isRequired,
   clickEditTitle: T.func.isRequired,
   clickEditArticle: T.func.isRequired,
@@ -72,6 +77,14 @@ LexiconContent.propTypes = {
   searchArticle: T.func.isRequired,
   consultArticle: T.func.isRequired,
   modalAddArticle: T.func.isRequired,
+  modal: T.shape({
+    type: T.string.isRequired,
+    open: T.bool
+  }).isRequired,
+  shareArticle: T.func.isRequired,
+  deleteArticle: T.func.isRequired,
+  consultArticle: T.func.isRequired,
+  currentContentArticle: T.string.isRequired
 }
 
 
@@ -81,7 +94,9 @@ function mapStateToProps(state) {
     articles: selectArticles.getArticles(state),
     totalArticles: selectArticles.getTotalArticles(state),
     search: selectOthers.getSearch(state),
-    articleEditable: selectOthers.getArticleEditable(state)
+    modal: selectOthers.getModal(state),
+    currentContentArticle: selectArticles.getCurrentContentArticle(state)
+    //articleEditable: selectOthers.getArticleEditable(state)
   }
 }
 
@@ -97,8 +112,8 @@ function mapDispatchToProps(dispatch) {
     clickEditArticle(articleEditable) {
       dispatch(actionsClicks.clickEditArticle(articleEditable))
     },
-    actionSaveTitleEdit(titleResource) {
-      dispatch(actionsMetaResource.saveEditTitle(titleResource))
+    actionSaveTitleEdit(old, newT) {
+      dispatch(actionsMetaResource.saveEditTitle(old, newT))
     },
     saveEditArticle(article) {
       dispatch(actionsArticles.saveEditArticle(article))
@@ -109,11 +124,17 @@ function mapDispatchToProps(dispatch) {
     searchArticle(valueSearch) {
       dispatch(actionsSearch.searchArticle(valueSearch))
     },
-    consultArticle(handle) {
-      dispatch(actionsArticles.consultArticle(handle))
+    modalAddArticle(open) {
+      dispatch(actionsModal.openModal(open))
     },
-    modalAddArticle() {
-      dispatch(actionsModal.openModal())
+    shareArticle(handle) {
+      dispatch(actionsArticles.shareArticle(handle))
+    },
+    deleteArticle(handle) {
+      dispatch(actionsArticles.deleteArticle(handle))
+    },
+    consultArticle(title, lang, handle, currentContentArticle) {
+      dispatch(actionsArticles.consultArticle(title, lang, handle, currentContentArticle))
     }
   }
 }

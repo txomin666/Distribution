@@ -6,13 +6,14 @@ import {
   SAVE_EDIT_ARTICLE,
   DELETE_ARTICLE,
   SHARE_ARTICLE,
-  CONSULT_ARTICLE,
   ADD_NEW_ARTICLE
 } from './../actions/articles'
 
 
 function setArticles(state, action) {
-  return action.articles
+	let newState   = state
+	newState = update(newState, {$set: action.articles})
+	return newState
 }
 
 
@@ -29,16 +30,6 @@ function deleteArticle(state, action) {
 	return newState
 }
 
-
-function consultArticle(state, action) {
-	//const newTitle = action.titleResource
-	let newState   = state
-	/*newState = update(newState, {
-		clickeditTitle: {$set: false},
-		titleResource: {$set: newTitle}
-	})*/
-	return newState
-}
 
 function shareArticle(state, action) {
 	console.log(action)
@@ -59,7 +50,6 @@ const articlesReducer = makeReducer([], {
   [SAVE_EDIT_ARTICLE]: saveEditArticle,
   [DELETE_ARTICLE]: deleteArticle,
   [SHARE_ARTICLE]: shareArticle,
-  [CONSULT_ARTICLE]: consultArticle,
   [ADD_NEW_ARTICLE]: addNewArticle
 })
 

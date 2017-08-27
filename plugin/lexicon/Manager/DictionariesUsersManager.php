@@ -113,6 +113,7 @@ class DictionariesUsersManager
         $usernames      = array();
         $userslist      = array();
         $userslistjson  = json_decode($this->JBKUsers->get_userlist(),true);
+        //var_dump($userslistjson);
        	foreach ($userslistjson['user-list']['user'] as $user){
        		foreach ($user as $name=>$login){
        			if ($name == 'login') {

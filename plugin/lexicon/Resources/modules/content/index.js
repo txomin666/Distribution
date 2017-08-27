@@ -5,7 +5,7 @@ import {lexiconStore as store} from './store'
 import ConnectedLexiconResource from './components/lexicon-Content.jsx'
 
 
-console.log(store.getState())
+console.log(store)
 
 
 ReactDOM.render(

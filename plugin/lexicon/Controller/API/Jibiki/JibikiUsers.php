@@ -72,7 +72,7 @@ class JibikiUsers
  	public function get_userlist()
     {
         $userlist = array();
-        $response = $this->CLIENT_USER->request('GET', '', ['http_errors' => false]);
+        $response = $this->CLIENT_USER->request('GET', 'users', ['http_errors' => false]);
         $code = $response->getStatusCode();
         $body = (string) $response->getBody();
     

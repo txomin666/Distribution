@@ -2,13 +2,57 @@ import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils'
 
 import {
-  CLICK_EDIT_TITLE,
-  SAVE_EDIT_TITLE
+    CLICK_EDIT_TITLE,
+    SAVE_EDIT_TITLE
 } from './../actions/metaResource'
+
+import {
+	CLICK_EDIT_ARTICLE,
+	CLICK_SEARCH_ARTICLE
+} from './../actions/clicks'
+
+import {
+	TOTAL_ARTICLES_CHANGE
+} from './../actions/totalArticles'
 
 
 
 function clickEditTitle (state, action) {
+	console.log(action)
+	let newState   = state
+	newState = update(newState, {editable: {$set: true}})
+	console.log('newState_click', newState)
+	return newState
+}
+
+
+function saveEditTitle (state, action) {
+	const newTitle = action.newT
+	let newState   = state
+	newState = update(newState, {
+		editable: {$set: false},
+		title: {$set: newTitle}
+	})
+	return newState
+}
+
+
+function clickEditArticles(state, action) {
+    let newState = state
+    console.log('clickEditArticles',newState, action)
+	newState = update(newState, {articleEditable: {$set: true}})
+	return newState
+}
+
+function clickSearchArticles(state, action) {
+	let newState = state
+	console.log('clickSearchArticles', newState, action)
+	newState = update(newState, {searchable: {$set: true}})
+	return newState
+}
+
+
+function changeTotalArticles (state, action) {
 	console.log(action)
 	let newState   = state
 	newState = update(newState, {clickeditTitle: {$set: true}})
@@ -16,20 +60,13 @@ function clickEditTitle (state, action) {
 }
 
 
-function saveEditTitle (state, action) {
-	const newTitle = action.titleResource
-	let newState   = state
-	newState = update(newState, {
-		clickeditTitle: {$set: false},
-		titleResource: {$set: newTitle}
-	})
-	return newState
-}
-
 
 const metaResourceReducer = makeReducer([], {
   [CLICK_EDIT_TITLE]: clickEditTitle,
-  [SAVE_EDIT_TITLE]: saveEditTitle
+  [SAVE_EDIT_TITLE]: saveEditTitle,
+  [CLICK_EDIT_ARTICLE]: clickEditArticles,
+  [CLICK_SEARCH_ARTICLE]: clickSearchArticles,
+  [TOTAL_ARTICLES_CHANGE]: changeTotalArticles
 })
 
 

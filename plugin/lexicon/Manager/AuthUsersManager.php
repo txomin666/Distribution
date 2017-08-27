@@ -57,7 +57,7 @@ class AuthUsersManager
 	public function generateAuth()
     {
 
-		$currentUser                      = $this->container->get('security.token_storage')->getToken()->getUser();
+		$currentUser = $this->container->get('security.token_storage')->getToken()->getUser();
 		if (is_string($currentUser)) {
             echo "<span class='alert alert-danger'>Vous n'êtes plus connecté ! Veuillez vous reconnecter pour continuer ! </span>\n";
         }else{
