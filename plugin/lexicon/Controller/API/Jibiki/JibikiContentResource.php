@@ -38,7 +38,7 @@ class JibikiContentResource
     public $domain;
     public $source;
     public $authors;
-    public $legal;
+    public $legal; 
     public $access;
     public $comments;
     public $administrators = array();

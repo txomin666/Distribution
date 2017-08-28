@@ -51,7 +51,7 @@ class JibikiUsers
             return False;
     	}else {
         	return True; 
-        }
+        } 
     } 
 
 

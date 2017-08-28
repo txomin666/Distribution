@@ -16,7 +16,7 @@ actions.setArticles     = makeActionCreator(ARTICLES_SET, 'articles')
 actions.saveEditArticle = makeActionCreator(SAVE_EDIT_ARTICLE, 'handle','articles')
 actions.deleteArticle   = makeActionCreator(DELETE_ARTICLE, 'handle')
 actions.shareArticle    = makeActionCreator(SHARE_ARTICLE, 'handle')
-actions.consultArticle  = makeActionCreator(CONSULT_ARTICLE, 'title', 'lang', 'handle', 'currentContentArticle')
+actions.consultArticle  = makeActionCreator(CONSULT_ARTICLE, 'entry', 'content')
 actions.addNewArticle   = makeActionCreator(ADD_NEW_ARTICLE, 'articles')
 
 

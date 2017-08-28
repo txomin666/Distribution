@@ -24,7 +24,7 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class JibikiResources
 {
-    public  $base_api_uri = 'totoro.imag.fr/lexinnova/api/';
+    public  $base_api_uri = 'totoro.imag.fr/lexinnova/api/*';
 	public  $header 	  = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
 	private $CLIENT_RESOURCES;
 
@@ -115,7 +115,6 @@ class JibikiResources
             echo "<p class='alert alert-danger'>JIBIKI REST API GET DICTLIST ERROR: $code $reason</p>\n";
         } else {
             $dictlist = simplexml_load_string($response->getBody());
-            var_dump($dictlist);
             foreach ($dictlist as $dictxml) {
                 $dict = JibikiContentResource::fromXML($dictxml);
                 foreach ($dict->src as $volumelang) {

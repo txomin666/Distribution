@@ -103,3 +103,46 @@ body {
 #add_entry{
   float:right;
 }
+
+.article{
+  margin:10pt;
+}
+
+.traitement{
+  margin-left: 15pt;
+  margin-top: 10pt;
+  font-size: 14pt;
+}
+.vedette{
+  font-weight: bold;
+  font-size: 20pt;
+}
+.class-gram{
+  font-style: italic;
+  color: gray;
+  font-size: 14pt;
+  margin-left: 14pt;
+}
+.texte-exemple-lang, .traduction-exemple-lang{
+  color: #D64A24;
+  font-style: italic;
+}
+.traduc-exemple, .exemple{
+  margin-left: 34pt;
+}
+.texte-exemple-content, .traduction-exemple-content{
+  margin-left: 10pt;
+  font-style: italic;
+}
+.définition, .traduction-group{
+    margin-left: 15pt;
+    margin-top: 10pt;
+}
+.intro{
+  margin-bottom: 20pt;
+  font-style: italic;
+  font-size: 10pt;
+}
+.texte-traduction{
+  margin-left: 10pt;
+}

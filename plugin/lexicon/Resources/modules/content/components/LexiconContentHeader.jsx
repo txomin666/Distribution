@@ -131,7 +131,7 @@ class TitleHeader extends Component {
 	    this.title = {old: this.props.metaResource.title, new:''}
 	    this.handleChange = this.handleChange.bind(this)
 	}
-	handleChange(event) {
+	handleChange(event) { 
 	   this.title.new = event.target.value
 	   console.log(event.target.value)
 	}

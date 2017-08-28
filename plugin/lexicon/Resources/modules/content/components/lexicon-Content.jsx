@@ -84,7 +84,7 @@ LexiconContent.propTypes = {
   shareArticle: T.func.isRequired,
   deleteArticle: T.func.isRequired,
   consultArticle: T.func.isRequired,
-  currentContentArticle: T.string.isRequired
+  currentContentArticle: T.object.isRequired
 }
 
 
@@ -133,8 +133,8 @@ function mapDispatchToProps(dispatch) {
     deleteArticle(handle) {
       dispatch(actionsArticles.deleteArticle(handle))
     },
-    consultArticle(title, lang, handle, currentContentArticle) {
-      dispatch(actionsArticles.consultArticle(title, lang, handle, currentContentArticle))
+    consultArticle(entry, content) {
+      dispatch(actionsArticles.consultArticle(entry, content))
     }
   }
 }

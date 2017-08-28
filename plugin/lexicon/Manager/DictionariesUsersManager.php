@@ -176,7 +176,7 @@ class DictionariesUsersManager
         return False;
     }*/
 
-    
+     
     /**
      * Check if the current claroline user exist in JIBIKI platform.
      * If not, we create a new user in JIBIKI with the same Claroline login.

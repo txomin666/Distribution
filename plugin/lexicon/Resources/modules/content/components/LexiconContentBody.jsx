@@ -8,7 +8,7 @@ import {ButtonGroup, Button} from 'react-bootstrap'
 
 {/* Liste des entrées d'une ressource lexicale */}
 const Entry = props =>
-	<li className="list-group-item"  id={props.entryHandle} key={props.entryHandle}>
+	<li className="list-group-item"  id={props.key} key={props.key} author={props.author} creation={props.creation}>
 	{/* Modale de partage d'un article de la ressource lexicale */}
 		<div className="modal fade" id="shareModal" role="dialog">
 		    <div className="modal-dialog">
@@ -66,17 +66,17 @@ const Entry = props =>
 		    </div>
 		</div>
 		{/* Bouton d'action pour chaque article de la ressource lexicale */}
-		<span className="pointer" onClick={() => props.consultArticle(props.metaResource.title, props.metaResource.lang, props.entryHandle, props.currentContentArticle)}>
+		<span className="pointer" onClick={() => props.consultArticle(props.entryName, props.content)}>
 			{props.entryName}
 		</span>
 		<span id="entryAction">
 			<i className="fa fa-share text-primary act"
-				onClick={() => props.shareArticle(props.entryHandle)}
+				onClick={() => props.shareArticle(props.key)}
 				data-toggle="modal" data-target="#shareModal"
 			/>
 			<span> &nbsp;&nbsp; </span>
 			<i className="fa fa-trash-o text-danger act"
-				onClick={() => props.deleteArticle(props.entryHandle)}
+				onClick={() => props.deleteArticle(props.key)}
 				data-toggle="modal" data-target="#deleteModal"
 			/>
 		</span>
@@ -84,7 +84,10 @@ const Entry = props =>
 
 Entry.propTypes = {
 	entryName: T.string.isRequired,
-	entryHandle: T.string.isRequired,
+	content: T.string.isRequired,
+	key: T.string.isRequired,
+	author: T.string.isRequired,
+	creation: T.string.isRequired,
 	metaResource: T.shape({
 	    id: T.string.isRequired,
 	    type: T.string.isRequired,
@@ -95,21 +98,10 @@ Entry.propTypes = {
 	    searchable: T.bool,
 	    articleEditable: T.bool
     }).isRequired,
-	/*article: T.shape({
-		entry: T.string.isRequired,
-		handle: T.string.isRequired,
-		editable: T.bool,
-		meta: T.shape({
-			content: T.string.isRequired,
-			dname: T.string.isRequired,
-			dstrategy: T.string.isRequired,
-			value: T.string.isRequired
-		}).isRequired
-	}).isRequired,*/
 	consultArticle: T.func.isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
-	currentContentArticle: T.string.isRequired
+	currentContentArticle: T.object.isRequired
 }
 
 
@@ -123,10 +115,10 @@ const ListEntries = props =>
 						const result  =
 							<Entry 
 								entryName={article.entry} 
-								key={article.handle} 
-								entryHandle={article.handle}
-								editable={article.editable}
-								meta={article.meta}
+								key={article.id}
+								author={article.author}
+								creation={article.creation}
+								content={article.content}
 								deleteArticle={props.deleteArticle}
 								shareArticle={props.shareArticle}
 								consultArticle={props.consultArticle}
@@ -149,7 +141,7 @@ ListEntries.propTypes = {
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.string.isRequired,
+	currentContentArticle: T.object.isRequired,
 	metaResource: T.shape({
 	    id: T.string.isRequired,
 	    type: T.string.isRequired,
@@ -264,7 +256,7 @@ FilterLexiconArticles.propTypes = {
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.string.isRequired
+	currentContentArticle: T.object.isRequired
 }
 
 
@@ -345,7 +337,7 @@ LexiconShowEntry.propTypes = {
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.string.isRequired
+	currentContentArticle: T.object.isRequired
 }
 
 
@@ -396,6 +388,6 @@ LexiconContentBody.propTypes = {
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.string.isRequired
+	currentContentArticle: T.object.isRequired
 }
 

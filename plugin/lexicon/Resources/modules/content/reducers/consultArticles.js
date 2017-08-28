@@ -1,3 +1,4 @@
+import React from 'react'
 import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils'
 import axios from 'axios'
@@ -7,29 +8,22 @@ import {
 } from './../actions/articles'
 
 
+function createMarkup(element) {
+  return {__html: element}
+}
+
+
 
 function consultArticle(state, action) {
 	console.log(action)
-	const title     = action.title
-	const lang      = action.lang
-	const handle    =  action.handle
-	const urljibiki = 'http://totoro.imag.fr/lexinnova/api/'+title+'/'+lang+'/handle/'+handle
 	let newState    = state
-
-	axios.get(urljibiki)
-		.then( (response) => {
-			const axiosData = response.data
-			console.log('axiosData', action)
-			const Data = JSON.stringify(axiosData)
-			console.log('Data', Data)
-			const parseData = JSON.parse(Data)
-			console.log('parseData', parseData)
-			const currentContentArticle = parseData
-			update(newState, {$set: currentContentArticle})
-			
-		})
+	const entry     = action.entry
+	let content     = action.content
+	newState = update(newState, 
+		{$set: <div dangerouslySetInnerHTML={{__html: content}}/>}
+	)
 	
-//	return newState
+    return newState
 }
 
 
@@ -40,3 +34,5 @@ const currentArticlesReducer = makeReducer([], {
 
 
 export default currentArticlesReducer
+
+

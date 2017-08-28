@@ -98,7 +98,7 @@ export function tex(message, domain = 'ujm_exo') {
  *
  * @returns {string}
  */
-export function translex(message, domain = 'claroline_lexicon') {
+export function translex(message, domain = 'lexicon') {
   return trans(message, {}, domain)
 }
 
