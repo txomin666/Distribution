@@ -67,7 +67,6 @@ LexiconContent.propTypes = {
   //  searchable: T.bool,
     value: T.string,
   }).isRequired,
-  //articleEditable: T.bool,
   actionAddArticle: T.func.isRequired,
   clickEditTitle: T.func.isRequired,
   clickEditArticle: T.func.isRequired,
@@ -115,8 +114,8 @@ function mapDispatchToProps(dispatch) {
     actionSaveTitleEdit(old, newT) {
       dispatch(actionsMetaResource.saveEditTitle(old, newT))
     },
-    saveEditArticle(article) {
-      dispatch(actionsArticles.saveEditArticle(article))
+    saveEditArticle(editable, currentContentArticle) {
+      dispatch(actionsArticles.saveEditArticle(editable, currentContentArticle))
     },
     clickSearchArticle(searchable) {
       dispatch(actionsClicks.clickSearchArticle(searchable))

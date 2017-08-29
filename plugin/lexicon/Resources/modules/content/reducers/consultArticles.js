@@ -8,8 +8,9 @@ import {
 } from './../actions/articles'
 
 
-function createMarkup(element) {
-  return {__html: element}
+function updateEditable(newState) {
+	newState = update(newState, {articleEditable: {$set: false}})
+  	return newState
 }
 
 
@@ -19,8 +20,11 @@ function consultArticle(state, action) {
 	let newState    = state
 	const entry     = action.entry
 	let content     = action.content
-	newState = update(newState, 
-		{$set: <div dangerouslySetInnerHTML={{__html: content}}/>}
+	
+	newState = update(updateEditable(newState), 
+		{
+		 $set: <div dangerouslySetInnerHTML={{__html: content}}/>
+		}
 	)
 	
     return newState

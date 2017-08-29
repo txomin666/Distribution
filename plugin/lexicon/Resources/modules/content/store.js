@@ -59,22 +59,27 @@ axios.get(urlAll)
 function generateInitialData(parseData) {
     const getTitle    = parseData.dentrylist
     const total       = parseData.dentrylist.dentry.length
-    let articles = []
-    getTitle.dentry.map( (entry) => {
-       console.log(entry)
-       const nameDict = entry.ddictionary
-       const langDict = entry.dlang
+    let articles      = []
+    let entry    = ""
+    let content  = ""
+    getTitle.dentry.map( (entryI, index) => {
+       const nameDict = entryI.ddictionary
+       const langDict = entryI.dlang
        let contrib = ''
-       if(entry.volume){
-          contrib   = entry.volume.dcontribution
-       }else if (entry.glossaire) {
-         contrib  = entry.glossaire.dcontribution
+       if(entryI.volume){
+          contrib   = entryI.volume.dcontribution
+       }else if (entryI.glossaire) {
+         contrib  = entryI.glossaire.dcontribution
        }
        const entryName = contrib.ddata.article.forme.vedette
        const id     = contrib.dcontribid
        const author = contrib.dmetadata.dauthor
        const entryCreation = contrib.dmetadata['dcreation-date']
        const contentArticle = jsonHtlmArticle(contrib.ddata.article)
+       if(index==0){
+          entry   = entryName
+          content = contentArticle
+       }
        //console.log(entryName, id, author, entryCreation, contentArticle, contrib.ddata.article)
        const buildEntries  = {'entry':entryName, 'id':id, 'author': author,  'creation': entryCreation, 'content':contentArticle}
        
@@ -85,6 +90,12 @@ function generateInitialData(parseData) {
     lexiconStore.dispatch({
       type: 'ARTICLES_SET',
       articles
+    })
+
+    lexiconStore.dispatch({
+      type: 'CONSULT_ARTICLE',
+      entry,
+      content
     })
 }
 

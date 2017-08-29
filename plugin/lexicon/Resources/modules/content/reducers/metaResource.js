@@ -2,18 +2,13 @@ import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils'
 
 import {
-    CLICK_EDIT_TITLE,
-    SAVE_EDIT_TITLE
+	CLICK_EDIT_TITLE, 
+	SAVE_EDIT_TITLE,
+	SAVE_EDIT_ARTICLE
 } from './../actions/metaResource'
 
-import {
-	CLICK_EDIT_ARTICLE,
-	CLICK_SEARCH_ARTICLE
-} from './../actions/clicks'
-
-import {
-	TOTAL_ARTICLES_CHANGE
-} from './../actions/totalArticles'
+import {CLICK_EDIT_ARTICLE, CLICK_SEARCH_ARTICLE} from './../actions/clicks'
+import {TOTAL_ARTICLES_CHANGE} from './../actions/totalArticles'
 
 
 
@@ -25,6 +20,17 @@ function clickEditTitle (state, action) {
 	return newState
 }
 
+function saveEditArticle (state, action) {
+	let newState = state
+	//let content = action.currentContentArticle
+	newState = update(newState, {articleEditable: {$set: false}})
+	/*newState = update(updateEditable(newState), 
+		{
+		 $set: <div dangerouslySetInnerHTML={{__html: content}}/>
+		}
+	)*/
+  	return newState
+}
 
 function saveEditTitle (state, action) {
 	const newTitle = action.newT
@@ -35,7 +41,6 @@ function saveEditTitle (state, action) {
 	})
 	return newState
 }
-
 
 function clickEditArticles(state, action) {
     let newState = state
@@ -51,7 +56,6 @@ function clickSearchArticles(state, action) {
 	return newState
 }
 
-
 function changeTotalArticles (state, action) {
 	console.log(action)
 	let newState   = state
@@ -66,7 +70,8 @@ const metaResourceReducer = makeReducer([], {
   [SAVE_EDIT_TITLE]: saveEditTitle,
   [CLICK_EDIT_ARTICLE]: clickEditArticles,
   [CLICK_SEARCH_ARTICLE]: clickSearchArticles,
-  [TOTAL_ARTICLES_CHANGE]: changeTotalArticles
+  [TOTAL_ARTICLES_CHANGE]: changeTotalArticles,
+  [SAVE_EDIT_ARTICLE]: saveEditArticle
 })
 
 

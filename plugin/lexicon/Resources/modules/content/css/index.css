@@ -105,7 +105,8 @@ body {
 }
 
 .article{
-  margin:10pt;
+  margin-top:-10pt;
+  margin-left: 10pt;
 }
 
 .traitement{

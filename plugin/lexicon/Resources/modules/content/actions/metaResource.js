@@ -3,11 +3,13 @@ import {REQUEST_SEND} from './actionsApi'
 
 export const CLICK_EDIT_TITLE = 'CLICK_EDIT_TITLE'
 export const SAVE_EDIT_TITLE  = 'SAVE_EDIT_TITLE'
+export const SAVE_EDIT_ARTICLE  = 'SAVE_EDIT_ARTICLE'
 
 export const actions  = {}
 
-actions.saveEditTitle  = makeActionCreator(SAVE_EDIT_TITLE, 'old', 'newT')
-actions.clickEditTitle = makeActionCreator(CLICK_EDIT_TITLE, 'editable')
+actions.saveEditArticle = makeActionCreator(SAVE_EDIT_ARTICLE, 'editable', 'currentContentArticle')
+actions.saveEditTitle   = makeActionCreator(SAVE_EDIT_TITLE, 'old', 'newT')
+actions.clickEditTitle  = makeActionCreator(CLICK_EDIT_TITLE, 'editable')
 
 actions.saveTitle = (old, newT) => ({
   [REQUEST_SEND]: {

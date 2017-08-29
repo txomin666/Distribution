@@ -8,7 +8,7 @@ import {ButtonGroup, Button} from 'react-bootstrap'
 
 {/* Liste des entrées d'une ressource lexicale */}
 const Entry = props =>
-	<li className="list-group-item"  id={props.key} key={props.key} author={props.author} creation={props.creation}>
+	<li className="list-group-item"  id={props.key} >
 	{/* Modale de partage d'un article de la ressource lexicale */}
 		<div className="modal fade" id="shareModal" role="dialog">
 		    <div className="modal-dialog">
@@ -85,9 +85,6 @@ const Entry = props =>
 Entry.propTypes = {
 	entryName: T.string.isRequired,
 	content: T.string.isRequired,
-	key: T.string.isRequired,
-	author: T.string.isRequired,
-	creation: T.string.isRequired,
 	metaResource: T.shape({
 	    id: T.string.isRequired,
 	    type: T.string.isRequired,
@@ -116,8 +113,6 @@ const ListEntries = props =>
 							<Entry 
 								entryName={article.entry} 
 								key={article.id}
-								author={article.author}
-								creation={article.creation}
 								content={article.content}
 								deleteArticle={props.deleteArticle}
 								shareArticle={props.shareArticle}
@@ -151,7 +146,7 @@ ListEntries.propTypes = {
 	    editable: T.bool,
 	    searchable: T.bool,
 	    articleEditable: T.bool
-	}).isRequired,
+	}).isRequired
 }
 
 
@@ -173,7 +168,7 @@ class SearchBar extends Component {
 		    <input type="text" className="form-control input-lg"
 		    	placeholder="Recherchez ..." onChange={this.changeSearch}/>
 		    <div className="input-group-btn">
-		      <button className="btn btn-default input-lg" type="submit">
+		      <button className="btn btn-default input-lg disabled" >
 		        <i className="fa fa-search" style={{"fontSize":"15pt"}}></i>
 		      </button>
 		    </div>
@@ -282,7 +277,9 @@ const LexiconShowEntry = props =>
 					<div className="row" style={{"marginLeft":"10pt"}}>
 						<div  style={{"float":"left"}}>
 							<button type="button" role="button" className="btn page-action-btn" 
-								onClick={() => props.clickEditArticle(props.metaResource.articleEditable)}>
+								onClick={() => props.clickEditArticle(props.metaResource.articleEditable)}
+								style={{":hover":"#2F99D1"}}
+							>
 								<span className="page-action-icon fa fa-pencil"></span>
 							</button>
 							<span>
@@ -296,7 +293,16 @@ const LexiconShowEntry = props =>
 			{/* corps de la page de consultation d'article */}
 				{props.metaResource.articleEditable ?
 					(<div className="panel panel-body" id="entry-content">
-
+						<div className="input-group">
+						    <textarea className="form-control custom-control" rows="3" 
+						    	style={{"resize":"none", "height":200}} 
+						    	defaultValue={props.currentContentArticle.props.dangerouslySetInnerHTML.__html} 
+						    />   
+						    <span className="input-group-addon btn btn-primary" 
+						    	onClick={() => props.saveEditArticle(props.metaResource.articleEditable, props.currentContentArticle)}> 
+						    	Modifier 
+						    </span>
+						</div>
 					</div>) :
 					(<div className="panel panel-body" id="entry-content">
 						{props.currentContentArticle}
@@ -332,7 +338,7 @@ LexiconShowEntry.propTypes = {
 	}).isRequired,
 	articles: T.array.isRequired,
 	clickEditArticle: T.func.isRequired,
-	articleEditable: T.bool,
+	saveEditArticle: T.func.isRequired,
 	clickSearchArticle: T.func.isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
@@ -352,13 +358,13 @@ export default class LexiconContentBody extends Component {
 					metaResource={this.props.metaResource}
 					articles={this.props.articles}
 					clickEditArticle={this.props.clickEditArticle}
-					articleEditable={this.props.articleEditable}
 					search={this.props.search}
 					clickSearchArticle={this.props.clickSearchArticle}
 					shareArticle={this.props.shareArticle}
 					deleteArticle={this.props.deleteArticle}
 					consultArticle={this.props.consultArticle}
 					currentContentArticle={this.props.currentContentArticle}
+					saveEditArticle={this.props.saveEditArticle}
 				/>
 		    </div>
     	);
@@ -383,11 +389,11 @@ LexiconContentBody.propTypes = {
 	}).isRequired,
 	articles: T.array.isRequired,
 	clickEditArticle: T.func.isRequired,
-	articleEditable: T.bool,
 	clickSearchArticle: T.func.isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.object.isRequired
+	currentContentArticle: T.object.isRequired,
+	saveEditArticle: T.func.isRequired
 }
 
