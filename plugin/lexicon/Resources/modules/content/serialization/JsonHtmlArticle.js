@@ -38,6 +38,7 @@ export function jsonHtlmArticle(article) {
     }
   }
 
+  let definitionHtml = ""
   let exempleHtml = ""
   let traducExemp = ""
   let traduction  = ""
@@ -46,15 +47,22 @@ export function jsonHtlmArticle(article) {
   if(exempleLang.length > 1){
   	  exempleHtml   = "<p class='exemple'>"+"[<span class='texte-exemple-lang'>"+exempleLang+"</span>]"+"<span class='texte-exemple-content'>"+exemple+"</span>"+"</p>"
   }else{exempleHtml = "<span class='exemple'>"+"<span class='texte-exemple-content'>"+exemple+"</span>"+"</span>"}
+  
   if(exempleTradLang.length > 1){
-  	traducExemp  = "<p class='traduc-exemple'>"+"[<span class='traduction-exemple-lang'>"+exempleTradLang+"</span>]"+"<span class='traduction-exemple-content'>"+exempleTrad+"</span>"+"</p>"
+  	if(typeof exempleTrad == 'undefined'){
+  		traducExemp    = "<p class='traduc-exemple'>"+"[<span class='traduction-exemple-lang'>"+exempleTradLang+"</span>]"+"<span class='traduction-exemple-content'>"+' ... '+"</span>"+"</p>"
+  	}else{traducExemp  = "<p class='traduc-exemple'>"+"[<span class='traduction-exemple-lang'>"+exempleTradLang+"</span>]"+"<span class='traduction-exemple-content'>"+exempleTrad+"</span>"+"</p>"}
+  	
   	traduction   = "<p class='traduction'>"+"[<span class='texte-exemple-lang'>"+exempleTradLang+"</span>]"+"<span class='texte-traduction'>"+tradContent+"</span>"+"<span class='class-gram'>"+tradCat+"</span>"+"</p>"
   }else{
   	traducExemp  = "<span class='traduc-exemple'>"+"<span class='traduction-exemple-content'>"+exempleTrad+"</span>"+"</span>"
   	traduction   = "<p class='traduction'>"+"<span class='texte-traduction'>"+tradContent+"</span>"+"<span class='class-gram'>"+tradCat+"</span>"+"</p>"
   }
   
-  let definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+definition+"</p>"
+  if(typeof definition == 'undefined'){
+  		definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+' ... '+"</p>"
+  }else{definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+definition+"</p>"}
+  
   let exempleGlob    = "<div class='exemple-group'>"+exempleHtml+traducExemp+"</div><br/>"
   let traductionGlob = "<span class='intro'>-- Traducción (Traduction) : </span><div class='traduction-group'>"+traduction+"</div>"
 

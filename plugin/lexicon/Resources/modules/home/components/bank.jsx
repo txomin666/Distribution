@@ -37,7 +37,7 @@ const Bank = props =>
         <PageAction
           id="lexicon-create"
           title={transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
-          icon="fa fa-plus text-primary"
+          icon="fa fa-plus"
           action={() => props.openCreateLexiconModal()}
         >
            

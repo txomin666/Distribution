@@ -2,20 +2,22 @@ import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils'
 
 import {
-  SEARCH_ARTICLE,
+  IN_SEARCH_ARTICLE,
 } from './../actions/search'
 
 
 function searchArticle (state, action) {
-	let newState = state
-	//newState.clicksearchEntry = true
+	console.log('event_search_action_state', action, state)
+	let newState    = state
+	let searchValue = action.value
+	newState = update(newState, {value: {$set: searchValue}})
 	return newState
 }
 
 
 
 const searchReducer = makeReducer([], {
-  [SEARCH_ARTICLE]: searchArticle,
+  [IN_SEARCH_ARTICLE]: searchArticle,
 })
 
 

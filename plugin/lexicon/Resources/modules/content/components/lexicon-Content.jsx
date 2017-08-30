@@ -38,12 +38,12 @@ class LexiconContent extends Component {
             clickEditArticle  = {this.props.clickEditArticle}
             saveEditArticle   = {this.props.saveEditArticle}
             clickSearchArticle  = {this.props.clickSearchArticle}
-            searchArticle       = {this.props.searchArticle}
             consultArticle      = {this.props.consultArticle}
             articleEditable     = {this.props.articleEditable}
             shareArticle        = {this.props.shareArticle}
             deleteArticle       = {this.props.deleteArticle}
             currentContentArticle = {this.props.currentContentArticle}
+            goToFilterSearch    = {this.props.goToFilterSearch}
           />
       </div>
     );
@@ -64,8 +64,7 @@ LexiconContent.propTypes = {
   }).isRequired,
   articles: T.array.isRequired,
   search: T.shape({
-  //  searchable: T.bool,
-    value: T.string,
+    value: T.string.isRequired
   }).isRequired,
   actionAddArticle: T.func.isRequired,
   clickEditTitle: T.func.isRequired,
@@ -73,7 +72,6 @@ LexiconContent.propTypes = {
   actionSaveTitleEdit: T.func.isRequired,
   saveEditArticle: T.func.isRequired,
   clickSearchArticle: T.func.isRequired,
-  searchArticle: T.func.isRequired,
   consultArticle: T.func.isRequired,
   modalAddArticle: T.func.isRequired,
   modal: T.shape({
@@ -83,7 +81,8 @@ LexiconContent.propTypes = {
   shareArticle: T.func.isRequired,
   deleteArticle: T.func.isRequired,
   consultArticle: T.func.isRequired,
-  currentContentArticle: T.object.isRequired
+  currentContentArticle: T.object.isRequired,
+  goToFilterSearch: T.func.isRequired
 }
 
 
@@ -95,7 +94,6 @@ function mapStateToProps(state) {
     search: selectOthers.getSearch(state),
     modal: selectOthers.getModal(state),
     currentContentArticle: selectArticles.getCurrentContentArticle(state)
-    //articleEditable: selectOthers.getArticleEditable(state)
   }
 }
 
@@ -115,13 +113,10 @@ function mapDispatchToProps(dispatch) {
       dispatch(actionsMetaResource.saveEditTitle(old, newT))
     },
     saveEditArticle(editable, currentContentArticle) {
-      dispatch(actionsArticles.saveEditArticle(editable, currentContentArticle))
+      dispatch(actionsMetaResource.saveEditArticle(editable, currentContentArticle))
     },
     clickSearchArticle(searchable) {
       dispatch(actionsClicks.clickSearchArticle(searchable))
-    },
-    searchArticle(valueSearch) {
-      dispatch(actionsSearch.searchArticle(valueSearch))
     },
     modalAddArticle(open) {
       dispatch(actionsModal.openModal(open))
@@ -134,6 +129,9 @@ function mapDispatchToProps(dispatch) {
     },
     consultArticle(entry, content) {
       dispatch(actionsArticles.consultArticle(entry, content))
+    },
+    goToFilterSearch(value) {
+      dispatch(actionsSearch.searchArticle(value))
     }
   }
 }

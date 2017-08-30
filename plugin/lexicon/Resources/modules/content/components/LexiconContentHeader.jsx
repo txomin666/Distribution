@@ -107,7 +107,7 @@ const AddEntry = props =>
 		    </div>
 		</div>
 		<button className="btn page-action-btn" type="button" role="button"
-		 onClick={() => props.modalAddArticle(props.modal.open)} style={{'background':'#2F99D1', 'color':'white', marginBottom:10}}
+		 onClick={() => props.modalAddArticle(props.modal.open)} style={{marginBottom:10}}
 		alt="Ajouter une ressource lexicale"
 			data-toggle="modal" data-target="#myModal"
 		>

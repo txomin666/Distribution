@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import classes from 'classnames'
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import index from './../css/index.css'
@@ -65,7 +66,7 @@ const Entry = props =>
 		      </div>
 		    </div>
 		</div>
-		{/* Bouton d'action pour chaque article de la ressource lexicale */}
+	{/* Bouton d'action pour chaque article de la ressource lexicale */}
 		<span className="pointer" onClick={() => props.consultArticle(props.entryName, props.content)}>
 			{props.entryName}
 		</span>
@@ -75,7 +76,7 @@ const Entry = props =>
 				data-toggle="modal" data-target="#shareModal"
 			/>
 			<span> &nbsp;&nbsp; </span>
-			<i className="fa fa-trash-o text-danger act"
+			<i className="fa fa-trash-o act"
 				onClick={() => props.deleteArticle(props.key)}
 				data-toggle="modal" data-target="#deleteModal"
 			/>
@@ -83,18 +84,9 @@ const Entry = props =>
 	</li>
 
 Entry.propTypes = {
+	key: T.string.isRequired,
 	entryName: T.string.isRequired,
 	content: T.string.isRequired,
-	metaResource: T.shape({
-	    id: T.string.isRequired,
-	    type: T.string.isRequired,
-	    lang: T.string.isRequired,
-	    title: T.string.isRequired,
-	    author: T.string.isRequired,
-	    editable: T.bool,
-	    searchable: T.bool,
-	    articleEditable: T.bool
-    }).isRequired,
 	consultArticle: T.func.isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
@@ -107,8 +99,10 @@ const ListEntries = props =>
 	<div className="panel panel-body" id="list-entry">
 		<ul className="list-group" id="content-entry">
 			{
-				props.articles.map(
-					(article) => {
+				props.articles.map( (article) => {
+						if (article.entry.indexOf(props.search.value) === -1 ) {
+					        return;
+					    }
 						const result  =
 							<Entry 
 								entryName={article.entry} 
@@ -130,35 +124,24 @@ const ListEntries = props =>
 ListEntries.propTypes = {
 	articles: T.array.isRequired,
 	search: T.shape({
-		searchable: T.bool,
 		value: T.string.isRequired
 	}).isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
 	currentContentArticle: T.object.isRequired,
-	metaResource: T.shape({
-	    id: T.string.isRequired,
-	    type: T.string.isRequired,
-	    lang: T.string.isRequired,
-	    title: T.string.isRequired,
-	    author: T.string.isRequired,
-	    editable: T.bool,
-	    searchable: T.bool,
-	    articleEditable: T.bool
-	}).isRequired
 }
 
 
 {/* Affiche la zone de recherche */}
 class SearchBar extends Component {
   constructor(props) {
-	  super(props);
-	  this.changeSearch = this.changeSearch.bind(this)
+	super(props)
+	this.changeSearch = this.changeSearch.bind(this)
   }
-  changeSearch(event) {
-	this.props.onSearch(event.target.value)
-	console.log('event_search', event.target.value)
+  changeSearch(e) {
+	this.props.onFilterSearch(e.target.value)
+	console.log('event_search', e.target.value)
   }
 
   render() {
@@ -166,7 +149,7 @@ class SearchBar extends Component {
       <form>
         <div className="input-group">
 		    <input type="text" className="form-control input-lg"
-		    	placeholder="Recherchez ..." onChange={this.changeSearch}/>
+		    	placeholder="Recherchez ..." onChange={this.changeSearch} value={this.props.search.value}/>
 		    <div className="input-group-btn">
 		      <button className="btn btn-default input-lg disabled" >
 		        <i className="fa fa-search" style={{"fontSize":"15pt"}}></i>
@@ -180,23 +163,14 @@ class SearchBar extends Component {
 
 SearchBar.propTypes = {
 	search: T.shape({
-		searchable: T.bool,
 		value: T.string.isRequired
 	}).isRequired,
-	onSearch: T.func.isRequired
+	onFilterSearch: T.func.isRequired
 }
 
 
 {/* Filtre les articles en fonction de la recherche */}
 class FilterLexiconArticles extends Component {
-  constructor(props) {
-	super(props);
-	this.changeSearch = this.changeSearch.bind(this)
-  }
-  changeSearch(event) {
-	this.props.onSearch(event.target.value)
-	console.log(event.target.value)
-  }
 
   render() {
     return (
@@ -204,7 +178,7 @@ class FilterLexiconArticles extends Component {
 		{/* Sélectionne la zone de recherche */}
 			<div className="panel panel-heading">
 				{this.props.metaResource.searchable ? 
-					(<SearchBar search={this.props.search} onSearch={this.entrySearch}/>) :
+					(<SearchBar search={this.props.search} onFilterSearch={(value) => this.props.goToFilterSearch(value)}/>) :
 					(<div className="row" id="row-search">
 						<button type="button" role="button" className="btn page-action-btn" 
 							onClick={() => this.props.clickSearchArticle(this.props.metaResource.searchable)}>
@@ -224,7 +198,6 @@ class FilterLexiconArticles extends Component {
 				deleteArticle={this.props.deleteArticle}
 				consultArticle={this.props.consultArticle}
 				currentContentArticle={this.props.currentContentArticle}
-				metaResource={this.props.metaResource}
 			/>
 		</div>
     );
@@ -244,14 +217,14 @@ FilterLexiconArticles.propTypes = {
 	}).isRequired,
 	articles: T.array.isRequired,
 	search: T.shape({
-		//searchable: T.bool,
 		value: T.string.isRequired
 	}).isRequired,
 	clickSearchArticle: T.func.isRequired,
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.object.isRequired
+	currentContentArticle: T.object.isRequired,
+	goToFilterSearch: T.func.isRequired
 }
 
 
@@ -267,6 +240,7 @@ const LexiconShowEntry = props =>
 				deleteArticle={props.deleteArticle}
 				consultArticle={props.consultArticle}
 				currentContentArticle={props.currentContentArticle}
+				goToFilterSearch={props.goToFilterSearch}
 			/>
 		</div>
 		<div className="col-md-9" style={{"float":"left"}}>
@@ -278,7 +252,6 @@ const LexiconShowEntry = props =>
 						<div  style={{"float":"left"}}>
 							<button type="button" role="button" className="btn page-action-btn" 
 								onClick={() => props.clickEditArticle(props.metaResource.articleEditable)}
-								style={{":hover":"#2F99D1"}}
 							>
 								<span className="page-action-icon fa fa-pencil"></span>
 							</button>
@@ -312,7 +285,7 @@ const LexiconShowEntry = props =>
 			{/* bas de page de consultation d'article */}
 				<div className="panel-footer text-right">
 					<span className="text-right" id="left">
-						<span>Type : <span className="text-primary">{props.metaResource.type}</span> >  </span>
+						<span> Type : <span className="text-primary">{props.metaResource.type}</span> >  </span>
 						<span> Titre : <span className="text-primary">{props.metaResource.title}</span> > </span>
 						<span> Auteur : <span className="text-primary">{props.metaResource.author}</span> </span>
 					</span>
@@ -333,7 +306,6 @@ LexiconShowEntry.propTypes = {
 	    articleEditable: T.bool
 	}).isRequired,
 	search: T.shape({
-		//searchable: T.bool,
 		value: T.string.isRequired
 	}).isRequired,
 	articles: T.array.isRequired,
@@ -343,7 +315,8 @@ LexiconShowEntry.propTypes = {
 	shareArticle: T.func.isRequired,
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
-	currentContentArticle: T.object.isRequired
+	currentContentArticle: T.object.isRequired,
+	goToFilterSearch: T.func.isRequired
 }
 
 
@@ -365,6 +338,7 @@ export default class LexiconContentBody extends Component {
 					consultArticle={this.props.consultArticle}
 					currentContentArticle={this.props.currentContentArticle}
 					saveEditArticle={this.props.saveEditArticle}
+					goToFilterSearch={this.props.goToFilterSearch}
 				/>
 		    </div>
     	);
@@ -382,9 +356,8 @@ LexiconContentBody.propTypes = {
 	    editable: T.bool,
 	    searchable: T.bool,
 	    articleEditable: T.bool
-	}).isRequired,
+	}).isRequired, 
 	search: T.shape({
-		//searchable: T.bool,
 		value: T.string.isRequired
 	}).isRequired,
 	articles: T.array.isRequired,
@@ -394,6 +367,7 @@ LexiconContentBody.propTypes = {
 	deleteArticle: T.func.isRequired,
 	consultArticle: T.func.isRequired,
 	currentContentArticle: T.object.isRequired,
-	saveEditArticle: T.func.isRequired
+	saveEditArticle: T.func.isRequired,
+	goToFilterSearch: T.func.isRequired 
 }
 
