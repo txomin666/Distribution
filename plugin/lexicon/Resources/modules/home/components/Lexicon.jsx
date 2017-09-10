@@ -1,12 +1,12 @@
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
-import classes from 'classnames'
+import classes   from 'classnames'
 
-import {tex, transChoice, trans, translex} from '#/main/core/translation'
-import {makeModal} from '#/main/core/layout/modal'
-import {actions as modalActions} from '#/main/core/layout/modal/actions'
-import { Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
+import { tex, transChoice, trans, translex } from '#/main/core/translation'
+import { makeModal } from '#/main/core/layout/modal'
+import { actions as modalActions } from '#/main/core/layout/modal/actions'
+import { Page, PageHeader, PageContent } from '#/main/core/layout/page/components/page.jsx'
 import { PageActions, PageAction } from '#/main/core/layout/page/components/page-actions.jsx'
 import { Pagination } from '#/main/core/layout/pagination/components/pagination.jsx'
 
@@ -15,9 +15,9 @@ import {actions as paginationActions} from './../actions/pagination'
 import {actions as searchActions} from './../actions/search'
 import {actions as createLexiconAction} from './../actions/createLexicon'
 import {select as paginationSelect} from './../selectors/pagination'
-import {getVisibleQuestions} from './../selectors/questions'
+import {getVisibleLexicons} from './../selectors/lexicons'
 
-import VisibleQuestions from './../containers/visible-questions.jsx'
+import VisibleLexicons from './../containers/visible-lexicons.jsx'
 
 import {MODAL_SEARCH} from './modal/search.jsx'
 import {MODAL_CREATE_LEXICON} from './modal/create-lexicon.jsx'
@@ -25,7 +25,7 @@ import {MODAL_CREATE_LEXICON} from './modal/create-lexicon.jsx'
 // TODO : do not load add item modal from editor
 // TODO : finish to refactor modals for using the ones embed in <Page> component
 
-const Bank = props =>
+const Lexicon = props =>
   <Page
     modal={props.modal}
     fadeModal={props.fadeModal}
@@ -76,7 +76,7 @@ const Bank = props =>
       }
 
       {0 < props.totalResults &&
-        <VisibleQuestions />
+        <VisibleLexicons />
       }
 
       {0 < props.totalResults &&
@@ -93,7 +93,7 @@ const Bank = props =>
     </PageContent>
   </Page>
 
-Bank.propTypes = {
+Lexicon.propTypes = {
   totalResults: T.number,
   searchFilters: T.object.isRequired,
   questions: T.array.isRequired,
@@ -124,7 +124,7 @@ function mapStateToProps(state) {
     searchFilters: select.filters(state),
     activeFilters: select.countFilters(state),
     modal: select.modal(state),
-    questions: getVisibleQuestions(state),
+    questions: getVisibleLexicons(state),
     totalResults: paginationSelect.getTotalResults(state),
     pagination: paginationSelect.getPagination(state),
     pages: paginationSelect.countPages(state)
@@ -172,7 +172,7 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-const ConnectedBank = connect(mapStateToProps, mapDispatchToProps)(Bank)
+const ConnectedLexicon = connect(mapStateToProps, mapDispatchToProps)(Lexicon)
 
 
-export {ConnectedBank as Bank}
+export {ConnectedLexicon as Lexicon}

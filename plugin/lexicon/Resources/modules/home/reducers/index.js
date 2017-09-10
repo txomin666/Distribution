@@ -2,7 +2,7 @@ import { combineReducers } from 'redux'
 
 import {reducer as modalReducer} from '#/main/core/layout/modal/reducer'
 import {reducers as apiReducers} from './../api/reducers'
-import questionsReducer    from './questions'
+import lexiconsReducer    from './lexicons'
 import selectReducer       from './select'
 import sortByReducer       from './sort-by'
 import paginationReducer   from './pagination'
@@ -12,7 +12,7 @@ import totalResultsReducer from './total-results'
 export const lexiconApp = combineReducers({
   modal: modalReducer,
   currentRequests: apiReducers.currentRequests,
-  questions: questionsReducer,
+  questions: lexiconsReducer,
   selected: selectReducer,
   sortBy: sortByReducer,
   pagination: paginationReducer,

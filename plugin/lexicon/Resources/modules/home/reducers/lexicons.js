@@ -2,16 +2,16 @@ import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils/utils'
 
 import {
-  QUESTIONS_SET,
-  QUESTIONS_REMOVE,
-  QUESTIONS_SHARE
-} from './../actions/questions'
+  LEXICONS_SET,
+  LEXICONS_REMOVE,
+  LEXICONS_SHARE
+} from './../actions/lexicons'
 
-function setQuestions(state, action) {
+function setLexicons(state, action) {
   return action.questions
 }
 
-function removeQuestions(state, action) {
+function removeLexicons(state, action) {
   let newState = state
   action.questions.map((questionId) => {
     const pos = newState.findIndex(questionId)
@@ -23,7 +23,7 @@ function removeQuestions(state, action) {
   return newState
 }
 
-function shareQuestions(state, action) {
+function shareLexicons(state, action) {
   let newState = state
 
   action.questions.map((questionId, questionIndex) => {
@@ -66,10 +66,10 @@ function shareQuestions(state, action) {
   return newState
 }
 
-const questionsReducer = makeReducer([], {
-  [QUESTIONS_SET]: setQuestions,
-  [QUESTIONS_REMOVE]: removeQuestions,
-  [QUESTIONS_SHARE]: shareQuestions
+const lexiconsReducer = makeReducer([], {
+  [LEXICONS_SET]: setLexicons,
+  [LEXICONS_REMOVE]: removeLexicons,
+  [LEXICONS_SHARE]: shareLexicons
 })
 
-export default questionsReducer
+export default lexiconsReducer

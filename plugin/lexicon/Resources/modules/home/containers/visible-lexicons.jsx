@@ -1,10 +1,10 @@
 import { connect } from 'react-redux'
 
 import {tex, transChoice, translex} from '#/main/core/translation'
-import QuestionList from './../components/question-list.jsx'
-import {getVisibleQuestions} from './../selectors/questions'
+import LexiconList from './../components/lexicon-list.jsx'
+import {getVisibleLexicons} from './../selectors/lexicons'
 import {actions as sortActions} from './../actions/sort-by'
-import {actions as questionsActions} from './../actions/questions'
+import {actions as lexiconsActions} from './../actions/lexicons'
 import {actions as selectActions} from './../actions/select'
 import {actions as modalActions} from '#/main/core/layout/modal/actions'
 import {MODAL_DELETE_CONFIRM} from '#/main/core/layout/modal'
@@ -13,7 +13,7 @@ import {select} from './../selectors'
 
 const mapStateToProps = (state) => {
   return {
-    questions: getVisibleQuestions(state),
+    questions: getVisibleLexicons(state),
     selected: select.selected(state),
     sortBy: state.sortBy
   }
@@ -48,7 +48,7 @@ const mapDispatchToProps = (dispatch) => {
         fadeModal: () => dispatch(modalActions.fadeModal()),
         handleShare: (users, adminRights) => {
           dispatch(modalActions.fadeModal())
-          dispatch(questionsActions.shareQuestions(items, users, adminRights))
+          dispatch(lexiconsActions.shareQuestions(items, users, adminRights))
         }
       }))
     },
@@ -57,16 +57,16 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(modalActions.showModal(MODAL_DELETE_CONFIRM, {
         title: transChoice('delete_items', items.length, {count: items.length}, 'lexicon'),
         question: translex('remove_question_confirm_message'),
-        handleConfirm: () => dispatch(questionsActions.deleteQuestions(items)),
+        handleConfirm: () => dispatch(lexiconsActions.deleteLexicons(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
     }
   }
 }
 
-const VisibleQuestions = connect(
+const VisibleLexicons = connect(
   mapStateToProps,
   mapDispatchToProps
-)(QuestionList)
+)(LexiconList)
 
-export default VisibleQuestions
+export default VisibleLexicons

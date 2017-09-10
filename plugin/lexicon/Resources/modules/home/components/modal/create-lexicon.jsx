@@ -37,7 +37,7 @@ export class CreateLexiconModal extends Component {
         <Modal.Body>
           <FormGroup
             controlId="type-resource"
-            label={'type'}
+            label={'Type'}
           >
             <input
               id="type-resource"

@@ -2,7 +2,7 @@ import {makeActionCreator} from '#/main/core/utilities/redux'
 
 import {REQUEST_SEND} from './../api/actions'
 import {actions as modalActions} from '#/main/core/layout/modal/actions'
-import {actions as questionActions} from './questions'
+import {actions as questionActions} from './lexicons'
 import {actions as totalResultsActions} from './total-results'
 
 export const SEARCH_CLEAR_FILTERS  = 'SEARCH_CLEAR_FILTERS'

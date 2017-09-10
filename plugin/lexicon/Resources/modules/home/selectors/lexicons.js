@@ -3,9 +3,9 @@ import {createSelector} from 'reselect'
 import {trans} from '#/main/core/translation'
 import {getDefinition} from './../components/item-types'
 
-const getQuestions = (state) => state.questions
+const getLexicons   = (state) => state.questions
 const getPagination = (state) => state.pagination
-const getSortBy = (state) => state.sortBy
+const getSortBy     = (state) => state.sortBy
 
 const sortMethods = {
   type: (a, b) => {
@@ -57,23 +57,23 @@ const sortMethods = {
   }
 }
 
-export const getVisibleQuestions =  createSelector(
-  [getQuestions, getPagination, getSortBy],
+export const getVisibleLexicons =  createSelector(
+  [getLexicons, getPagination, getSortBy],
   (questions, pagination, sortBy) => {
     // Apply pagination
-    let visibleQuestions
+    let visibleLexicons
     if (-1 !== pagination.pageSize) {
       const offset = (pagination.current) * pagination.pageSize
-      visibleQuestions = questions.slice(offset, offset + pagination.pageSize)
+      visibleLexicons = questions.slice(offset, offset + pagination.pageSize)
     } else {
-      visibleQuestions = questions.slice(0)
+      visibleLexicons = questions.slice(0)
     }
 
     if (sortBy.property && sortMethods[sortBy.property]) {
       // Sort results
-      return visibleQuestions.sort((a, b) => sortBy.direction * sortMethods[sortBy.property](a, b))
+      return visibleLexicons.sort((a, b) => sortBy.direction * sortMethods[sortBy.property](a, b))
     } else {
-      return visibleQuestions
+      return visibleLexicons
     }
   }
 )

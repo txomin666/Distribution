@@ -17,7 +17,6 @@ import {
 
 
 
-
 const SelectedRow = props =>
   <tr className="selected-rows active">
     <td className="text-left" >
@@ -55,7 +54,7 @@ SelectedRow.propTypes = {
   onShare: T.func.isRequired
 }
 
-const QuestionTableHeader = props =>
+const LexiconTableHeader = props =>
   <TableHeader>
     <tr>
       <TableHeaderCell align="center">
@@ -104,7 +103,7 @@ const QuestionTableHeader = props =>
       }
   </TableHeader>
 
-QuestionTableHeader.propTypes = {
+LexiconTableHeader.propTypes = {
   selected: T.array.isRequired,
   sortBy: T.shape({
     property: T.string,
@@ -151,7 +150,7 @@ const StatusDict = props =>
     </span>
 
 
-const QuestionRow = props =>
+const LexiconRow = props =>
   <TableRow className={props.isSelected ? 'selected' : null}>
     {props.question.userClaro == props.question.meta.authors[0].name ? 
         (<TableCell align="center" className="bg-primary"> 
@@ -217,7 +216,7 @@ const QuestionRow = props =>
     </TableCell>
   </TableRow>
 
-QuestionRow.propTypes = {
+LexiconRow.propTypes = {
   question: T.shape({
     id: T.string,
     type: T.string.isRequired,
@@ -241,7 +240,7 @@ QuestionRow.propTypes = {
   onDelete: T.func.isRequired
 }
 
-QuestionRow.defaultProps = {
+LexiconRow.defaultProps = {
   isSelected: false
 }
 
@@ -250,7 +249,7 @@ function goContent(id) {
 }
 
 
-export default class QuestionList extends Component {
+export default class LexiconList extends Component {
 
   render() {
 
@@ -258,7 +257,7 @@ export default class QuestionList extends Component {
       <Table
         isEmpty={0 === this.props.questions.length}
       >
-        <QuestionTableHeader
+        <LexiconTableHeader
           selected={this.props.selected}
           toggleSelectAll={this.props.toggleSelectAll}
           sortBy={this.props.sortBy}
@@ -269,7 +268,7 @@ export default class QuestionList extends Component {
 
         <tbody>
         {this.props.questions.map(question => (
-          <QuestionRow
+          <LexiconRow
             key={question.id}
             question={question}
             isSelected={-1 !== this.props.selected.indexOf(question.id)}
@@ -284,7 +283,7 @@ export default class QuestionList extends Component {
   }
 }
 
-QuestionList.propTypes = {
+LexiconList.propTypes = {
   questions: T.array.isRequired,
   selected: T.array.isRequired,
   sortBy: T.object.isRequired,

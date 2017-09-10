@@ -7,7 +7,7 @@ import {registerModalType} from '#/main/core/layout/modal'
 import {MODAL_SEARCH, SearchModal} from './components/modal/search.jsx'
 import {MODAL_SHARE, ShareModal} from './components/modal/share.jsx'
 import {MODAL_CREATE_LEXICON, CreateLexiconModal} from './components/modal/create-lexicon.jsx'
-import {Bank} from './components/bank.jsx'
+import {Lexicon} from './components/Lexicon.jsx'
 
  
 // Load question typeset et toi  et oiok
@@ -43,7 +43,7 @@ class LexiconComponents extends Component {
       React.createElement(
         Provider,
         {store},
-        React.createElement(Bank)
+        React.createElement(Lexicon)
       )
     );
   }

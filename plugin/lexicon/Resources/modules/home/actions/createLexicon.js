@@ -2,7 +2,7 @@ import {makeActionCreator} from '#/main/core/utilities/redux'
 
 import {REQUEST_SEND} from './../api/actions'
 import {actions as modalActions} from '#/main/core/layout/modal/actions'
-import {actions as questionActions} from './questions'
+import {actions as lexiconActions} from './lexicons'
 import {actions as totalResultsActions} from './total-results'
 
 export const SEARCH_CLEAR_FILTERS  = 'SEARCH_CLEAR_FILTERS'
@@ -25,7 +25,7 @@ actions.fetchLexicons = (questions, pagination = {}, sortBy = {}) => ({
       // Update total results
       dispatch(totalResultsActions.changeTotalResults(questionsResults.totalResults))
       // Update questions list
-      dispatch(questionActions.setQuestions(questionsResults.questions))
+      dispatch(lexiconActions.setQuestions(questionsResults.questions))
     }
   }
 })
