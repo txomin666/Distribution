@@ -60,7 +60,7 @@ export function jsonHtlmArticle(article) {
   }
   
   if(typeof definition == 'undefined'){
-  		definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+' ... '+"</p>"
+  	    definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+' ... '+"</p>"
   }else{definitionHtml = "<span class='intro'>-- Definición (Définition) : </span><p class='définition'>"+definition+"</p>"}
   
   let exempleGlob    = "<div class='exemple-group'>"+exempleHtml+traducExemp+"</div><br/>"

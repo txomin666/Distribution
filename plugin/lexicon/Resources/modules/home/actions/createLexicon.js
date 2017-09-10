@@ -6,42 +6,42 @@ import {actions as questionActions} from './questions'
 import {actions as totalResultsActions} from './total-results'
 
 export const SEARCH_CLEAR_FILTERS  = 'SEARCH_CLEAR_FILTERS'
-export const SEARCH_CHANGE_FILTERS = 'SEARCH_CHANGE_FILTERS'
+export const ADD_NEW_RESOURCE      = 'ADD_NEW_RESOURCE'
 
 export const actions = {}
 
-actions.fetchLexicons = (filters, pagination = {}, sortBy = {}) => ({
+actions.fetchLexicons = (questions, pagination = {}, sortBy = {}) => ({
   [REQUEST_SEND]: {
-    route: ['question_search'],
+    route: ['lexicon_create_new_resource'],
     request: {
       method: 'POST',
       body: JSON.stringify({
-        filters,
+        questions,
         pagination,
         sortBy
       })
     },
-    success: (searchResults, dispatch) => {
+    success: (questionsResults, dispatch) => {
       // Update total results
-      dispatch(totalResultsActions.changeTotalResults(searchResults.totalResults))
+      dispatch(totalResultsActions.changeTotalResults(questionsResults.totalResults))
       // Update questions list
-      dispatch(questionActions.setQuestions(searchResults.questions))
+      dispatch(questionActions.setQuestions(questionsResults.questions))
     }
   }
 })
 
-actions.changeFilters = makeActionCreator(SEARCH_CHANGE_FILTERS, 'filters')
+actions.addNewResource = makeActionCreator(ADD_NEW_RESOURCE, 'questions')
 
-actions.createLexicon = (filters, pagination = {}, sortBy = {}) => {
+actions.createLexicon = (questions, pagination = {}, sortBy = {}) => {
   return (dispatch) => {
     // Close search modal
     dispatch(modalActions.fadeModal())
 
     // Update filters
-    dispatch(actions.changeFilters(filters))
+    dispatch(actions.addNewResource(questions))
 
     // Fetch new questions list
-    return dispatch(actions.fetchQuestions(filters, pagination, sortBy))
+    return dispatch(actions.fetchLexicons(questions, pagination, sortBy))
   }
 }
 
@@ -51,9 +51,9 @@ actions.saveResource = (pagination = {}, sortBy = {}) => {
     dispatch(modalActions.fadeModal())
 
     // Update filters
-    dispatch(actions.changeFilters({}))
+    dispatch(actions.addNewResource({}))
 
     // Fetch new questions list
-    return dispatch(actions.fetchQuestions({}, pagination, sortBy))
+    return dispatch(actions.fetchLexicons({}, pagination, sortBy))
   }
 }

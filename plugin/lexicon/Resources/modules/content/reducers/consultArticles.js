@@ -1,4 +1,5 @@
 import React from 'react'
+
 import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils'
 import axios from 'axios'
@@ -16,7 +17,7 @@ function updateEditable(newState) {
 
 
 function consultArticle(state, action) {
-	console.log(action)
+	//console.log(action)
 	let newState    = state
 	const entry     = action.entry
 	let content     = action.content
@@ -26,7 +27,6 @@ function consultArticle(state, action) {
 		 $set: <div dangerouslySetInnerHTML={{__html: content}}/>
 		}
 	)
-	
     return newState
 }
 

@@ -17,15 +17,19 @@ export class CreateLexiconModal extends Component {
 
     this.state = {
       adminRights: false,
-      dataResource : Object.assign({
+      questions: Object.assign({
         type : '',
-        title : '',
-        description : ''
-      }, props.dataResource)
+        category : '',
+        name : '',
+        fullname : ''
+      }, props.data)
     }
   }
 
-  
+  updateData(name, value) {
+    this.setState(update(this.state, {questions: {[name]: {$set: value}}}))
+  }
+
 
   render() {
     return (
@@ -33,52 +37,63 @@ export class CreateLexiconModal extends Component {
         <Modal.Body>
           <FormGroup
             controlId="type-resource"
-            label={tex('type')}
+            label={'type'}
           >
             <input
               id="type-resource"
               type="text"
-              placeholder="A quel type  se réfère votre ressource ?"
+              placeholder="Votre ressource est-elle monodirectionnel ou  bidirectionnel ?"
               className="form-control "
-              value={this.state.dataResource.type}
+              value={this.state.questions.type}
+              onChange={e => this.updateData('type', e.target.value)}
             />
           </FormGroup>
-          
-          <FormGroup
-            controlId="title-resource"
-            label={tex('Intitulé de la ressource')}
-          >
-            <input
-              id="title-resource"
-              type="text"
-              placeholder="Quel nom donnez vous à votre ressource ?"
-              className="form-control"
-              value={this.state.dataResource.title}
-            />
-          </FormGroup>
-          
           <FormGroup
             controlId="decription-resource"
-            label={tex('Description de la ressource')}
+            label={'Catégorie de la ressource'}
           >
-            <textarea 
-              rows="5"
-              id="decription-resource"
+             <input
+              id="category-resource"
+              type="text"
+              placeholder="Votre ressource est-elle bilingue ou monolingue ?"
               className="form-control"
-              value={this.state.dataResource.description}
-            >
-
-            </textarea>
-
+              value={this.state.questions.category}
+              onChange={e => this.updateData('category', e.target.value)}
+            />
           </FormGroup>
-
+          <FormGroup
+            controlId="title-resource"
+            label={tex('Nom minimal de la ressource')}
+          >
+            <input
+              id="name-resource"
+              type="text"
+              placeholder="Quel nom minimal donnez vous à votre ressource ?"
+              className="form-control"
+              value={this.state.questions.name}
+              onChange={e => this.updateData('name', e.target.value)}
+            />
+          </FormGroup>
+          <FormGroup
+            controlId="decription-resource"
+            label={'Nom complet de la ressource'}
+          >
+             <input
+              id="fullname-resource"
+              type="text"
+              placeholder="Quel nom complet donnez vous à votre ressource ?"
+              className="form-control"
+              value={this.state.questions.fullname}
+              onChange={e => this.updateData('fullname', e.target.value)}
+            />
+          </FormGroup>
         </Modal.Body>
 
         <Modal.Footer>
           <button className="btn btn-default" onClick={this.props.fadeModal}>
             {t('cancel')}
           </button>
-          <button className="btn btn-primary" onClick={() => this.props.handleCreateLexicon(this.state.dataResource)}>
+          <button className="btn btn-primary" onClick={() => this.props.handleCreateLexicon(this.state.questions)}>
             {t('Créer')}
           </button>
         </Modal.Footer>
@@ -88,10 +103,11 @@ export class CreateLexiconModal extends Component {
 }
 
 CreateLexiconModal.propTypes = {
-  dataResource: T.shape({
-    title: T.string,
-    type: T.string,
-    description: T.string
+  questions: T.shape({
+    type: T.string.isRequired,
+    category: T.string.isRequired,
+    name: T.string.isRequired,
+    fullname: T.string.isRequired
   }).isRequired,
   fadeModal: T.func.isRequired,
   handleCreateLexicon: T.func.isRequired

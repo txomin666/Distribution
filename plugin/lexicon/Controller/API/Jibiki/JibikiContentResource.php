@@ -23,9 +23,8 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class JibikiContentResource
 {
-    public  $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';
-    public  $header       = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
-    //public $guzzleclient  = new Client(['base_uri' => $base_api_uri, 'headers'  => $header]);
+    public $base_api_uri = 'http://totoro.imag.fr/lexinnova/api';
+    public $header       = ['Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml'];
     public $name;
     public $fullname;
     public $category;
@@ -125,6 +124,7 @@ class JibikiContentResource
         return $article;
     }
 
+
     public function put_article($dictname, $src, $articleid, $articledata, $user, $password)
     {
         $article = '';
@@ -139,6 +139,7 @@ class JibikiContentResource
 
         return $article;
     }
+
 
     public function put_article_part($dictname, $src, $contributionid, $xpath, $value, $user, $password)
     {
@@ -155,6 +156,7 @@ class JibikiContentResource
         return $article;
     }
 
+
     public function delete_article($dictname, $src, $articleid, $user, $password)
     {
         $response = $this->RESOURCE_CONTENT->request('DELETE', $dictname.'/'.$src.'/'.$articleid, ['auth' => [$user, $password], 'http_errors' => false]);
@@ -168,6 +170,7 @@ class JibikiContentResource
 
         return $code;
     }
+
 
     public static function fromData($name, $category, $type, $authors)
     {
@@ -212,10 +215,8 @@ class JibikiContentResource
         if (isset($admin)) {
             foreach ($admin->{'user-ref'} as $user) {
                array_push($instance->administrators, (string) $user['name']);
-               #echo($user['name']);
             }
         }else {
-            echo($admin['name']);
             array_push($instance->administrators, (string) $admin['name']);
         }
         //var_dump($instance->administrators);
@@ -329,7 +330,6 @@ class JibikiContentResource
         }
         $body .= '</d:dictionary-metadata-files>';
         $code = post_dictionnaire($this->name, $body, $user, $password);
-        // dictionary already existing
         if ($code == 409) {
             $code = put_dictionnaire($this->name, $body, $user, $password);
         }

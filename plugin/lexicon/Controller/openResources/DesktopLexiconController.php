@@ -48,7 +48,7 @@ class DesktopLexiconController extends Controller
      *     }
      * )
      * @EXT\Method("GET")
-     * @EXT\Template("ClarolineLexiconBundle:Pages:home.html.twig")
+     * @EXT\Template("ClarolineLexiconBundle:content-resource.html.twig")
      */
     
     public function indexContent($nameResource, $lang)
@@ -64,6 +64,44 @@ class DesktopLexiconController extends Controller
         );
     }
 
+    /**
+     * Create new lexicale resource for users.
+     *
+     * @EXT\Route("/create", name="lexicon_create_new_resource")
+     * @EXT\Method("POST")
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function createNewResource(Request $request)
+    {
+        $errors = [];
 
+        $data = $this->decodeRequestData($request);
+        $user = $this->container->get('claroline_lexicon.manager.users')->getCurrentUser();
+        
+        $new_resource = $this->container->get('claroline_lexicon.api.JibikiResources')->create_resource($data, $user);
+
+
+        if (empty($data)) {
+            $errors[] = [
+                'path' => '',
+                'message' => 'Invalid JSON data.',
+            ];
+        } else {
+            try {
+                $this->shareManager->share($data, $user);
+            } catch (ValidationException $e) {
+                $errors = $e->getErrors();
+            }
+        }
+
+        if (!empty($errors)) {
+            return new JsonResponse($errors, 422);
+        } else {
+            return new JsonResponse(null, 201);
+        }
+    }
 
 }

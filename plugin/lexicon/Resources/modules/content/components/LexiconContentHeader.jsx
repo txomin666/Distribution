@@ -1,56 +1,17 @@
 import React, { Component } from 'react';
 import {PropTypes as T} from 'prop-types'
-import {ButtonGroup, Button} from 'react-bootstrap'
+import {OverlayTrigger, Tooltip} from 'react-bootstrap'
 import Modal from 'react-bootstrap/lib/Modal'
 import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
 import {BaseModal} from '#/main/core/layout/modal/components/base.jsx'
 
 
-const modalNewArticle = props => 
-	<BaseModal {...this.props} className="search-modal">
-        <Modal.Body>
-          <FormGroup
-            controlId="search-title"
-            label='filter_by_title'
-          >
-            <input
-              id="search-title"
-              type="text"
-              className="form-control"
-            />
-          </FormGroup>
-          
-          <div className="checkbox">
-            <label htmlhtmlFor="search-self-only">
-              <input
-                id="search-self-only"
-                type="checkbox"
-                name="search-self-only"
-              />
-            </label>
-          </div>
-
-          <a role="button">
-            <span>Play</span>
-          </a>
-        </Modal.Body>
-
-        <Modal.Footer>
-            <button className="btn btn-link btn-link-danger pull-left">
-              <span className="fa fa-fw fa-ban">close</span>
-            </button>
-         	<button className="btn btn-default">Open
-            </button>
-          <button className="btn btn-primary">go 
-          </button>
-        </Modal.Footer>
-      </BaseModal>
 
 
 {/* Zone de création de nouvelles ressources lexicales */}
 const AddEntry = props =>
 	<span id="add_entry">
-		<div className="modal fade" id="myModal" role="dialog">
+		<div className="modal fade" id="add_new_entry" role="dialog">
 		    <div className="modal-dialog">
 		      <div className="modal-content">
 		        <div className="modal-header">
@@ -106,13 +67,14 @@ const AddEntry = props =>
 		      </div>
 		    </div>
 		</div>
-		<button className="btn page-action-btn" type="button" role="button"
-		 onClick={() => props.modalAddArticle(props.modal.open)} style={{marginBottom:10}}
-		alt="Ajouter une ressource lexicale"
-			data-toggle="modal" data-target="#myModal"
-		>
-			<i className="page-action-icon fa fa-plus" style={{"fontSize":"20pt"}}/>
-		</button>
+		 <OverlayTrigger trigger={['hover', 'focus']} placement="top" overlay={popoverCreateArticle}>
+			<button className="btn page-action-btn" type="button" role="button"
+			 	onClick={() => props.modalAddArticle(props.modal.open)} style={{marginBottom:10}}
+				data-toggle="modal" data-target="#add_new_entry"
+			>
+				<i className="page-action-icon fa fa-plus" style={{"fontSize":"14pt"}}/>
+			</button>
+		</OverlayTrigger>
 	</span>
 
 AddEntry.propTypes = {
@@ -123,6 +85,17 @@ AddEntry.propTypes = {
   }).isRequired
 }
 
+const popoverCreateArticle = (
+  <Tooltip id="popover-trigger-hover-focus">
+    <span> Cliquez pour ajouter une nouvelle entrée </span>
+  </Tooltip>
+)
+
+const popoverEditTitleArticle = (
+  <Tooltip id="popover-trigger-hover-focus">
+    <span> Cliquez pour modifier le titre de la ressource</span>
+  </Tooltip>
+)
 
 {/* Zone de création de nouvelles ressources lexicales */}
 class TitleHeader extends Component {
@@ -133,7 +106,7 @@ class TitleHeader extends Component {
 	}
 	handleChange(event) { 
 	   this.title.new = event.target.value
-	   console.log(event.target.value)
+	   //console.log(event.target.value)
 	}
 	render() {
 		return (
@@ -151,10 +124,12 @@ class TitleHeader extends Component {
 					    </span>
 					</span>
 					) : (
-					<span id="titre-up" style={{'cursor': 'pointer'}} 
-						onClick={() => this.props.clickEditTitle(this.props.metaResource.editable)}>
-						{this.props.metaResource.title}
-					</span>
+					<OverlayTrigger trigger={['hover', 'focus']} placement="right" overlay={popoverEditTitleArticle}>
+						<span id="titre-up" style={{'cursor': 'pointer'}} 
+							onClick={() => this.props.clickEditTitle(this.props.metaResource.editable)}>
+							{this.props.metaResource.title}
+						</span>
+					</OverlayTrigger>
 					)
 				}
 			</span>

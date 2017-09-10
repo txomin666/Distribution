@@ -2,6 +2,8 @@ import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 import { DropdownButton, MenuItem } from 'react-bootstrap'
 import {tex, trans, transChoice, translex} from '#/main/core/translation'
+import classes from 'classnames'
+
 
 import {
   Table,
@@ -114,25 +116,47 @@ QuestionTableHeader.propTypes = {
   onDelete: T.func.isRequired
 }
 
-// a revoir (dynamiser la mise ne couleur)
+
 function glossaryCliked(type, dict, lang, author) {
   return window.location.assign(origin="/app_dev.php/lexicon/content/"+type+"/"+dict+"/"+lang+"/"+author);
 }
 
+function formatDate(date) {
+  const partdate = date.split('T')
+  const day = partdate[0]
+  const hour = partdate[1].split('+')[0]
+  const partday = day.split('-')
+  const result = 'Le  '+partday[2]+'-'+partday[1]+'-'+partday[0]+'  à '+hour
+  return result
+ }
 
 const StatusDict = props => 
     <span>
-        <span className="fa fa-eye text-primary" style={{marginRight:20}} />
-        <span className="fa fa-pencil" style={{marginRight:20, 'cursor':'not-allowed'}} />
-        <span className="fa fa-trash-o" style={{marginRight:20, 'cursor':'not-allowed'}} />
-        <span className="fa fa-comments-o text-primary" style={{marginRight:1}} />
+        {props.question.userClaro == props.question.meta.authors[0].name ? 
+          (<span className="fa fa-eye text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
+          (<span className="fa fa-eye text-primary" style={{marginRight:25}} />)
+        }
+        {props.question.userClaro == props.question.meta.authors[0].name ? 
+          (<span className="fa fa-pencil text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
+          (<span className="fa fa-pencil text-primary" style={{marginRight:25}} />)
+        }
+        {props.question.userClaro == props.question.meta.authors[0].name ?
+          (<span className='fa fa-trash-o text-danger' style={{marginRight:25, 'cursor':'pointer'}} />) :
+          (<span className='fa fa-trash-o text-default' style={{marginRight:25, 'cursor':'not-allowed'}} />)
+        }
+        {props.question.userClaro == props.question.meta.authors[0].name ?
+          (<span className="fa fa-comments-o text-primary" style={{marginRight:1, 'cursor':'pointer'}} />) :
+          (<span className="fa fa-comments-o text-primary" style={{marginRight:1}} />)
+        }
     </span>
+
 
 const QuestionRow = props =>
   <TableRow className={props.isSelected ? 'selected' : null}>
     {props.question.userClaro == props.question.meta.authors[0].name ? 
         (<TableCell align="center" className="bg-primary"> 
              <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
+           
          </TableCell>) :
         (<TableCell align="center"> 
              <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
@@ -147,11 +171,11 @@ const QuestionRow = props =>
       </span>
     </TableCell>
     <TableCell>
-      <StatusDict/>
+      <StatusDict question={props.question}/>
     </TableCell>
     <TableCell align="left">
       {props.question.meta.updated ?
-          <small className="text-muted">{props.question.meta.updated}</small> : '-'
+          <small className="text-muted">{formatDate(props.question.meta.updated)}</small> : '-'
       }
     </TableCell>
     <TableCell>
@@ -176,15 +200,19 @@ const QuestionRow = props =>
           <span className="fa fa-fw fa-share" />&nbsp;
           {translex('question_share')}
         </MenuItem>
-        <MenuItem divider />
-
-        <MenuItem
-          className="dropdown-link-danger"
-          onClick={() => props.onDelete([props.question.id])}
-        >
-          <span className="fa fa-fw fa-trash-o" />&nbsp;
-          {translex('question_delete')}
-        </MenuItem>
+        {props.question.userClaro == props.question.meta.authors[0].name ? 
+          (<MenuItem divider ></MenuItem>) : (<span></span>)
+        }
+        {props.question.userClaro == props.question.meta.authors[0].name ?  
+            (<MenuItem
+              className="dropdown-link-danger"
+              onClick={() => props.onDelete([props.question.id])}
+              >
+              <span className="fa fa-fw fa-trash-o" />&nbsp;
+              {translex('question_delete')}
+            </MenuItem>) : 
+            (<span></span>)
+        }
       </DropdownButton>
     </TableCell>
   </TableRow>
@@ -217,16 +245,14 @@ QuestionRow.defaultProps = {
   isSelected: false
 }
 
+function goContent(id) {
+  return window.location.assign(url: "lexicon/home");
+}
+
+
 export default class QuestionList extends Component {
 
-
-
-
   render() {
-
-    function goContent(id) {
-      return window.location.assign(url: "lexicon/home");
-    }
 
     return(
       <Table

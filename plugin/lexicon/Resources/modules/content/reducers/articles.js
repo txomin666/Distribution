@@ -17,6 +17,7 @@ function updateEditable(State) {
 
 function setArticles(state, action) {
 	let newState   = state
+	//LoadingIndicator.show()
 	newState = update(newState, {$set: action.articles})
 	return newState
 }

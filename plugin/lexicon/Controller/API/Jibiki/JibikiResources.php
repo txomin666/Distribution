@@ -43,8 +43,6 @@ class JibikiResources
         $entries    = '';
         $urlRequest = $dictname.'/'.$lang.'/cdm-headword/a/';
 
-        
-        //echo ($requesto);
         $response = $this->CLIENT_RESOURCES->request('GET', $urlRequest, ['http_errors' => false, 'query' => ['strategy' => $strategy, 'sortBy' => 'asc']]);
         $code = $response->getStatusCode();
         if ($code != 200) {
@@ -66,7 +64,7 @@ class JibikiResources
         $code = $response->getStatusCode();
         if ($code != 200) {
             $reason = $response->getReasonPhrase();
-            echo "<p class='alert alert-danger'>JIBIKI REST API GET VOLUME ERROR: $code $reason</p>\n";
+            //echo "<p class='alert alert-danger'>JIBIKI REST API GET VOLUME ERROR: $code $reason</p>\n";
         } else {
             $volumexml = simplexml_load_string($response->getBody());
             $volume = JibikiContentResource::fromXML($volumexml);
@@ -172,7 +170,19 @@ class JibikiResources
     }
 
 
+    public function create_resource($data, $user)
+    {
+        var_dump($data, $user);
+        $response = $this->CLIENT_RESOURCES->request('POST', $dictname.'/'.$src, ['body' => $voldata, 'auth' => [$user, $password], 'http_errors' => false]);
+        $code = $response->getStatusCode();
+        if ($code != 201) {
+            $reason = $response->getReasonPhrase();
+            echo "<p class='alert alert-danger'>JIBIKI REST API POST VOLUME ERROR : $code $reason</p>\n";
+            echo $response->getBody();
+        }
 
+        return $code;
+    }
     
 }
 

@@ -98,7 +98,7 @@ Entry.propTypes = {
 const ListEntries = props =>
 	<div className="panel panel-body" id="list-entry">
 		<ul className="list-group" id="content-entry">
-			{
+			{ 0 < props.articles.length && 
 				props.articles.map( (article) => {
 						if (article.entry.indexOf(props.search.value) === -1 ) {
 					        return;
@@ -117,6 +117,13 @@ const ListEntries = props =>
 						return result
 					}
 				) 
+			}
+			{ 0 === props.articles.length && 
+				<div className="empty-list">
+					&#9785;! <small style={{fontSize:14}}>
+						Aucune(s) entrée(s) disponible(s) 
+					</small>
+				</div> 
 			}
 		</ul>
 	</div>
@@ -192,6 +199,7 @@ class FilterLexiconArticles extends Component {
 				}
 			</div>
 		{/* Affiche la liste des entrées d'une ressource lexicale */}
+			
 			<ListEntries articles={this.props.articles} 
 				search={this.props.search} 
 				shareArticle={this.props.shareArticle} 
@@ -252,6 +260,7 @@ const LexiconShowEntry = props =>
 						<div  style={{"float":"left"}}>
 							<button type="button" role="button" className="btn page-action-btn" 
 								onClick={() => props.clickEditArticle(props.metaResource.articleEditable)}
+								data-toggle="popover" data-trigger="hover" data-content="Some content"
 							>
 								<span className="page-action-icon fa fa-pencil"></span>
 							</button>

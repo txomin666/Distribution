@@ -150,7 +150,6 @@ class DictionariesManager
      */
     public function resourcesToJson($dico) 
     {  
-        //var_dump($dico->src[0]);
         $ClaroUser                           = $this->userClaro->generateAuth();
         $resourcejsondata                    = new \stdClass();
         $resourcejsondata->id                = $dico->name; 
@@ -231,14 +230,13 @@ class DictionariesManager
     public function getContentResource($nameResource, $lang, $strategy)
     {
         $oooo                            = $this->JBKresources->get_volume_entries($nameResource, $lang, $strategy);
-        //echo($oooo);
         $ResourceContent                 = new \stdClass();
         $ResourceContent->idname         = $nameResource;
         $ResourceContent->lang           = $lang;
         $ResourceContent->titleResource  = $nameResource;
         $ResourceContent->dataItems      = [];
 
-        return json_encode((array) $ResourceContent, True);;
+        return json_encode((array) $ResourceContent, True);
     } 
 
 

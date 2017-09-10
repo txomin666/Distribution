@@ -15,6 +15,7 @@ import {actions as paginationActions} from './../actions/pagination'
 import {actions as searchActions} from './../actions/search'
 import {actions as createLexiconAction} from './../actions/createLexicon'
 import {select as paginationSelect} from './../selectors/pagination'
+import {getVisibleQuestions} from './../selectors/questions'
 
 import VisibleQuestions from './../containers/visible-questions.jsx'
 
@@ -38,7 +39,7 @@ const Bank = props =>
           id="lexicon-create"
           title={transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-plus"
-          action={() => props.openCreateLexiconModal()}
+          action={() => props.openCreateLexiconModal(props.questions)}
         >
            
         </PageAction>
@@ -95,6 +96,7 @@ const Bank = props =>
 Bank.propTypes = {
   totalResults: T.number,
   searchFilters: T.object.isRequired,
+  questions: T.array.isRequired,
   activeFilters: T.number.isRequired,
   modal: T.shape({
     type: T.string,
@@ -122,7 +124,7 @@ function mapStateToProps(state) {
     searchFilters: select.filters(state),
     activeFilters: select.countFilters(state),
     modal: select.modal(state),
-    dataLexicon: select.newLexicon(state),
+    questions: getVisibleQuestions(state),
     totalResults: paginationSelect.getTotalResults(state),
     pagination: paginationSelect.getPagination(state),
     pages: paginationSelect.countPages(state)
@@ -147,10 +149,10 @@ function mapDispatchToProps(dispatch) {
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
     },
-    openCreateLexiconModal() {
+    openCreateLexiconModal(questions) {
       dispatch(modalActions.showModal(MODAL_CREATE_LEXICON, {
         title: translex('Créer une nouvelle ressource lexicale'),
-        handleCreateLexicon: () => dispatch(createLexiconAction.createLexicon(dataLexicon)),
+        handleCreateLexicon: (questions) => dispatch(createLexiconAction.createLexicon(questions)),
         dataSave : () => dispatch(createLexiconAction.saveResource()),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))

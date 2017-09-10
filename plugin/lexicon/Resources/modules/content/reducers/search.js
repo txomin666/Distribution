@@ -7,7 +7,7 @@ import {
 
 
 function searchArticle (state, action) {
-	console.log('event_search_action_state', action, state)
+	//console.log('event_search_action_state', action, state)
 	let newState    = state
 	let searchValue = action.value
 	newState = update(newState, {value: {$set: searchValue}})
