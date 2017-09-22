@@ -784,15 +784,18 @@ class ResourceController extends Controller
             $node = $this->getRealTarget($node);
             $collection = new ResourceCollection([$node]);
             $this->checkAccess('OPEN', $collection);
+            $canAdministrate = $this->authorization->isGranted('ADMINISTRATE', $node);
 
             if ($user !== 'anon.') {
-                if ($user === $node->getCreator() || $this->authorization->isGranted('ROLE_ADMIN')) {
+                if ($user === $node->getCreator() || $this->authorization->isGranted('ROLE_ADMIN')
+                    || $canAdministrate
+                ) {
                     $canChangePosition = true;
                 }
             }
 
             $path = $this->resourceManager->getAncestors($node);
-            $nodes = $this->resourceManager->getChildren($node, $currentRoles, $user, true);
+            $nodes = $this->resourceManager->getChildren($node, $currentRoles, $user, true, $canAdministrate);
 
             //set "admin" mask if someone is the creator of a resource or the resource workspace owner.
             //if someone needs admin rights, the resource type list will go in this array
@@ -989,6 +992,8 @@ class ResourceController extends Controller
     {
         $criteria = $this->resourceManager->buildSearchArray($this->request->query->all());
         $criteria['roots'] = $node ? [$node->getPath()] : [];
+        // Display only active resources (omit soft deleted)
+        $criteria['active'] = true;
         $path = $node ? $this->resourceManager->getAncestors($node) : [];
         $userRoles = $this->roleManager->getStringRolesFromToken($this->tokenStorage->getToken());
 
@@ -1108,7 +1113,9 @@ class ResourceController extends Controller
      */
     public function insertAt(ResourceNode $node, User $user, $index)
     {
-        if ($user !== $node->getParent()->getCreator() && !$this->authorization->isGranted('ROLE_ADMIN')) {
+        if ($user !== $node->getParent()->getCreator() && !$this->authorization->isGranted('ROLE_ADMIN')
+            && !$this->authorization->isGranted('ADMINISTRATE', $node->getParent())
+        ) {
             throw new AccessDeniedException();
         }
 
