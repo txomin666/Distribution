@@ -18,7 +18,7 @@
      {{
          macros.desktopBreadcrumbs([
              {
-                 'name': 'claroline_lexicon'|trans({}, 'tools'),
+                 'name': 'claroline_lexicon'|translex({}, 'tools'),
                  'href': path('claro_desktop_open')
              },
              {
@@ -30,7 +30,7 @@
  {% endblock %}
 
  {% block title %}
-     {{ parent() ~ ' - ' ~ "claroline_lexicon" | trans({}, "tools") | striptags | raw }}
+     {{ parent() ~ ' - ' ~ "claroline_lexicon" | translex({}, "tools") | striptags | raw }}
  {% endblock %}
 
  {% block section_panel %}
@@ -46,7 +46,7 @@
      {{ parent() }}
      {# Translations #}
      <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'lexicon' }) }}"></script>
-     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'tools' }) }}"></script>
-     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'platform' }) }}"></script>
+     {#<script src="{{ url('bazinga_jstranslation_js', { 'domain': 'tools' }) }}"></script>
+     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'platform' }) }}"></script>#}
      <script src="{{ hotAsset('dist/claroline-distribution-plugin-lexicon-content.js') }}"></script>
  {% endblock %}

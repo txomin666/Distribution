@@ -3,10 +3,9 @@ import {PropTypes as T} from 'prop-types'
 import Modal from 'react-bootstrap/lib/Modal'
 
 import {update} from './../../utils/utils'
-import {t, tex} from '#/main/core/translation'
+import {translex} from '#/main/core/translation'
 import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
 import {BaseModal} from '#/main/core/layout/modal/components/base.jsx'
-import {UserTypeahead} from './../../users/components/typeahead.jsx'
 
 export const MODAL_CREATE_LEXICON = 'MODAL_CREATE_LEXICON'
 
@@ -63,7 +62,7 @@ export class CreateLexiconModal extends Component {
           </FormGroup>
           <FormGroup
             controlId="title-resource"
-            label={tex('Nom minimal de la ressource')}
+            label={translex('Nom minimal de la ressource')}
           >
             <input
               id="name-resource"
@@ -91,10 +90,10 @@ export class CreateLexiconModal extends Component {
 
         <Modal.Footer>
           <button className="btn btn-default" onClick={this.props.fadeModal}>
-            {t('cancel')}
+            {translex('cancel')}
           </button>
           <button className="btn btn-primary" onClick={() => this.props.handleCreateLexicon(this.state.questions)}>
-            {t('Créer')}
+            {translex('Créer')}
           </button>
         </Modal.Footer>
       </BaseModal>

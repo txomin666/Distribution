@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 import { DropdownButton, MenuItem } from 'react-bootstrap'
-import {tex, trans, transChoice, translex} from '#/main/core/translation'
+import {translex} from '#/main/core/translation'
 import classes from 'classnames'
 
 

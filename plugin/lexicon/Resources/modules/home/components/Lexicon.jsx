@@ -3,7 +3,7 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 import classes   from 'classnames'
 
-import { tex, transChoice, trans, translex } from '#/main/core/translation'
+import { translex } from '#/main/core/translation'
 import { makeModal } from '#/main/core/layout/modal'
 import { actions as modalActions } from '#/main/core/layout/modal/actions'
 import { Page, PageHeader, PageContent } from '#/main/core/layout/page/components/page.jsx'
@@ -37,7 +37,7 @@ const Lexicon = props =>
       <PageActions>
         <PageAction
           id="lexicon-create"
-          title={transChoice('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
+          title={translex('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-plus"
           action={() => props.openCreateLexiconModal(props.questions)}
         >
@@ -46,7 +46,7 @@ const Lexicon = props =>
         <span className="text-muted" style={{fontSize:30}}><span className="text-muted" style={{width:140, margin:10}}></span></span>
         <PageAction
           id="bank-search"
-          title={transChoice('active_filters', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
+          title={translex('active_filters', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-search"
           action={() => props.openSearchModal(props.searchFilters)}
         >

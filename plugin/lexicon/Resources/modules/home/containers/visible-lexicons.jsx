@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 
-import {tex, transChoice, translex} from '#/main/core/translation'
+import {translex} from '#/main/core/translation'
 import LexiconList from './../components/lexicon-list.jsx'
 import {getVisibleLexicons} from './../selectors/lexicons'
 import {actions as sortActions} from './../actions/sort-by'
@@ -44,7 +44,7 @@ const mapDispatchToProps = (dispatch) => {
 
     onShare: (items) => {
       dispatch(modalActions.showModal(MODAL_SHARE, {
-        title: transChoice('share_items', items.length, {count: items.length}, 'lexicon'),
+        title: translex('share_items', items.length, {count: items.length}, 'lexicon'),
         fadeModal: () => dispatch(modalActions.fadeModal()),
         handleShare: (users, adminRights) => {
           dispatch(modalActions.fadeModal())
@@ -55,8 +55,8 @@ const mapDispatchToProps = (dispatch) => {
 
     onDelete: (items) => {
       dispatch(modalActions.showModal(MODAL_DELETE_CONFIRM, {
-        title: transChoice('delete_items', items.length, {count: items.length}, 'lexicon'),
-        question: translex('remove_question_confirm_message'),
+        title: translex('delete_items', items.length, {count: items.length}, 'lexicon'),
+        question: translex('remove_lexicon_resource_confirm_message'),
         handleConfirm: () => dispatch(lexiconsActions.deleteLexicons(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))

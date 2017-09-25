@@ -3,10 +3,10 @@ import {PropTypes as T} from 'prop-types'
 import Modal from 'react-bootstrap/lib/Modal'
 
 import {update} from './../../utils/utils'
-import {t, tex} from '#/main/core/translation'
+import {translex} from '#/main/core/translation'
 import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
 import {BaseModal} from '#/main/core/layout/modal/components/base.jsx'
-import {UserTypeahead} from './../../users/components/typeahead.jsx'
+import {UserTypeahead} from './../typeahead.jsx'
 
 export const MODAL_SHARE = 'MODAL_SHARE'
 
@@ -71,13 +71,13 @@ export class ShareModal extends Component {
                   adminRights: !this.state.adminRights
                 })}
               />
-              {tex('share_admin_rights')}
+              {translex('share_admin_rights')}
             </label>
           </div>
 
           <FormGroup
             controlId="share-users"
-            label={tex('share_with')}
+            label={translex('share_with')}
           >
             <UserTypeahead
               handleSelect={this.selectUser.bind(this)}
@@ -94,14 +94,14 @@ export class ShareModal extends Component {
 
         <Modal.Footer>
           <button className="btn btn-default" onClick={this.props.fadeModal}>
-            {t('cancel')}
+            {translex('cancel')}
           </button>
           <button
             className="btn btn-primary"
             disabled={0 === this.state.users.length}
             onClick={() => this.props.handleShare(this.state.users, this.state.adminRights)}
           >
-            {tex('share')}
+            {translex('share')}
           </button>
         </Modal.Footer>
       </BaseModal>

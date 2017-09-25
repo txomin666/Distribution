@@ -5,7 +5,7 @@ import size from 'lodash/size'
 import Modal from 'react-bootstrap/lib/Modal'
 
 import {update} from './../../utils/utils'
-import {t, tex, trans} from '#/main/core/translation'
+import {translex} from '#/main/core/translation'
 import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
 
 import {listItemMimeTypes, getDefinition} from './../../components/item-types'
@@ -39,7 +39,7 @@ export class SearchModal extends Component {
         <Modal.Body>
           <FormGroup
             controlId="search-title"
-            label={tex('filter_by_title')}
+            label={translex('filter_by_title')}
           >
             <input
               id="search-title"
@@ -59,14 +59,14 @@ export class SearchModal extends Component {
                 checked={this.state.filters.self_only}
                 onChange={() => this.updateFilters('self_only', !this.state.filters.self_only)}
               />
-              {tex('filter_by_self_only')}
+              {translex('filter_by_self_only')}
             </label>
           </div>
 
           {!this.state.filters.self_only &&
             <FormGroup
               controlId="search-creator"
-              label={tex('filter_by_creator')}
+              label={translex('filter_by_creator')}
             >
               <input
                 id="search-creator"
@@ -80,7 +80,7 @@ export class SearchModal extends Component {
           {this.state.moreFilters &&
             <FormGroup
               controlId="search-type"
-              label={tex('filter_by_type')}
+              label={translex('filter_by_type')}
             >
               <select
                 id="search-type"
@@ -104,7 +104,7 @@ export class SearchModal extends Component {
                     value={getDefinition(type).type}
                     role="option"
                   >
-                    {trans(getDefinition(type).name, {}, 'question_types')}
+                    {translex(getDefinition(type).name, {}, 'question_types')}
                   </option>
                 )}
               </select>
@@ -122,14 +122,14 @@ export class SearchModal extends Component {
                   checked={this.state.filters.model_only}
                   onChange={() => this.updateFilters('model_only', !this.state.filters.model_only)}
                 />
-                {tex('filter_by_model_only')}
+                {translex('filter_by_model_only')}
               </label>
             </div>
           }
 
           <a role="button" onClick={() => this.setState({moreFilters: !this.state.moreFilters})}>
             <span className={classes('fa fa-fw', this.state.moreFilters ? 'fa-caret-up' : 'fa-caret-right' )}></span>
-            {tex(this.state.moreFilters ? 'filters_less' : 'filters_more')}
+            {translex(this.state.moreFilters ? 'filters_less' : 'filters_more')}
           </a>
         </Modal.Body>
 
@@ -137,15 +137,15 @@ export class SearchModal extends Component {
           {0 < size(this.props.filters) &&
             <button className="btn btn-link btn-link-danger pull-left" onClick={this.props.clearFilters}>
               <span className="fa fa-fw fa-ban"></span>
-              {tex('filters_reset')}
+              {translex('filters_reset')}
             </button>
           }
 
           <button className="btn btn-default" onClick={this.props.fadeModal}>
-            {t('cancel')}
+            {translex('cancel')}
           </button>
           <button className="btn btn-primary" onClick={() => this.props.handleSearch(this.state.filters)}>
-            {t('search')}
+            {translex('search')}
           </button>
         </Modal.Footer>
       </BaseModal>
