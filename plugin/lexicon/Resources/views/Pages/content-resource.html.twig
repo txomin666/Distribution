@@ -18,7 +18,7 @@
      {{
          macros.desktopBreadcrumbs([
              {
-                 'name': 'claroline_lexicon'|translex({}, 'tools'),
+                 'name': 'claroline_lexicon'|trans({}, 'lexicon'),
                  'href': path('claro_desktop_open')
              },
              {
@@ -30,7 +30,7 @@
  {% endblock %}
 
  {% block title %}
-     {{ parent() ~ ' - ' ~ "claroline_lexicon" | translex({}, "tools") | striptags | raw }}
+     {{ parent() ~ ' - ' ~ "claroline_lexicon" | trans({}, "lexicon") | striptags | raw }}
  {% endblock %}
 
  {% block section_panel %}

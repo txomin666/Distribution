@@ -26,4 +26,4 @@ actions.saveArticle = (type) => ({
 })
 
 
-console.log(actions)
+//console.log(actions)

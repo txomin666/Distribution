@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {PropTypes as T} from 'prop-types'
 import {OverlayTrigger, Tooltip} from 'react-bootstrap'
 import Modal from 'react-bootstrap/lib/Modal'
-import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
+import {FormGroup} from '#/main/core/layout/form/components/group/form-group.jsx'
 import {BaseModal} from '#/main/core/layout/modal/components/base.jsx'
 
 

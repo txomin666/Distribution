@@ -23,4 +23,4 @@ actions.saveTitle = (old, newT) => ({
 })
 
 
-console.log(actions)
+//console.log(actions)

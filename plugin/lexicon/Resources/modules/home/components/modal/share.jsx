@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/lib/Modal'
 
 import {update} from './../../utils/utils'
 import {translex} from '#/main/core/translation'
-import {FormGroup} from '#/main/core/layout/form/components/form-group.jsx'
+import {FormGroup} from '#/main/core/layout/form/components/group/form-group.jsx'
 import {BaseModal} from '#/main/core/layout/modal/components/base.jsx'
 import {UserTypeahead} from './../typeahead.jsx'
 

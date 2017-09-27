@@ -17,17 +17,6 @@ actions.shareArticle      = makeActionCreator(SHARE_ARTICLE, 'handle')
 actions.consultArticle    = makeActionCreator(CONSULT_ARTICLE, 'entry', 'content')
 actions.addNewArticle     = makeActionCreator(ADD_NEW_ARTICLE, 'articles')
 
-/*
-actions.viewArticle = (handle, currentContentArticle) => ({
-  [REQUEST_SEND]: {
-    route: ['consult_article'],
-    request: {
-      method: 'GET',
-      body: JSON.stringify({old, newT})
-    },
-    success: () => actions.consultArticle(handle, currentContentArticle)
-  }
-}) */
 
 
-console.log(actions)
+//console.log(actions)

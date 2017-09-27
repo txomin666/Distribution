@@ -12,4 +12,4 @@ actions.clickEditArticle    = makeActionCreator(CLICK_EDIT_ARTICLE, 'articleEdit
 actions.clickSearchArticle  = makeActionCreator(CLICK_SEARCH_ARTICLE, 'searchable')
 
 
-console.log(actions)
+//console.log(actions)

@@ -10,4 +10,4 @@ export const actions = {}
 actions.searchArticle  = makeActionCreator(IN_SEARCH_ARTICLE, 'value')
 
 
-console.log(actions)
+//console.log(actions)

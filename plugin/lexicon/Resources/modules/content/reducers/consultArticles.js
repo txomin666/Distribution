@@ -15,7 +15,6 @@ function updateEditable(newState) {
 }
 
 
-
 function consultArticle(state, action) {
 	//console.log(action)
 	let newState    = state
