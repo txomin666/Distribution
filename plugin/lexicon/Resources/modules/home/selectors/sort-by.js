@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import {createSelector} from 'reselect'
 
 const getProperty = (state) => state.property // FIX ME

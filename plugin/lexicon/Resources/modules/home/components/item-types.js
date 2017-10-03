@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import invariant from 'invariant'
 import difference from 'lodash/difference'
 import mapValues from 'lodash/mapValues'

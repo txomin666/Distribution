@@ -1,8 +1,13 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import {makeActionCreator} from '#/main/core/utilities/redux'
 
 import {REQUEST_SEND} from './../api/actions'
 import {actions as modalActions} from '#/main/core/layout/modal/actions'
-import {actions as questionActions} from './lexicons'
+import {actions as lexiconsActions} from './lexicons'
 import {actions as totalResultsActions} from './total-results'
 
 export const SEARCH_CLEAR_FILTERS  = 'SEARCH_CLEAR_FILTERS'
@@ -10,7 +15,7 @@ export const SEARCH_CHANGE_FILTERS = 'SEARCH_CHANGE_FILTERS'
 
 export const actions = {}
 
-actions.fetchQuestions = (filters, pagination = {}, sortBy = {}) => ({
+actions.fetchLexiconsResources = (filters, pagination = {}, sortBy = {}) => ({
   [REQUEST_SEND]: {
     route: ['question_search'],
     request: {
@@ -24,8 +29,8 @@ actions.fetchQuestions = (filters, pagination = {}, sortBy = {}) => ({
     success: (searchResults, dispatch) => {
       // Update total results
       dispatch(totalResultsActions.changeTotalResults(searchResults.totalResults))
-      // Update questions list
-      dispatch(questionActions.setQuestions(searchResults.questions))
+      // Update Lexicons Resources list
+      dispatch(lexiconsActions.setLexiconsResources(searchResults.lexiconsResources))
     }
   }
 })
@@ -40,8 +45,8 @@ actions.search = (filters, pagination = {}, sortBy = {}) => {
     // Update filters
     dispatch(actions.changeFilters(filters))
 
-    // Fetch new questions list
-    return dispatch(actions.fetchQuestions(filters, pagination, sortBy))
+    // Fetch new Lexicons Resources list
+    return dispatch(actions.fetchLexiconsResources(filters, pagination, sortBy))
   }
 }
 
@@ -53,7 +58,7 @@ actions.clearFilters = (pagination = {}, sortBy = {}) => {
     // Update filters
     dispatch(actions.changeFilters({}))
 
-    // Fetch new questions list
-    return dispatch(actions.fetchQuestions({}, pagination, sortBy))
+    // Fetch new Lexicons Resources list
+    return dispatch(actions.fetchLexiconsResources({}, pagination, sortBy))
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * This file was copied  from QuestionBank bundle
+ */
+
+
 import { makeActionCreator } from '#/main/core/utilities/redux'
 
 export const REQUEST_SEND     = 'REQUEST_SEND'

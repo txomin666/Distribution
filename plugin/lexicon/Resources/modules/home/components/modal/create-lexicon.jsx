@@ -16,17 +16,20 @@ export class CreateLexiconModal extends Component {
 
     this.state = {
       adminRights: false,
-      questions: Object.assign({
+      lexiconsResources: Object.assign({
         type : '',
         category : '',
         name : '',
-        fullname : ''
+        fullname : '',
+        lang: '',
+        forme: '',
+        comment: ''
       }, props.data)
     }
   }
 
   updateData(name, value) {
-    this.setState(update(this.state, {questions: {[name]: {$set: value}}}))
+    this.setState(update(this.state, {lexiconsResources: {[name]: {$set: value}}}))
   }
 
 
@@ -36,54 +39,124 @@ export class CreateLexiconModal extends Component {
         <Modal.Body>
           <FormGroup
             controlId="type-resource"
-            label={'Type'}
-          >
-            <input
-              id="type-resource"
-              type="text"
-              placeholder="Votre ressource est-elle monodirectionnel ou  bidirectionnel ?"
-              className="form-control "
-              value={this.state.questions.type}
-              onChange={e => this.updateData('type', e.target.value)}
-            />
+            label={'Orientation : '}
+          > 
+            <div className="form-control">
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.type === 'monodirectional'}
+                    value="monodirectional"
+                    onChange={e => this.updateData('type', e.target.value)}
+                  />
+                  Monodirectionnel
+              </label>
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.type === 'bidirectional'}
+                    value="bidirectional"
+                    onChange={e => this.updateData('type', e.target.value)}
+                  />
+                  Bidirectionnel
+              </label>
+            </div>
           </FormGroup>
           <FormGroup
-            controlId="decription-resource"
-            label={'Catégorie de la ressource'}
-          >
-             <input
-              id="category-resource"
-              type="text"
-              placeholder="Votre ressource est-elle bilingue ou monolingue ?"
-              className="form-control"
-              value={this.state.questions.category}
-              onChange={e => this.updateData('category', e.target.value)}
-            />
+            controlId="forme-resource"
+            label={'Forme : '}
+          > 
+            <div className="form-control">
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.forme === 'dictionnaire'}
+                    value="dictionnaire"
+                    onChange={e => this.updateData('forme', e.target.value)}
+                  />
+                  Dictionnaire
+              </label>
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.forme === 'glossaire'}
+                    value="glossaire"
+                    onChange={e => this.updateData('forme', e.target.value)}
+                  />
+                  Glossaire
+              </label>
+            </div>
           </FormGroup>
           <FormGroup
-            controlId="title-resource"
-            label={translex('Nom minimal de la ressource')}
+            controlId="category-resource"
+            label={'Catégorie : '}
+          > 
+            <div className="form-control">
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.category === 'monolingual'}
+                    value="monolingual"
+                    onChange={e => this.updateData('category', e.target.value)}
+                  />
+                  Monolingue
+              </label>
+              <label className="radio-inline">
+                  <input 
+                    type="radio"
+                    checked={this.state.lexiconsResources.category === 'bilingual'}
+                    value="bilingual"
+                    onChange={e => this.updateData('category', e.target.value)}
+                  />
+                  Bilingue
+              </label>
+            </div>
+          </FormGroup>
+          <FormGroup
+            controlId="name-resource"
+            label={translex('Nom minimal ou Type initial')}
           >
             <input
               id="name-resource"
               type="text"
               placeholder="Quel nom minimal donnez vous à votre ressource ?"
               className="form-control"
-              value={this.state.questions.name}
+              value={this.state.lexiconsResources.name}
               onChange={e => this.updateData('name', e.target.value)}
             />
           </FormGroup>
           <FormGroup
-            controlId="decription-resource"
-            label={'Nom complet de la ressource'}
+            controlId="fullname-resource"
+            label={'Nom complet'}
           >
              <input
               id="fullname-resource"
               type="text"
               placeholder="Quel nom complet donnez vous à votre ressource ?"
               className="form-control"
-              value={this.state.questions.fullname}
+              value={this.state.lexiconsResources.fullname}
               onChange={e => this.updateData('fullname', e.target.value)}
+            />
+          </FormGroup>
+          <FormGroup
+            controlId="langue-resource"
+            label={'Langue(s) et commentaire'}
+          >
+            <input
+              id="lang-resource"
+              type="text"
+              placeholder="Langue ? format = 'fra:eng' où 'fra' est source et 'eng' cible "
+              className="form-control"
+              value={this.state.lexiconsResources.lang}
+              onChange={e => this.updateData('lang', e.target.value)}
+            /><br/>
+             <input
+              id="comment-resource"
+              type="text"
+              placeholder="Que contient votre ressource ? ou commmentaire ?"
+              className="form-control"
+              value={this.state.lexiconsResources.comment}
+              onChange={e => this.updateData('comment', e.target.value)}
             />
           </FormGroup>
         </Modal.Body>
@@ -92,8 +165,8 @@ export class CreateLexiconModal extends Component {
           <button className="btn btn-default" onClick={this.props.fadeModal}>
             {translex('cancel')}
           </button>
-          <button className="btn btn-primary" onClick={() => this.props.handleCreateLexicon(this.state.questions)}>
-            {translex('Créer')}
+          <button className="btn btn-primary" onClick={() => this.props.handleCreateLexicon(this.state.lexiconsResources)}>
+            {translex('créer')}
           </button>
         </Modal.Footer>
       </BaseModal>
@@ -102,11 +175,14 @@ export class CreateLexiconModal extends Component {
 }
 
 CreateLexiconModal.propTypes = {
-  questions: T.shape({
+  lexiconsResources: T.shape({
     type: T.string.isRequired,
     category: T.string.isRequired,
     name: T.string.isRequired,
-    fullname: T.string.isRequired
+    fullname: T.string.isRequired,
+    lang: T.string.isRequired,
+    forme: T.string.isRequired,
+    comment: T.string.isRequired
   }).isRequired,
   fadeModal: T.func.isRequired,
   handleCreateLexicon: T.func.isRequired

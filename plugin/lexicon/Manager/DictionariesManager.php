@@ -135,7 +135,7 @@ class DictionariesManager
             array_push($dicocontent, $jsondico);
         }
         $resourcesjsondata->totalResults         = count($diconame);
-        $resourcesjsondata->questions            = array_map(function($n){return $n;}, $dicocontent);
+        $resourcesjsondata->lexiconsResources    = array_map(function($n){return $n;}, $dicocontent);
         $resourcesjsondata->pagination           = new \stdClass();
         $resourcesjsondata->pagination->current  =  0;
         $resourcesjsondata->pagination->pageSize = -1; 
@@ -213,11 +213,11 @@ class DictionariesManager
      */
     public function getCurrentUser()
     {
-        $ClaroUser          = $this->userClaro->generateAuth();
-        $currentuser        = new \stdClass();
-        $currentuser->id    = $ClaroUser['id'];
-        $currentuser->name  = $ClaroUser['firstName'].' '.$ClaroUser['LastName'];
-        $currentuser->email = $ClaroUser['email'];
+        $ClaroUser             = $this->userClaro->generateAuth();
+        $currentuser           = new \stdClass();
+        $currentuser->id       = $ClaroUser['id'];
+        $currentuser->name     = $ClaroUser['firstName'].' '.$ClaroUser['LastName'];
+        $currentuser->email    = $ClaroUser['email'];
         return json_encode((array) $currentuser, True);
     } 
 

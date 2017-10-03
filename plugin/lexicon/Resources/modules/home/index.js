@@ -1,3 +1,9 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 import {Provider} from 'react-redux'

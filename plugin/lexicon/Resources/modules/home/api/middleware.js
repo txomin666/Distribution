@@ -1,3 +1,8 @@
+/**
+ * This file was copied from QuestionBank bundle
+ */
+
+
 import invariant from 'invariant'
 import isFunction from 'lodash/isFunction'
 import isString from 'lodash/isString'

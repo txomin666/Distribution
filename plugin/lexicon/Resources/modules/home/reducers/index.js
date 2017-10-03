@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import { combineReducers } from 'redux'
 
 import {reducer as modalReducer} from '#/main/core/layout/modal/reducer'
@@ -12,7 +17,7 @@ import totalResultsReducer from './total-results'
 export const lexiconApp = combineReducers({
   modal: modalReducer,
   currentRequests: apiReducers.currentRequests,
-  questions: lexiconsReducer,
+  lexiconsResources: lexiconsReducer,
   selected: selectReducer,
   sortBy: sortByReducer,
   pagination: paginationReducer,

@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
@@ -39,7 +44,7 @@ const Lexicon = props =>
           id="lexicon-create"
           title={translex('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
           icon="fa fa-plus"
-          action={() => props.openCreateLexiconModal(props.questions)}
+          action={() => props.openCreateLexiconModal(props.lexiconsResources)}
         >
            
         </PageAction>
@@ -96,7 +101,7 @@ const Lexicon = props =>
 Lexicon.propTypes = {
   totalResults: T.number,
   searchFilters: T.object.isRequired,
-  questions: T.array.isRequired,
+  lexiconsResources: T.array.isRequired,
   activeFilters: T.number.isRequired,
   modal: T.shape({
     type: T.string,
@@ -124,7 +129,7 @@ function mapStateToProps(state) {
     searchFilters: select.filters(state),
     activeFilters: select.countFilters(state),
     modal: select.modal(state),
-    questions: getVisibleLexicons(state),
+    lexiconsResources: getVisibleLexicons(state),
     totalResults: paginationSelect.getTotalResults(state),
     pagination: paginationSelect.getPagination(state),
     pages: paginationSelect.countPages(state)
@@ -149,10 +154,10 @@ function mapDispatchToProps(dispatch) {
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
     },
-    openCreateLexiconModal(questions) {
+    openCreateLexiconModal(lexiconsResources) {
       dispatch(modalActions.showModal(MODAL_CREATE_LEXICON, {
         title: translex('Créer une nouvelle ressource lexicale'),
-        handleCreateLexicon: (questions) => dispatch(createLexiconAction.createLexicon(questions)),
+        handleCreateLexicon: (lexiconsResources) => dispatch(createLexiconAction.createLexicon(lexiconsResources)),
         dataSave : () => dispatch(createLexiconAction.saveResource()),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))

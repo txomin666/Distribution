@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 import { DropdownButton, MenuItem } from 'react-bootstrap'
@@ -121,6 +126,7 @@ function glossaryCliked(type, dict, lang, author) {
 }
 
 function formatDate(date) {
+  console.log(date)
   const partdate = date.split('T')
   const day = partdate[0]
   const hour = partdate[1].split('+')[0]
@@ -205,7 +211,7 @@ const LexiconRow = props =>
         {props.question.userClaro == props.question.meta.authors[0].name ?  
             (<MenuItem
               className="dropdown-link-danger"
-              onClick={() => props.onDelete([props.question.id])}
+              onClick={() => props.onDelete([props.question.id, props.question.lang])}
               >
               <span className="fa fa-fw fa-trash-o" />&nbsp;
               {translex('question_delete')}
@@ -255,7 +261,7 @@ export default class LexiconList extends Component {
 
     return(
       <Table
-        isEmpty={0 === this.props.questions.length}
+        isEmpty={0 === this.props.lexiconsResources.length}
       >
         <LexiconTableHeader
           selected={this.props.selected}
@@ -267,7 +273,7 @@ export default class LexiconList extends Component {
         />
 
         <tbody>
-        {this.props.questions.map(question => (
+        {this.props.lexiconsResources.map(question => (
           <LexiconRow
             key={question.id}
             question={question}
@@ -284,7 +290,7 @@ export default class LexiconList extends Component {
 }
 
 LexiconList.propTypes = {
-  questions: T.array.isRequired,
+  lexiconsResources: T.array.isRequired,
   selected: T.array.isRequired,
   sortBy: T.object.isRequired,
   onSort: T.func.isRequired,

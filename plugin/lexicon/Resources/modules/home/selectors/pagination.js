@@ -1,3 +1,10 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
+
 import {createSelector} from 'reselect'
 
 const getTotalResults = (state) => state.totalResults

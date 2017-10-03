@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import {makeActionCreator} from '#/main/core/utilities/redux'
 
 export const PAGE_SIZE_UPDATE = 'PAGE_SIZE_UPDATE'

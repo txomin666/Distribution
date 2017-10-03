@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import {makeReducer} from '#/main/core/utilities/redux'
 
 import {

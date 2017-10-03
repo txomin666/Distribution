@@ -1,5 +1,10 @@
 /* global process, require */
 
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import {
   applyMiddleware,
   compose,

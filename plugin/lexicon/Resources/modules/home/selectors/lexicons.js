@@ -1,9 +1,15 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
 import {createSelector} from 'reselect'
 
 import {trans} from '#/main/core/translation'
 import {getDefinition} from './../components/item-types'
 
-const getLexicons   = (state) => state.questions
+const getLexicons   = (state) => state.lexiconsResources
 const getPagination = (state) => state.pagination
 const getSortBy     = (state) => state.sortBy
 
@@ -59,14 +65,14 @@ const sortMethods = {
 
 export const getVisibleLexicons =  createSelector(
   [getLexicons, getPagination, getSortBy],
-  (questions, pagination, sortBy) => {
+  (lexiconsResources, pagination, sortBy) => {
     // Apply pagination
     let visibleLexicons
     if (-1 !== pagination.pageSize) {
       const offset = (pagination.current) * pagination.pageSize
-      visibleLexicons = questions.slice(offset, offset + pagination.pageSize)
+      visibleLexicons = lexiconsResources.slice(offset, offset + pagination.pageSize)
     } else {
-      visibleLexicons = questions.slice(0)
+      visibleLexicons = lexiconsResources.slice(0)
     }
 
     if (sortBy.property && sortMethods[sortBy.property]) {

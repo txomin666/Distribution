@@ -93,11 +93,13 @@ class DictionariesUsersManager
      */
     public function getCurrentUser()
     {
-        $userInfo           = $this->getUriUser();
-        $currentuser        = new \stdClass();
-        $currentuser->id    = $userInfo[4];
-        $currentuser->name  = $userInfo[2];
-        $currentuser->email = $userInfo[3];
+        $userInfo               = $this->getUriUser();
+        $currentuser            = new \stdClass();
+        $currentuser->id        = $userInfo[4];
+        $currentuser->name      = $userInfo[2];
+        $currentuser->email     = $userInfo[3];
+        $currentuser->username  = $userInfo[0];
+        $currentuser->password  = $userInfo[1];
         return json_encode((array) $currentuser, True);
     } 
 
@@ -156,6 +158,27 @@ class DictionariesUsersManager
         }
     }
 
+
+    /**
+     * Check if the current claroline user exist in JIBIKI platform.
+     * If not, we create a new user in JIBIKI with the same Claroline login.
+     * 
+     * @return message (success or non-success) 
+     */
+    public function createUser()
+    {
+        $userInfo = $this->getUriUser();
+        if ($this->JBKUsers->post_user($userInfo[2], $userInfo[0], $userInfo[1], $userInfo[3])){
+            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$userInfo[0]."'  
+            a bien été crée sur la plateforme Jibiki &#9786; </span>";
+        }
+        else{
+            echo "<span class='alert alert-danger'> Votre compte utilisateur : '".$userInfo[0]."'  n'a pas pu être crée sur la plateforme Jibiki. 
+            Veuillez vérifier la disponibilité de votre login ou réessayer plutard &#9785; </span>";
+        }
+    }
+
+
     /*
     public function userDictionries($U)
     {
@@ -176,24 +199,7 @@ class DictionariesUsersManager
     }*/
 
      
-    /**
-     * Check if the current claroline user exist in JIBIKI platform.
-     * If not, we create a new user in JIBIKI with the same Claroline login.
-     * 
-     * @return message (success or non-success) 
-     */
-    public function createUser()
-    {
-        $userInfo = $this->getUriUser();
-        if ($this->JBKUsers->post_user($userInfo[2], $userInfo[0], $userInfo[1], $userInfo[3])){
-            echo "<span class='alert alert-success'> Votre compte utilisateur : '".$userInfo[0]."'  
-            a bien été crée sur la plateforme Jibiki &#9786; </span>";
-        }
-        else{
-            echo "<span class='alert alert-danger'> Votre compte utilisateur : '".$userInfo[0]."'  n'a pas pu être crée sur la plateforme Jibiki. 
-            Veuillez vérifier la disponibilité de votre login ou réessayer plutard &#9785; </span>";
-        }
-    }
+   
 
 
 

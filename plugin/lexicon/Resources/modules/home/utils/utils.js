@@ -1,3 +1,9 @@
+/**
+ * This file was copied  from QuestionBank bundle
+ */
+
+
+
 import update from 'immutability-helper'
 import uuid from 'uuid'
 

@@ -1,32 +1,26 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
 import {makeReducer} from '#/main/core/utilities/redux'
 import {update} from './../utils/utils'
 
 import {
   LEXICONS_SET,
-  LEXICONS_REMOVE,
   LEXICONS_SHARE
 } from './../actions/lexicons'
 
 function setLexicons(state, action) {
-  return action.questions
+  return action.lexiconsResources
 }
 
-function removeLexicons(state, action) {
-  let newState = state
-  action.questions.map((questionId) => {
-    const pos = newState.findIndex(questionId)
-    if (-1 !== pos) {
-      newState = update(newState, {$splice: [[pos, 1]]})
-    }
-  })
 
-  return newState
-}
-
-function shareLexicons(state, action) {
+function shareResource(state, action) {
   let newState = state
 
-  action.questions.map((questionId, questionIndex) => {
+  action.lexiconsResources.map((questionId, questionIndex) => {
     const question = state.find(question => questionId === question.id)
     action.users.map((user) => {
       let newShare = {
@@ -68,8 +62,7 @@ function shareLexicons(state, action) {
 
 const lexiconsReducer = makeReducer([], {
   [LEXICONS_SET]: setLexicons,
-  [LEXICONS_REMOVE]: removeLexicons,
-  [LEXICONS_SHARE]: shareLexicons
+  [LEXICONS_SHARE]: shareResource
 })
 
 export default lexiconsReducer

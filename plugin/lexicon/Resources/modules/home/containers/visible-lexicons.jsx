@@ -1,3 +1,8 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
 import { connect } from 'react-redux'
 
 import {translex} from '#/main/core/translation'
@@ -13,7 +18,7 @@ import {select} from './../selectors'
 
 const mapStateToProps = (state) => {
   return {
-    questions: getVisibleLexicons(state),
+    lexiconsResources: getVisibleLexicons(state),
     selected: select.selected(state),
     sortBy: state.sortBy
   }
@@ -48,7 +53,7 @@ const mapDispatchToProps = (dispatch) => {
         fadeModal: () => dispatch(modalActions.fadeModal()),
         handleShare: (users, adminRights) => {
           dispatch(modalActions.fadeModal())
-          dispatch(lexiconsActions.shareQuestions(items, users, adminRights))
+          dispatch(lexiconsActions.shareResource(items, users, adminRights))
         }
       }))
     },
@@ -57,7 +62,7 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(modalActions.showModal(MODAL_DELETE_CONFIRM, {
         title: translex('delete_items', items.length, {count: items.length}, 'lexicon'),
         question: translex('remove_lexicon_resource_confirm_message'),
-        handleConfirm: () => dispatch(lexiconsActions.deleteLexicons(items)),
+        handleConfirm: () => dispatch(lexiconsActions.deleteResource(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
     }

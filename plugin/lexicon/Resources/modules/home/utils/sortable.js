@@ -1,3 +1,9 @@
+/**
+ * This file was copied from QuestionBank bundle
+ */
+
+
+
 import {findDOMNode} from 'react-dom'
 import {DragSource, DropTarget} from 'react-dnd'
 import invariant from 'invariant'

@@ -1,3 +1,9 @@
+/**
+ * This file was copied from QuestionBank bundle
+ */
+
+
+
 import {LoadingIndicator} from '#/main/core/loader/loading-indicator'
 
 import {makeReducer} from '#/main/core/utilities/redux'

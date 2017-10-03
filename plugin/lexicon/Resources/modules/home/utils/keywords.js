@@ -1,3 +1,9 @@
+/**
+ * This file was copied from QuestionBank bundle
+ */
+
+
+
 import {tex, transChoice} from '#/main/core/translation'
 import {notBlank, number, chain} from '#/main/core/validation'
 

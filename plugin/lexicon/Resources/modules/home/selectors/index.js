@@ -1,3 +1,9 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
 import {createSelector} from 'reselect'
 import size from 'lodash/size'
 

@@ -1,3 +1,9 @@
+/**
+ * This file was copied and update from QuestionBank bundle
+ */
+
+
+
 import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 import classes from 'classnames'
