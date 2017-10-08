@@ -49,7 +49,7 @@ const mapDispatchToProps = (dispatch) => {
 
     onShare: (items) => {
       dispatch(modalActions.showModal(MODAL_SHARE, {
-        title: translex('share_items', items.length, {count: items.length}, 'lexicon'),
+        title: translex('Partager la ressource lexicale', items.length, {count: items.length}, 'lexicon'),
         fadeModal: () => dispatch(modalActions.fadeModal()),
         handleShare: (users, adminRights) => {
           dispatch(modalActions.fadeModal())
@@ -60,7 +60,7 @@ const mapDispatchToProps = (dispatch) => {
 
     onDelete: (items) => {
       dispatch(modalActions.showModal(MODAL_DELETE_CONFIRM, {
-        title: translex('delete_items', items.length, {count: items.length}, 'lexicon'),
+        title: translex('Supprimer la ressource lexicale', items.length, {count: items.length}, 'lexicon'),
         question: translex('remove_lexicon_resource_confirm_message'),
         handleConfirm: () => dispatch(lexiconsActions.deleteResource(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())

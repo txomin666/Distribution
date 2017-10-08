@@ -148,7 +148,7 @@ class SearchBar extends Component {
   }
   changeSearch(e) {
 	this.props.onFilterSearch(e.target.value)
-	console.log('event_search', e.target.value)
+	//console.log('event_search', e.target.value)
   }
 
   render() {
@@ -198,8 +198,8 @@ class FilterLexiconArticles extends Component {
 					</div>)
 				}
 			</div>
-		{/* Affiche la liste des entrées d'une ressource lexicale */}
 			
+		{/* Affiche la liste des entrées d'une ressource lexicale */}
 			<ListEntries articles={this.props.articles} 
 				search={this.props.search} 
 				shareArticle={this.props.shareArticle} 

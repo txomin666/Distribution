@@ -128,47 +128,5 @@ function generateInitialData(parseData) {
 
 
 
-
-
-
 export {lexiconStore}
 
-
-
-//http://127.0.0.1:8000/app_dev.php/lexicon/content/Lexinnova/Lexinnova/esp/Lexinnova
-//http://127.0.0.1:8000/app_dev.php/lexicon/content/Glossaire/Glossaire/fra/mangeot
-
-/*
-axios.get(urlEntries)
-  .then( (response) => {
-    const axiosData = response.data
-    const Data = JSON.stringify(axiosData, {'d:entry-list':'d-entry-list', 'd:entry':'d-entry'})
-    const re  = /d:/gi
-    const re2  = /dentry-list/gi
-    const newData = Data.replace(re, 'd')
-    const newData2 = newData.replace(re2, 'dentrylist')
-    const parseData = JSON.parse(newData2)
-    generateInitialData(parseData)
-  })
-
-function generateInitialData(parseData) {
-    const getTitle    = parseData.dentrylist
-    const total       = parseData.dentrylist.dentry.length
-    let articles = []
-    getTitle.dentry.map( (entry) => { 
-       const nameDict = entry.ddictionary
-       const langDict = entry.dlang
-       const entryhandle   = entry.dhandle
-       const nameEntry     = entry.dcriteria.content
-       const entryCriteria = entry.dcriteria
-       const buildEntries  = {'entry':nameEntry, 'handle':entryhandle, 'editable':false, 'meta':entryCriteria}
-       articles.push(buildEntries)
-    })
-
-    lexiconStore.dispatch({
-      type: 'ARTICLES_SET',
-      articles
-    })
-}
-
-*/

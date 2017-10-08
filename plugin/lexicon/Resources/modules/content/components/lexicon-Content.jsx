@@ -14,7 +14,6 @@ import {select  as selectMetaResource}  from './../selectors/metaResource'
 import {select  as selectOthers}  from './../selectors'
 
 
-console.log(actionsArticles)
 
 class LexiconContent extends Component {
 
@@ -29,6 +28,7 @@ class LexiconContent extends Component {
             modalAddArticle     = {this.props.modalAddArticle}
             actionSaveTitleEdit = {this.props.actionSaveTitleEdit}
             modal               = {this.props.modal}
+            createNewArticle    = {this.props.createNewArticle}
           />
           <LexiconContentBody
             metaResource      = {this.props.metaResource}
@@ -79,6 +79,7 @@ LexiconContent.propTypes = {
     open: T.bool
   }).isRequired,
   shareArticle: T.func.isRequired,
+  createNewArticle: T.func.isRequired,
   deleteArticle: T.func.isRequired,
   consultArticle: T.func.isRequired,
   currentContentArticle: T.object.isRequired,
@@ -132,6 +133,9 @@ function mapDispatchToProps(dispatch) {
     },
     goToFilterSearch(value) {
       dispatch(actionsSearch.searchArticle(value))
+    },
+    createNewArticle(entryResource) {
+      dispatch(actionsArticles.createArticle(entryResource))
     }
   }
 }

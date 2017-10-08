@@ -104,7 +104,7 @@ export class SearchModal extends Component {
                     value={getDefinition(type).type}
                     role="option"
                   >
-                    {translex(getDefinition(type).name, {}, 'question_types')}
+                    {translex(getDefinition(type).name, {}, 'resource_types')}
                   </option>
                 )}
               </select>

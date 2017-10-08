@@ -11,7 +11,6 @@ year           = year[2]+'-'+year[1]+'-'+year[0]
 let dateCreate = year+'T'+datepart[2]+'+02:00'
 dateCreate     = dateCreate
 
-console.log(year)
 
 export const metaDicobilingue = (name, owner, type, category, fullname, source, cible) =>
    '<?xml version="1.0" encoding="UTF-8"?>\
@@ -52,7 +51,6 @@ export const metaDicobilingue = (name, owner, type, category, fullname, source, 
         </dictionary-metadata>\
     </dictionary-metadata-files>'
 
-const dbname = ''
 
 export const volumeDicobilingue = (name, owner, source, cible, fullname, category, type, comment) =>
 	'<?xml version="1.0" encoding="UTF-8"?>\
@@ -119,31 +117,35 @@ export const volumeDicobilingue = (name, owner, source, cible, fullname, categor
 		</d:volume-metadata-files>'
 
 
-export const articleDicobilingue = (lemme, cat, def, trad, tradcat, expl, source, cible) =>
- 		'<article id="esp.boda.1">\
-			<forme>\
-				<vedette>'+lemme+'</vedette>\
-				<classe-gram>'+cat+'</classe-gram>\
-			</forme>\
-			<sémantique>\
-				<sens>\
-					<séance/>\
-					<définition>'+def+'</définition>\
-					<traduction lang="'+cible+'">\
-						<texte-traduction>'+trad+'</texte-traduction>\
-						<gram-traduction>'+tradcat+'</gram-traduction>\
-					</traduction>\
-					<exemples>\
-						<exemple>\
-							<texte-exemple lang="'+source+'">'+expl+'</texte-exemple>\
-							<traduction-exemple lang="'+cible+'"/>\
-							<source/>\
-						</exemple>\
-					</exemples>\
-				</sens>\
-				<expressions></expressions>\
-			</sémantique>\
-			<remarques/>\
-		</article>'
+export const articleDicobilingue = (lemme, cat, def, trad, tradcat, expl, source, cible, id, name) =>
+ 	'<?xml version="1.0" encoding="UTF-8"?>\
+		<volume xmlns:d="http://www-clips.imag.fr/geta/services/dml"\
+  				xmlns:xml="http://www.w3.org/XML/1998/namespace"    langue-source="'+source+'"    nom="'+name+'_'+source+'_'+cible+'">\
+	 		<article id="'+id+'">\
+				<forme>\
+					<vedette>'+lemme+'</vedette>\
+					<classe-gram>'+cat+'</classe-gram>\
+				</forme>\
+				<sémantique>\
+					<sens>\
+						<séance/>\
+						<définition>'+def+'</définition>\
+						<traduction lang="'+cible+'">\
+							<texte-traduction>'+trad+'</texte-traduction>\
+							<gram-traduction>'+tradcat+'</gram-traduction>\
+						</traduction>\
+						<exemples>\
+							<exemple>\
+								<texte-exemple lang="'+source+'">'+expl+'</texte-exemple>\
+								<traduction-exemple lang="'+cible+'"/>\
+								<source/>\
+							</exemple>\
+						</exemples>\
+					</sens>\
+					<expressions></expressions>\
+				</sémantique>\
+				<remarques/>\
+			</article>\
+		</volume>'
 
 

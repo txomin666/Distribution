@@ -13,7 +13,7 @@ import { makeModal } from '#/main/core/layout/modal'
 import { actions as modalActions } from '#/main/core/layout/modal/actions'
 import { Page, PageHeader, PageContent } from '#/main/core/layout/page/components/page.jsx'
 import { PageActions, PageAction } from '#/main/core/layout/page/components/page-actions.jsx'
-import { Pagination } from '#/main/core/layout/pagination/components/pagination.jsx'
+import { Pagination } from './pagination/components/pagination.jsx'
 
 import {select} from './../selectors'
 import {actions as paginationActions} from './../actions/pagination'
@@ -42,7 +42,7 @@ const Lexicon = props =>
       <PageActions>
         <PageAction
           id="lexicon-create"
-          title={translex('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
+          title={translex('Créer une nouvelle ressource lexicale ?', props.activeFilters, {count: props.activeFilters})}
           icon="fa fa-plus"
           action={() => props.openCreateLexiconModal(props.lexiconsResources)}
         >
@@ -51,7 +51,7 @@ const Lexicon = props =>
         <span className="text-muted" style={{fontSize:30}}><span className="text-muted" style={{width:140, margin:10}}></span></span>
         <PageAction
           id="bank-search"
-          title={translex('active_filters', props.activeFilters, {count: props.activeFilters}, 'lexicon')}
+          title={translex('active_filters', props.activeFilters, {count: props.activeFilters})}
           icon="fa fa-search"
           action={() => props.openSearchModal(props.searchFilters)}
         >

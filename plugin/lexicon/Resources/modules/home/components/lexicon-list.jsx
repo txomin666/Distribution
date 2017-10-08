@@ -30,7 +30,7 @@ const SelectedRow = props =>
     <td
       className="text-left"
       colSpan={5}
-      dangerouslySetInnerHTML={{ __html: translex('questions_selected', props.selected.length, {count: props.selected.length})}}
+      dangerouslySetInnerHTML={{ __html: translex('resource_selected', props.selected.length, {count: props.selected.length})}}
     >
     </td>
     <td className="table-actions text-right">
@@ -40,7 +40,7 @@ const SelectedRow = props =>
         onClick={() => props.onShare(props.selected)}
       >
         <span className="fa fa-fw fa-share" />
-        <span className="sr-only">{translex('questions_share')}</span>
+        <span className="sr-only">{translex('resource_share')}</span>
       </button>
       <button
         role="button"
@@ -48,7 +48,7 @@ const SelectedRow = props =>
         onClick={() => props.onDelete(props.selected)}
       >
         <span className="fa fa-fw fa-trash-o" />
-        <span className="sr-only">{translex('questions_delete')}</span>
+        <span className="sr-only">{translex('resource_delete')}</span>
       </button>
     </td>
   </tr>
@@ -122,11 +122,18 @@ LexiconTableHeader.propTypes = {
 
 
 function glossaryCliked(type, dict, lang, author) {
-  return window.location.assign(origin="/app_dev.php/lexicon/content/"+type+"/"+dict+"/"+lang+"/"+author);
+  const rexg = /[:]/g
+  if(lang[0].search(rexg)) {
+    const langPart = lang[0].split(':')
+    return window.location.assign(origin="/app_dev.php/lexicon/content/"+type+"/"+dict+"/"+langPart[0]+"/"+author);
+  }else if(Array.isArray(lang) == false){
+    return window.location.assign(origin="/app_dev.php/lexicon/content/"+type+"/"+dict+"/"+lang+"/"+author);
+  }else {
+    return window.location.assign(origin="/app_dev.php/lexicon/content/"+type+"/"+dict+"/"+lang[0]+"/"+author);
+  }
 }
 
 function formatDate(date) {
-  console.log(date)
   const partdate = date.split('T')
   const day = partdate[0]
   const hour = partdate[1].split('+')[0]
@@ -137,19 +144,19 @@ function formatDate(date) {
 
 const StatusDict = props => 
     <span>
-        {props.question.userClaro == props.question.meta.authors[0].name ? 
+        {props.resource.userClaro == props.resource.meta.authors[0].name ? 
           (<span className="fa fa-eye text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
           (<span className="fa fa-eye text-primary" style={{marginRight:25}} />)
         }
-        {props.question.userClaro == props.question.meta.authors[0].name ? 
+        {props.resource.userClaro == props.resource.meta.authors[0].name ? 
           (<span className="fa fa-pencil text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
           (<span className="fa fa-pencil text-primary" style={{marginRight:25}} />)
         }
-        {props.question.userClaro == props.question.meta.authors[0].name ?
+        {props.resource.userClaro == props.resource.meta.authors[0].name ?
           (<span className='fa fa-trash-o text-danger' style={{marginRight:25, 'cursor':'pointer'}} />) :
           (<span className='fa fa-trash-o text-default' style={{marginRight:25, 'cursor':'not-allowed'}} />)
         }
-        {props.question.userClaro == props.question.meta.authors[0].name ?
+        {props.resource.userClaro == props.resource.meta.authors[0].name ?
           (<span className="fa fa-comments-o text-primary" style={{marginRight:1, 'cursor':'pointer'}} />) :
           (<span className="fa fa-comments-o text-primary" style={{marginRight:1}} />)
         }
@@ -158,41 +165,40 @@ const StatusDict = props =>
 
 const LexiconRow = props =>
   <TableRow className={props.isSelected ? 'selected' : null}>
-    {props.question.userClaro == props.question.meta.authors[0].name ? 
+    {props.resource.userClaro == props.resource.meta.authors[0].name ? 
         (<TableCell align="center" className="bg-primary"> 
              <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
-           
          </TableCell>) :
         (<TableCell align="center"> 
              <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
          </TableCell>)
     }
     <TableCell align="left" className=""> 
-      <small className="text-muted" style={{marginLeft:1}}> {props.question.type}</small>
+      <small className="text-muted" style={{marginLeft:1}}> {props.resource.type}</small>
     </TableCell>
     <TableCell>
-      <span style={{'cursor':'pointer'}} onClick={() => glossaryCliked(props.question.type, props.question.id, props.question.lang, props.question.meta.authors[0].name)}>
-        {props.question.title || props.question.content}
+      <span style={{'cursor':'pointer'}} onClick={() => glossaryCliked(props.resource.type, props.resource.id, props.resource.lang, props.resource.meta.authors[0].name)}>
+        {props.resource.title || props.resource.content}
       </span>
     </TableCell>
     <TableCell>
-      <StatusDict question={props.question}/>
+      <StatusDict resource={props.resource}/>
     </TableCell>
     <TableCell align="left">
-      {props.question.meta.updated ?
-          <small className="text-muted">{formatDate(props.question.meta.updated)}</small> : '-'
+      {props.resource.meta.updated ?
+          <small className="text-muted">{formatDate(props.resource.meta.updated)}</small> : '-'
       }
     </TableCell>
     <TableCell>
-      {props.question.meta.authors ?
+      {props.resource.meta.authors ?
         <small className="text-muted">
-          {props.question.meta.authors[0].name}
+          {props.resource.meta.authors[0].name}
         </small> : '-'
       }
     </TableCell>
     <TableCell align="right" className="table-actions">
       <DropdownButton
-        id={`dropdown-other-actions-${props.question.id}`}
+        id={`dropdown-other-actions-${props.resource.id}`}
         title={<span className="fa fa-fw fa-ellipsis-v" />}
         bsStyle="link"
         noCaret={true}
@@ -200,21 +206,21 @@ const LexiconRow = props =>
       >
         <MenuItem header>Actions</MenuItem>
         <MenuItem
-          onClick={() => props.onShare([props.question.id])}
+          onClick={() => props.onShare([props.resource.id])}
         >
           <span className="fa fa-fw fa-share" />&nbsp;
-          {translex('question_share')}
+          {translex('resource_share')}
         </MenuItem>
-        {props.question.userClaro == props.question.meta.authors[0].name ? 
+        {props.resource.userClaro == props.resource.meta.authors[0].name ? 
           (<MenuItem divider ></MenuItem>) : (<span></span>)
         }
-        {props.question.userClaro == props.question.meta.authors[0].name ?  
+        {props.resource.userClaro == props.resource.meta.authors[0].name ?  
             (<MenuItem
               className="dropdown-link-danger"
-              onClick={() => props.onDelete([props.question.id, props.question.lang])}
+              onClick={() => props.onDelete([props.resource.id, props.resource.lang])}
               >
               <span className="fa fa-fw fa-trash-o" />&nbsp;
-              {translex('question_delete')}
+              {translex('resource_delete')}
             </MenuItem>) : 
             (<span></span>)
         }
@@ -223,7 +229,7 @@ const LexiconRow = props =>
   </TableRow>
 
 LexiconRow.propTypes = {
-  question: T.shape({
+  resource: T.shape({
     id: T.string,
     type: T.string.isRequired,
     title: T.string,
@@ -273,11 +279,11 @@ export default class LexiconList extends Component {
         />
 
         <tbody>
-        {this.props.lexiconsResources.map(question => (
+        {this.props.lexiconsResources.map(resource => (
           <LexiconRow
-            key={question.id}
-            question={question}
-            isSelected={-1 !== this.props.selected.indexOf(question.id)}
+            key={resource.id}
+            resource={resource}
+            isSelected={-1 !== this.props.selected.indexOf(resource.id)}
             onShare={(items) => this.props.onShare(items)}
             onDelete={this.props.onDelete}
             toggleSelect={this.props.toggleSelect}

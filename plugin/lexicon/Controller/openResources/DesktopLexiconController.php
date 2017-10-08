@@ -53,9 +53,9 @@ class DesktopLexiconController extends Controller
     
     public function indexContent($nameResource, $lang)
     {
-        //echo($nameResource);
         $user         = $this->container->get('claroline_lexicon.manager.users')->getCurrentUser();
         $data_content = $this->container->get('claroline_lexicon.api.JibikiResources')->get_volume_entries($nameResource, $lang, 'GREATER_THAN_OR_EQUAL');
+        
         return $this->render('ClarolineLexiconBundle:Pages:content-resource.html.twig', array(
             'data' => $data_content, 
             'active_user' => $user,

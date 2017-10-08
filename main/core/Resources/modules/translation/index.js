@@ -92,7 +92,7 @@ export function tex(message, placeholders = {}, domain = 'ujm_exo') {
 }
 
 /**
- * Shortcut to access simple translation without placeholders.
+ * Shortcut to access simple translation without placeholders lexicon.
  *
  * @param {string} message
  * @param {string} domain

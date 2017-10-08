@@ -153,7 +153,7 @@ export class CreateLexiconModal extends Component {
              <input
               id="comment-resource"
               type="text"
-              placeholder="Que contient votre ressource ? ou commmentaire ?"
+              placeholder="Que contient votre ressource  ou commentaire ?"
               className="form-control"
               value={this.state.lexiconsResources.comment}
               onChange={e => this.updateData('comment', e.target.value)}

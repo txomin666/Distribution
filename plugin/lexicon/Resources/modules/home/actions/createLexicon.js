@@ -21,12 +21,11 @@ export const actions = {}
 
 const currentUser   = JSON.parse(document.getElementById('lexicon').dataset.user)
 
-console.log(currentUser.password)
+//console.log(currentUser.password)
 
 function postNewResource(lexiconsResources, pagination, sortBy)
 {
     const baseUrlResource = 'http://totoro.imag.fr/lexinnova/api/'
-    console.log(lexiconsResources)
     let lang, sourcelang
     const rexg = /[:]/g
     if(lexiconsResources.lang.search(rexg) == 0) {lang = lexiconsResources.lang.split(':')}else{sourcelang = lexiconsResources.lang}
@@ -56,7 +55,6 @@ function postNewResource(lexiconsResources, pagination, sortBy)
       headers: {'Accept':'application/xml', 'Content-Type':'application/xml'}
     })
 
-    //console.log(metadataVolDico)
 
     if(metadataGloss){
         axios.all(
@@ -74,8 +72,8 @@ function postNewResource(lexiconsResources, pagination, sortBy)
             document.location.reload(true)
         }))
         .catch(
-          function(error){
-            return console.log('An error occur, please correct it : ', error)
+          function(error1, error2){
+            return console.log('An error occur, please correct it : ', error1, error2)
           }
         )
     }else if (metadataDico) {
@@ -94,8 +92,8 @@ function postNewResource(lexiconsResources, pagination, sortBy)
             document.location.reload(true)
         }))
         .catch(
-          function(error){
-            return console.log('An error occur, please correct it : ', error)
+          function(error1, error2){
+            return console.log('An error occur, please correct it : ', error1, error2)
           }
         )
     } 

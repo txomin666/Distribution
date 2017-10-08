@@ -50,7 +50,6 @@ export const metaGlossaire = (name, owner, type, category, fullname, source) =>
     </dictionary-metadata-files>'
 
 
-const dbname = ''
 
 export const volumeGlossaire = (name, owner, source, fullname, category, type, comment) =>
    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
@@ -109,12 +108,16 @@ export const volumeGlossaire = (name, owner, source, fullname, category, type, c
 		</d:volume-metadata-files>'
 
 
-export const articleGlossaire = (lemme, def, source) =>
-	'<glossaire src="'+source+'">\
-		<entrée>\
-			<terme>'+lemme+'</terme>\
-			<définition>'+def+'</définition>\
-		</entrée>\
-	</glossaire>'
+export const articleGlossaire = (lemme, def, source, entryid, nom) =>
+ 	'<?xml version="1.0" encoding="UTF-8"?>\
+		<volume xmlns:d="http://www-clips.imag.fr/geta/services/dml" \
+  			xmlns:xml="http://www.w3.org/XML/1998/namespace"    langue-source="'+source+'"    nom="'+nom+'_'+source+'_'+'">\
+			<glossaire src="'+source+'">\
+				<entrée id="'+entryid+'">\
+					<terme>'+lemme+'</terme>\
+					<définition>'+def+'</définition>\
+				</entrée>\
+			</glossaire>\
+		</volume>'
 
 

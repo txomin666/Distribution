@@ -48,3 +48,17 @@ export function deleteVolumeResourceJibiki(username, password, name, lang){
       }
     })
 }
+
+
+export function createEntryJibiki(instAxios, username, password, name, dataEntry, lang, entryid){
+  const urlResource     =  name+'/'+lang+'/'+entryid
+  return instAxios.request({
+      url : urlResource,
+      data : dataEntry,
+      method : 'POST',
+      auth : {
+        username: username,
+        password: password
+      }
+  })
+}
