@@ -1291,12 +1291,16 @@ class WorkspaceManager
         return false;
     }
 
-    //used for cli copy
+    //used for cli copy debug tool
     public function copyFromCode(Workspace $workspace, $code)
     {
         $newWorkspace = $this->copy($workspace, new Workspace());
 
         // override code & name
+        $newWorkspace->setCode($code);
+        $newWorkspace->setName($code);
+        $newWorkspace = $this->copy($workspace, $newWorkspace);
+        //override code & name
         $newWorkspace->setCode($code);
         $newWorkspace->setName($code);
 
@@ -1320,23 +1324,30 @@ class WorkspaceManager
 
         // create new name and code
         $prefix = $model ? '[MODEL]' : '[COPY]';
-        $newWorkspace->setName($prefix.' '.$workspace->getName());
-        $newWorkspace->setCode($prefix.' '.$workspace->getCode());
+        $ws = $this->getOneByCode($newWorkspace->getCode());
+
+        if ($ws) {
+            $name = $prefix.' '.$newWorkspace->getName();
+            $code = $prefix.' '.$newWorkspace->getCode();
+        } else {
+            $name = $newWorkspace->getName();
+            $code = $newWorkspace->getCode();
+        }
+
+        $newWorkspace->setName($name);
+        $newWorkspace->setCode($code);
 
         $this->createWorkspace($newWorkspace);
         $token = $this->container->get('security.token_storage')->getToken();
         $user = null;
         $resourceInfo = ['copies' => []];
 
-        if ($token && $token->getUser() !== 'anon.') {
-            $user = $workspace->getCreator() ?
-            $workspace->getCreator() :
-            $this->container->get('security.token_storage')->getToken()->getUser();
-        }
+        $user = $newWorkspace->getCreator();
 
-        //last fool proof check in case something weird happens
         if (!$user) {
-            $user = $this->container->get('claroline.manager.user_manager')->getDefaultUser();
+            $user = (!$user && $token && $token->getUser() !== 'anon.') ?
+              $this->container->get('security.token_storage')->getToken()->getUser() :
+              $this->container->get('claroline.manager.user_manager')->getDefaultUser();
         }
 
         $this->om->startFlushSuite();
@@ -1384,6 +1395,8 @@ class WorkspaceManager
         $this->duplicateOrderedTools($workspace, $newWorkspace, $resourceInfo);
         $this->om->endFlushSuite();
 
+        $this->container->get('claroline.security.token_updater')->updateNormal($token);
+
         return $newWorkspace;
     }
 
@@ -1393,7 +1406,6 @@ class WorkspaceManager
         $rootDirectory = new Directory();
         $rootDirectory->setName($workspace->getName());
         $directoryType = $this->resourceManager->getResourceTypeByName('directory');
-
         $rootCopy = $this->resourceManager->create(
             $rootDirectory,
             $directoryType,
@@ -1768,6 +1780,7 @@ class WorkspaceManager
 
             $this->om->persist($createdRole);
             if ($roleName === 'ROLE_WS_MANAGER') {
+                $this->log('Adding role manager to user '.$user->getUsername());
                 $user->addRole($createdRole);
                 $this->om->persist($user);
             }

@@ -21,6 +21,7 @@ use JMS\SecurityExtraBundle\Annotation as SEC;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
+
 /**
  * @DI\Tag("security.secure_service")
  * @SEC\PreAuthorize("canOpenAdminTool('workspace_management')")
@@ -71,9 +72,9 @@ class WorkspaceController extends Controller
                 'Claroline\CoreBundle\Entity\Workspace\Workspace', [
                     'limit' => 20,
                     'filters' => ['model' => false, 'personal' => false],
-                    'sortBy' => 'name'
+                    'sortBy' => 'name',
                 ]
-            )
+            ),
         ];
     }
 

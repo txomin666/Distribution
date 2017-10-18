@@ -9,13 +9,33 @@ import {update} from './../utils/utils'
 
 import {
   LEXICONS_SET,
-  LEXICONS_SHARE
+  LEXICONS_SHARE,
+  LEXICONS_TOGGLE_VIEW_OFF
 } from './../actions/lexicons'
 
+
 function setLexicons(state, action) {
-  return action.lexiconsResources
+  let newState = action.lexiconsResources
+  action.lexiconsResources.map((questionId, questionIndex) => {
+    const question = state.find(question => questionId === question.id)
+   
+    newState = update(newState, {
+      [questionIndex]: {
+        meta: {
+          sharedWith: {[0]: {adminRights: {$set: True}}}
+        }
+      }
+    })
+    
+    return newState
+  })
+
 }
 
+
+function toggleViewOff(state, action) {
+  return action.lexiconsResources
+}
 
 function shareResource(state, action) {
   let newState = state
@@ -62,7 +82,8 @@ function shareResource(state, action) {
 
 const lexiconsReducer = makeReducer([], {
   [LEXICONS_SET]: setLexicons,
-  [LEXICONS_SHARE]: shareResource
+  [LEXICONS_SHARE]: shareResource,
+  [LEXICONS_TOGGLE_VIEW_OFF] : toggleViewOff
 })
 
 export default lexiconsReducer

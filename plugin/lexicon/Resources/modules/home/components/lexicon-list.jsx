@@ -25,12 +25,12 @@ import {
 const SelectedRow = props =>
   <tr className="selected-rows active">
     <td className="text-left" >
-      <span className="fa fa-fw fa-check-square" style={{marginLeft:30}}/>
+      <span className="fa fa-fw fa-check-square" style={{marginLeft:35}}/>
     </td>
     <td
       className="text-left"
-      colSpan={5}
-      dangerouslySetInnerHTML={{ __html: translex('resource_selected', props.selected.length, {count: props.selected.length})}}
+      colSpan={4}
+      dangerouslySetInnerHTML={{ __html: translex('Ressource(s) sélectionnée(s)', props.selected.length, {count: props.selected.length})}}
     >
     </td>
     <td className="table-actions text-right">
@@ -97,7 +97,6 @@ const LexiconTableHeader = props =>
       >
         {translex('creator')}
       </TableSortingCell>
-      <TableHeaderCell align="right">&nbsp;</TableHeaderCell>
     </tr>
       {0 < props.selected.length &&
         <SelectedRow
@@ -142,35 +141,70 @@ function formatDate(date) {
   return result
  }
 
-const StatusDict = props => 
+
+const StatusDict = props =>
     <span>
-        {props.resource.userClaro == props.resource.meta.authors[0].name ? 
-          (<span className="fa fa-eye text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
-          (<span className="fa fa-eye text-primary" style={{marginRight:25}} />)
+        {props.resource.meta.sharedWith[0].adminRights == true || props.resource.userClaro == props.resource.meta.authors[0].name ? 
+            (<span className="fa fa-eye-slash text-primary" style={{marginRight:25, 'cursor':'pointer'}}
+              onClick={() => props.viewOff(props.resource)} 
+            />) : 
+            (<span className="fa fa-eye text-default" style={{marginRight:25}} />)
         }
         {props.resource.userClaro == props.resource.meta.authors[0].name ? 
-          (<span className="fa fa-pencil text-primary" style={{marginRight:25, 'cursor':'pointer'}} />) :
-          (<span className="fa fa-pencil text-primary" style={{marginRight:25}} />)
+          (<span className="fa fa-pencil text-primary" style={{marginRight:25, 'cursor':'pointer'}} 
+            onClick={() => glossaryCliked(props.resource.type, props.resource.id, props.resource.lang, props.resource.meta.authors[0].name)}
+          />) :
+          (<span className="fa fa-pencil text-primary" style={{marginRight:25, 'cursor':'pointer'}} 
+            onClick={() => glossaryCliked(props.resource.type, props.resource.id, props.resource.lang, props.resource.meta.authors[0].name)}
+          />)
         }
         {props.resource.userClaro == props.resource.meta.authors[0].name ?
-          (<span className='fa fa-trash-o text-danger' style={{marginRight:25, 'cursor':'pointer'}} />) :
+          (<span className='fa fa-trash-o text-danger' style={{marginRight:25, 'cursor':'pointer'}} 
+            onClick={() => props.onDelete([props.resource.id, props.resource.lang])} 
+            />) :
           (<span className='fa fa-trash-o text-default' style={{marginRight:25, 'cursor':'not-allowed'}} />)
         }
         {props.resource.userClaro == props.resource.meta.authors[0].name ?
-          (<span className="fa fa-comments-o text-primary" style={{marginRight:1, 'cursor':'pointer'}} />) :
-          (<span className="fa fa-comments-o text-primary" style={{marginRight:1}} />)
+          (<span className="fa fa-share text-primary" style={{marginRight:1, 'cursor':'pointer'}} 
+            onClick={() => props.onShare([props.resource.id])}
+            />) :
+          (<span className="fa fa-share text-primary" style={{marginRight:1, 'cursor':'pointer'}} 
+            onClick={() => props.onShare([props.resource.id])}
+          />)
         }
     </span>
 
+StatusDict.propTypes = {
+  resource: T.shape({
+    id: T.string,
+    type: T.string.isRequired,
+    title: T.string,
+    content: T.string.isRequired,
+    meta: T.shape({
+      updated: T.string,
+      category: T.shape({
+        name: T.string
+      }),
+      authors: T.arrayOf(T.shape({
+        name: T.isRequired
+      })),
+      sharedWith: T.array.isRequired,
+      usedBy: T.array.isRequired
+    }).isRequired
+  }).isRequired,
+  onShare: T.func.isRequired,
+  onDelete: T.func.isRequired,
+  viewOff: T.func.isRequired
+}
 
 const LexiconRow = props =>
   <TableRow className={props.isSelected ? 'selected' : null}>
     {props.resource.userClaro == props.resource.meta.authors[0].name ? 
         (<TableCell align="center" className="bg-primary"> 
-             <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
+             <input type="checkbox" onChange={() => props.toggleSelect(props.resource)} />
          </TableCell>) :
         (<TableCell align="center"> 
-             <input type="checkbox" onChange={() => props.toggleSelect(props.question)} />
+             <input type="checkbox" onChange={() => props.toggleSelect(props.resource)} />
          </TableCell>)
     }
     <TableCell align="left" className=""> 
@@ -182,7 +216,7 @@ const LexiconRow = props =>
       </span>
     </TableCell>
     <TableCell>
-      <StatusDict resource={props.resource}/>
+      <StatusDict resource={props.resource} onShare={props.onShare} onDelete={props.onDelete} viewOff={props.viewOff}/>
     </TableCell>
     <TableCell align="left">
       {props.resource.meta.updated ?
@@ -195,36 +229,6 @@ const LexiconRow = props =>
           {props.resource.meta.authors[0].name}
         </small> : '-'
       }
-    </TableCell>
-    <TableCell align="right" className="table-actions">
-      <DropdownButton
-        id={`dropdown-other-actions-${props.resource.id}`}
-        title={<span className="fa fa-fw fa-ellipsis-v" />}
-        bsStyle="link"
-        noCaret={true}
-        pullRight={true}
-      >
-        <MenuItem header>Actions</MenuItem>
-        <MenuItem
-          onClick={() => props.onShare([props.resource.id])}
-        >
-          <span className="fa fa-fw fa-share" />&nbsp;
-          {translex('resource_share')}
-        </MenuItem>
-        {props.resource.userClaro == props.resource.meta.authors[0].name ? 
-          (<MenuItem divider ></MenuItem>) : (<span></span>)
-        }
-        {props.resource.userClaro == props.resource.meta.authors[0].name ?  
-            (<MenuItem
-              className="dropdown-link-danger"
-              onClick={() => props.onDelete([props.resource.id, props.resource.lang])}
-              >
-              <span className="fa fa-fw fa-trash-o" />&nbsp;
-              {translex('resource_delete')}
-            </MenuItem>) : 
-            (<span></span>)
-        }
-      </DropdownButton>
     </TableCell>
   </TableRow>
 
@@ -249,7 +253,8 @@ LexiconRow.propTypes = {
   isSelected: T.bool,
   toggleSelect: T.func.isRequired,
   onShare: T.func.isRequired,
-  onDelete: T.func.isRequired
+  onDelete: T.func.isRequired,
+  viewOff: T.func.isRequired
 }
 
 LexiconRow.defaultProps = {
@@ -287,6 +292,7 @@ export default class LexiconList extends Component {
             onShare={(items) => this.props.onShare(items)}
             onDelete={this.props.onDelete}
             toggleSelect={this.props.toggleSelect}
+            viewOff={this.props.viewOff}
           />
         ))}
         </tbody>
@@ -304,5 +310,6 @@ LexiconList.propTypes = {
   onShare: T.func.isRequired,
   toggleSelect: T.func.isRequired,
   toggleSelectPage: T.func.isRequired,
-  toggleSelectAll: T.func.isRequired
+  toggleSelectAll: T.func.isRequired,
+  viewOff: T.func.isRequired
 }

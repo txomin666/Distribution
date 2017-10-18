@@ -79,3 +79,44 @@
     font-size : 30pt;
     margin-left : -60pt;
 }
+
+
+.table > tbody > tr.selected {
+  background-color: @state-info-bg;
+}
+
+.table-cell-tooltip {
+    > * {
+        display: inline-block;
+        cursor: help;
+    }
+}
+
+.dropdown-menu {
+    .dropdown-link-danger {
+        color: @brand-danger;
+    }
+}
+
+
+.item-icon {
+    &.item-icon-sm {
+        width: 16px;
+        height: 16px;
+        margin-right: 10px;
+        margin-bottom: -2px; /* tmp fix */
+        stroke: #555;
+        fill: #555;
+
+    }
+
+    &.item-icon-lg {
+        width: 64px;
+        height: 64px;
+        padding: 10px;
+        border: solid 2px #777;
+        border-radius: 16px;
+        fill: #777;
+        stroke: #777;
+    }
+}

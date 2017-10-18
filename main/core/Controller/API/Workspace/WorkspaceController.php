@@ -24,7 +24,7 @@ use FOS\RestBundle\Controller\FOSRestController;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\SecurityExtraBundle\Annotation as SEC;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Symfony\Component\HttpFoundation\Request;
+
 
 /**
  * @NamePrefix("api_")
@@ -103,21 +103,6 @@ class WorkspaceController extends FOSRestController
         }, $this->workspaceManager->getWorkspacesByUser($user));
     }
 
-    /**
-     * @Get("/workspace", name="get_search_workspaces", options={ "method_prefix" = false })
-     * @SEC\PreAuthorize("canOpenAdminTool('workspace_management')")
-     *
-     * @param Request $request
-     *
-     * @return array
-     */
-    public function getSearchWorkspacesAction(Request $request)
-    {
-        return $this->finder->search(
-          'Claroline\CoreBundle\Entity\Workspace\Workspace',
-            $request->query->all()
-        );
-    }
 
     /**
      * @View(serializerGroups={"api_workspace"})
@@ -134,27 +119,14 @@ class WorkspaceController extends FOSRestController
 
         $this->om->startFlushSuite();
         $newWorkspaces = array_map(function (Workspace $workspace) use ($isModel) {
-            return $this->workspaceManager->copy($workspace, new Workspace(), $isModel);
+            $new = new Workspace();
+            $new->setName($workspace->getName());
+            $new->setCode($workspace->getCode());
+
+            return $this->workspaceManager->copy($workspace, $new, $isModel);
         }, $workspaces);
         $this->om->endFlushSuite();
 
         return $newWorkspaces;
-    }
-
-    /**
-     * @View()
-     * @SEC\PreAuthorize("canOpenAdminTool('workspace_management')")
-     */
-    public function deleteWorkspacesAction()
-    {
-        $workspaces = $this->apiManager->getParameters('ids', 'Claroline\CoreBundle\Entity\Workspace\Workspace');
-
-        $this->om->startFlushSuite();
-        foreach ($workspaces as $workspace) {
-            $this->workspaceManager->deleteWorkspace($workspace);
-        }
-        $this->om->endFlushSuite();
-
-        return ['success'];
     }
 }

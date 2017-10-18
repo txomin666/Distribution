@@ -179,7 +179,8 @@ class AdministrationToolListener
         ], $event);
     }
 
-    private function redirect($params, OpenAdministrationToolEvent $event)
+
+    protected function redirect($params, OpenAdministrationToolEvent $event)
     {
         $subRequest = $this->request->duplicate([], null, $params);
 

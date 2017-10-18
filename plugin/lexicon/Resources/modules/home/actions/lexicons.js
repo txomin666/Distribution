@@ -13,8 +13,11 @@ export const LEXICONS_SHARE  = 'LEXICONS_SHARE'
 export const LEXICONS_SET    = 'LEXICONS_SET'
 export const LEXICONS_REMOVE = 'LEXICONS_REMOVE'
 
+export const LEXICONS_TOGGLE_VIEW_OFF = 'LEXICONS_TOGGLE_VIEW_OFF'
+
 export const actions = {}
 
+actions.toggleViewOff  = makeActionCreator(LEXICONS_TOGGLE_VIEW_OFF, 'lexiconsResources')
 actions.setLexicons    = makeActionCreator(LEXICONS_SET, 'lexiconsResources')
 actions.deleteResource = makeActionCreator(LEXICONS_REMOVE, 'lexiconsResources')
 actions.shareResource  = makeActionCreator(LEXICONS_SHARE, 'lexiconsResources', 'users', 'adminRights')
@@ -36,8 +39,6 @@ actions.sharelexiconsResources = (lexiconsResources, users, adminRights) => ({
 
 function deleteLexiconResource(lexiconsResources){
     const currentUser   = JSON.parse(document.getElementById('lexicon').dataset.user)
-    console.log(lexiconsResources)
-
     
     axios.all(
       [
@@ -48,7 +49,6 @@ function deleteLexiconResource(lexiconsResources){
     .then(axios.spread(function (resource, volume) {
         const resultsMetadata = resource.data
         const resultsVolume   = volume.data
-        console.log(resultsMetadata, resultsVolume)
         
         // Update resource list and total results
         document.location.reload(true)

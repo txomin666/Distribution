@@ -23,7 +23,6 @@ use FOS\RestBundle\Controller\Annotations\View;
 use FOS\RestBundle\Controller\FOSRestController;
 use JMS\DiExtraBundle\Annotation as DI;
 use JMS\SecurityExtraBundle\Annotation as SEC;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -79,7 +78,6 @@ class OrganizationController extends FOSRestController
 
     /**
      * @View()
-     * @EXT\ParamConverter("organization", class="ClarolineCoreBundle:Organization\Organization",)
      */
     public function deleteOrganizationAction(Organization $organization)
     {
@@ -148,16 +146,5 @@ class OrganizationController extends FOSRestController
         ];
 
         return $this->apiManager->handleFormView('ClarolineCoreBundle:API:Organization\editLocationForm.html.twig', $form, $options);
-    }
-
-    /**
-     * @View(serializerGroups={"api_organization_list"})
-     * @Get("/organization/{organization}/move/{parent}")
-     */
-    public function moveOrganizationAction(Organization $organization, $parent)
-    {
-        $parent = $this->om->getRepository('ClarolineCoreBundle:Organization\Organization')->find($parent);
-
-        return $this->organizationManager->setParent($organization, $parent);
     }
 }

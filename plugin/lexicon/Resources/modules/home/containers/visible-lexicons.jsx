@@ -65,6 +65,10 @@ const mapDispatchToProps = (dispatch) => {
         handleConfirm: () => dispatch(lexiconsActions.deleteResource(items)),
         fadeModal: () => dispatch(modalActions.fadeModal())
       }))
+    },
+
+    viewOff: (items) => {
+      dispatch(lexiconsActions.toggleViewOff(items))
     }
   }
 }
