@@ -23,3 +23,14 @@ doctrine:
                 if: Claroline\CoreBundle\Doctrine\Query\IfElse
                 regexp: Claroline\CoreBundle\Doctrine\Query\Regexp
                 replace: Claroline\CoreBundle\Doctrine\Query\Replace
+
+doctrine_mongodb:
+    default_commit_options: ~
+    connections:
+        default:
+            server: "%mongodb_server%"
+            options: {}
+    default_database: "%mongodb_database%"
+    document_managers:
+        default:
+            auto_mapping: true
