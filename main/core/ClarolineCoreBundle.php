@@ -108,6 +108,7 @@ class ClarolineCoreBundle extends DistributionPluginBundle implements AutoConfig
             'Symfony\Bundle\MonologBundle\MonologBundle' => 'monolog',
             'Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle' => 'swiftmailer',
             'Doctrine\Bundle\DoctrineBundle\DoctrineBundle' => 'doctrine',
+            'Doctrine\Bundle\MongoDBBundle\DoctrineMongoDBBundle' => 'doctrine_mongodb',
         ];
 
         if (in_array($bundleClass, $emptyConfigs)) {
