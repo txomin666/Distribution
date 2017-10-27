@@ -84,4 +84,14 @@ class Log implements AdapterInterface
     {
         return 'Claroline\CoreBundle\Model\LogInterface';
     }
+
+    public function getDocumentClass()
+    {
+        return 'Claroline\CoreBundle\Document\Log';
+    }
+
+    public function getEntityClass()
+    {
+        return 'Claroline\CoreBundle\Entity\Log\Log';
+    }
 }

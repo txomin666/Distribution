@@ -15,6 +15,8 @@ interface AdapterInterface
 {
     public function adapt($object, $to);
     public function getInterface();
+    public function getDocumentClass();
+    public function getEntityClass();
     public function fromMongo($log);
     public function fromMysql($log);
 }

@@ -27,7 +27,12 @@ class AdapterProvider
 
     public function add(AdapterInterface $adapter)
     {
-        $this->adapters[$adapter->getInterface()] = $adapter;
+        $this->adapters[$adapter->getDocumentClass()] = $adapter;
+    }
+
+    public function has($class)
+    {
+        return array_key_exists($class, $this->adapters);
     }
 
     public function get($class)

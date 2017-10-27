@@ -34,6 +34,7 @@ class ObjectManager extends ObjectManagerDecorator
     private $activateLog = false;
     private $allowForceFlush = true;
     private $showFlushLevel = false;
+    private $mode = 'entity';
 
     /**
      * ObjectManager constructor.
@@ -51,6 +52,7 @@ class ObjectManager extends ObjectManagerDecorator
             = $this->hasEventManager
             = $this->hasUnitOfWork
             = $om instanceof EntityManagerInterface;
+        $this->mode = $om instanceof EntityManagerInterface ? 'entity' : 'document';
     }
 
     /**

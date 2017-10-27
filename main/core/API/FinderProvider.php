@@ -11,6 +11,7 @@
 
 namespace Claroline\CoreBundle\API;
 
+use Claroline\CoreBundle\Persistence\AdapterProvider;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -23,12 +24,21 @@ class FinderProvider
     /**
      * @var ObjectManager
      */
-    private $om;
+    private $em;
 
     /**
      * @var SerializerProvider
      */
     private $serializer;
+
+    /**
+     * @var AdapterProvider
+     */
+    private $adapter;
+
+    private $ch;
+
+    private $dm;
 
     /**
      * The list of registered finders in the platform.
@@ -41,19 +51,29 @@ class FinderProvider
      * Finder constructor.
      *
      * @DI\InjectParams({
-     *     "om"         = @DI\Inject("claroline.persistence.object_manager"),
-     *     "serializer" = @DI\Inject("claroline.api.serializer")
+     *     "em"         = @DI\Inject("doctrine.orm.entity_manager"),
+     *     "dm"         = @DI\Inject("doctrine_mongodb.odm.document_manager"),
+     *     "serializer" = @DI\Inject("claroline.api.serializer"),
+     *     "adapter"    = @DI\Inject("claroline.persistence.adapter"),
+     *     "ch"         = @DI\Inject("claroline.config.platform_config_handler")
      * })
      *
      * @param ObjectManager      $om
      * @param SerializerProvider $serializer
+     * @param SerializerProvider $adapter
      */
     public function __construct(
-        ObjectManager $om,
-        SerializerProvider $serializer
+        $em,
+        $dm,
+        SerializerProvider $serializer,
+        AdapterProvider $adapter,
+        $ch
     ) {
-        $this->om = $om;
+        $this->em = $em;
         $this->serializer = $serializer;
+        $this->adapter = $adapter;
+        $this->ch = $ch;
+        $this->dm = $dm;
     }
 
     /**
@@ -111,12 +131,15 @@ class FinderProvider
 
     public function fetch($class, $page, $limit, array $filters, array $sortBy = null, $count = false)
     {
+        $manager = $this->adapter->has($class) && $this->ch->getParameter('enable_mongo') ?
+          $this->dm : $this->em;
+        $om = new ObjectManager($manager);
+
         try {
             /** @var QueryBuilder $qb */
-            $qb = $this->om->createQueryBuilder();
+            $qb = $om->createQueryBuilder();
 
-            $qb->select($count ? 'count(distinct obj)' : 'distinct obj')
-               ->from($class, 'obj');
+            $qb->select($count ? 'count(distinct obj)' : 'distinct obj')->from($class, 'obj');
 
             // filter query - let's the finder implementation process the filters to configure query
             $this->get($class)->configureQueryBuilder($qb, $filters, $sortBy);

@@ -114,6 +114,16 @@ class Log implements LogInterface
     }
 
     /**
+     * Get dateLog.
+     *
+     * @return \DateTime
+     */
+    public function getShortDateLog()
+    {
+        return $this->shortDateLog;
+    }
+
+    /**
      * Set details.
      *
      * @param array $details
