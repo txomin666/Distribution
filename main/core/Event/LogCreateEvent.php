@@ -11,8 +11,8 @@
 
 namespace Claroline\CoreBundle\Event;
 
+use Claroline\CoreBundle\Model\LogInterface;
 use Symfony\Component\EventDispatcher\Event;
-use Claroline\CoreBundle\Entity\Log\Log;
 
 class LogCreateEvent extends Event
 {
@@ -21,7 +21,7 @@ class LogCreateEvent extends Event
     /** @var \Claroline\CoreBundle\Entity\Log\Log */
     protected $log;
 
-    public function __construct(Log $log)
+    public function __construct(LogInterface $log)
     {
         $this->log = $log;
     }
