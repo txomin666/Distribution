@@ -18,7 +18,7 @@ class LogCreateEvent extends Event
 {
     const NAME = 'claroline.log.create';
 
-    /** @var \Claroline\CoreBundle\Entity\Log\Log */
+    /** @var LogInterface; */
     protected $log;
 
     public function __construct(LogInterface $log)
