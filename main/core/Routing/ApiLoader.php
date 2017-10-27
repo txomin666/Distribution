@@ -75,11 +75,13 @@ class ApiLoader extends Loader
                     $class = null;
                     $found = false;
                     $prefix = '';
+                    $ignore = [];
 
                     foreach ($this->reader->getClassAnnotations($refClass) as $annotation) {
                         if ($annotation instanceof ApiMeta) {
                             $found = true;
                             $class = $annotation->class;
+                            $ignore = $annotation->ignore;
                         }
 
                         if ($annotation instanceof RouteConfig) {
@@ -88,7 +90,7 @@ class ApiLoader extends Loader
                     }
 
                     if ($found) {
-                        foreach ($this->makeRouteMap($controller, $routes, $prefix) as $name => $options) {
+                        foreach ($this->makeRouteMap($controller, $routes, $prefix, $ignore) as $name => $options) {
                             $pattern = '';
 
                             if ($options[0] !== '') {
@@ -120,7 +122,7 @@ class ApiLoader extends Loader
         return $routes;
     }
 
-    private function makeRouteMap($controller, RouteCollection $routes, $prefix)
+    private function makeRouteMap($controller, RouteCollection $routes, $prefix, $ignore = [])
     {
         $defaults = [
           'create' => ['', 'POST'],
@@ -129,6 +131,10 @@ class ApiLoader extends Loader
           'list' => ['', 'GET'],
           'get' => ['get', 'GET'],
         ];
+
+        foreach ($ignore as $ignored) {
+            unset($defaults[$ignored]);
+        }
 
         $traits = class_uses($controller);
 
