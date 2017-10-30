@@ -70,18 +70,18 @@ class FinderProvider
         $ch
     ) {
         $this->em = $em;
+        $this->dm = $dm;
         $this->serializer = $serializer;
         $this->adapter = $adapter;
         $this->ch = $ch;
-        $this->dm = $dm;
     }
 
     /**
      * Registers a new finder.
      *
-     * @param FinderInterface $finder
+     * @param AbstractFinder $finder
      */
-    public function add(FinderInterface $finder)
+    public function add(AbstractFinder $finder)
     {
         $this->finders[$finder->getClass()] = $finder;
     }
@@ -91,7 +91,7 @@ class FinderProvider
      *
      * @param string $class
      *
-     * @return FinderInterface
+     * @return AbstractFinder
      *
      * @throws \Exception
      */
@@ -131,35 +131,67 @@ class FinderProvider
 
     public function fetch($class, $page, $limit, array $filters, array $sortBy = null, $count = false)
     {
-        $manager = $this->adapter->has($class) && $this->ch->getParameter('enable_mongo') ?
-          $this->dm : $this->em;
-        $om = new ObjectManager($manager);
+        $enableMongo = $this->adapter->has($class) && $this->ch->getParameter('enable_mongo');
+
+        if ($this->adapter->has($class)) {
+            $class = $enableMongo ?
+              $this->adapter->get($class)->getDocumentClass() :
+              $this->adapter->get($class)->getEntityClass();
+        }
 
         try {
-            /** @var QueryBuilder $qb */
-            $qb = $om->createQueryBuilder();
-
-            $qb->select($count ? 'count(distinct obj)' : 'distinct obj')->from($class, 'obj');
-
-            // filter query - let's the finder implementation process the filters to configure query
-            $this->get($class)->configureQueryBuilder($qb, $filters, $sortBy);
-
-            // order query if implementation has not done it
-            $this->sortResults($qb, $sortBy);
-
-            if (!$count && 0 < $limit) {
-                $qb->setFirstResult($page * $limit);
-                $qb->setMaxResults($limit);
-            }
-
-            $query = $qb->getQuery();
-
-            return $count ? (int) $query->getSingleScalarResult() : $query->getResult();
+            /* @var QueryBuilder $qb */
+            return ($enableMongo) ?
+                $this->fetchDocuments($class, $page, $limit, $filters, $sortBy, $count) :
+                $this->fetchEntities($class, $page, $limit, $filters, $sortBy, $count);
         } catch (FinderException $e) {
-            $data = $this->om->getRepository($class)->findBy($filters, null, 0 < $limit ? $limit : null, $page);
+            //works for both document and entities
+            $om = new ObjectManager($enableMongo ? $this->dm : $this->em);
+            $data = $om->getRepository($class)->findBy($filters, null, 0 < $limit ? $limit : null, $page);
 
             return $count ? count($data) : $data;
         }
+    }
+
+    private function fetchEntities($class, $page, $limit, array $filters, array $sortBy = null, $count = false)
+    {
+        $om = new ObjectManager($this->em);
+
+        $qb = $om->createQueryBuilder();
+        $qb->select($count ? 'count(distinct obj)' : 'distinct obj')->from($class, 'obj');
+
+        // filter query - let's the finder implementation process the filters to configure query
+        $this->get($class)->configureEntityQueryBuilder($qb, $filters, $sortBy);
+
+        // order query if implementation has not done it
+        $this->sortResults($qb, $sortBy);
+
+        if (!$count && 0 < $limit) {
+            $qb->setFirstResult($page * $limit);
+            $qb->setMaxResults($limit);
+        }
+
+        $query = $qb->getQuery();
+
+        return $count ? (int) $query->getSingleScalarResult() : $query->getResult();
+    }
+
+    private function fetchDocuments($class, $page, $limit, array $filters, array $sortBy = null, $count = false)
+    {
+        $om = new ObjectManager($this->dm);
+
+        $qb = $om->createQueryBuilder($class);
+        // filter query - let's the finder implementation process the filters to configure query
+        $this->get($class)->configureDocumentQueryBuilder($qb, $filters, $sortBy);
+
+        if (!$count && 0 < $limit) {
+            $qb->skip($page * $limit);
+            $qb->limit($limit);
+        }
+
+        $query = $qb->getQuery();
+
+        return $count ? (int) $query->getSingleScalarResult() : $query->getResult();
     }
 
     private function sortResults(QueryBuilder $qb, array $sortBy = null)
@@ -167,6 +199,7 @@ class FinderProvider
         if (!empty($sortBy) && !empty($sortBy['property']) && 0 !== $sortBy['direction']) {
             // query needs to be sorted, check if the Finder implementation has a custom sort system
             $queryOrder = $qb->getDQLPart('orderBy');
+
             if (empty($queryOrder)) {
                 // no order by defined
                 $qb->orderBy('obj.'.$sortBy['property'], 1 === $sortBy['direction'] ? 'ASC' : 'DESC');

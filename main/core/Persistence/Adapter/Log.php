@@ -34,6 +34,7 @@ class Log implements AdapterInterface
         return $this->migrate($log, $new);
     }
 
+    //probably add the option here
     private function migrate(LogInterface $model, LogInterface $new)
     {
         $new->setAction($model->getAction());

@@ -11,7 +11,7 @@
 
 namespace Claroline\CoreBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Claroline\CoreBundle\Entity\Role;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -22,7 +22,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @DI\Service("claroline.api.finder.role")
  * @DI\Tag("claroline.finder")
  */
-class RoleFinder implements FinderInterface
+class RoleFinder extends AbstractFinder
 {
     /** @var AuthorizationCheckerInterface */
     private $authChecker;
@@ -54,7 +54,7 @@ class RoleFinder implements FinderInterface
         return 'Claroline\CoreBundle\Entity\Role';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         foreach ($searches as $filterName => $filterValue) {
             switch ($filterName) {

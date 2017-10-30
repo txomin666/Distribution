@@ -27,7 +27,7 @@ class AdapterProvider
 
     public function add(AdapterInterface $adapter)
     {
-        $this->adapters[$adapter->getDocumentClass()] = $adapter;
+        $this->adapters[$adapter->getInterface()] = $adapter;
     }
 
     public function has($class)
@@ -38,10 +38,11 @@ class AdapterProvider
     public function get($class)
     {
         if (is_object($class)) {
-            $class = get_class($class);
+            $interfaces = class_implements(get_class($class));
+        } else {
+            $obj = new \ReflectionClass($class);
+            $interfaces = $obj->isInterface() ? [$class] : class_implements($class);
         }
-
-        $interfaces = class_implements($class);
 
         foreach ($this->adapters as $adapter) {
             if (in_array($adapter->getInterface(), $interfaces)) {

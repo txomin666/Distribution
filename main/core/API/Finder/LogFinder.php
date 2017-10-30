@@ -11,8 +11,9 @@
 
 namespace Claroline\CoreBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
-use Doctrine\ORM\QueryBuilder;
+use Claroline\CoreBundle\API\AbstractFinder;
+use Doctrine\ODM\MongoDB\Query\Builder as DocumentQueryBuilder;
+use Doctrine\ORM\QueryBuilder as EntityQueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -21,7 +22,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @DI\Service("claroline.api.finder.log")
  * @DI\Tag("claroline.finder")
  */
-class LogFinder implements FinderInterface
+class LogFinder extends AbstractFinder
 {
     /** @var AuthorizationCheckerInterface */
     private $authChecker;
@@ -53,7 +54,15 @@ class LogFinder implements FinderInterface
         return 'Claroline\CoreBundle\Model\LogInterface';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(EntityQueryBuilder $qb, array $searches = [], array $sortBy = null)
+    {
+        foreach ($searches as $filterName => $filterValue) {
+            $qb->andWhere("obj.{$filterName} = :{$filterName}");
+            $qb->setParameter($filterName, $filterValue);
+        }
+    }
+
+    public function configureDocumentQueryBuilder(DocumentQueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         return $qb;
     }

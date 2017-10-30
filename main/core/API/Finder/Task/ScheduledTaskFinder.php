@@ -11,7 +11,7 @@
 
 namespace Claroline\CoreBundle\API\Finder\Task;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -21,7 +21,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @DI\Service("claroline.api.finder.scheduled_task")
  * @DI\Tag("claroline.finder")
  */
-class ScheduledTaskFinder implements FinderInterface
+class ScheduledTaskFinder extends AbstractFinder
 {
     /** @var AuthorizationCheckerInterface */
     private $authChecker;
@@ -53,7 +53,7 @@ class ScheduledTaskFinder implements FinderInterface
         return 'Claroline\CoreBundle\Entity\Task\ScheduledTask';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         foreach ($searches as $filterName => $filterValue) {
             if (is_string($filterValue)) {

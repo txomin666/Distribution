@@ -17,7 +17,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
 /**
  * @ApiMeta(
- *     class="Claroline\CoreBundle\Document\Log",
+ *     class="Claroline\CoreBundle\Model\LogInterface",
  *     ignore={"get", "deleteBulk", "create", "update"}
  * )
  * @Route("log")

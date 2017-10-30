@@ -11,7 +11,7 @@
 
 namespace Claroline\CoreBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -21,7 +21,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
  * @DI\Service("claroline.api.finder.resource_node")
  * @DI\Tag("claroline.finder")
  */
-class ResourceNodeFinder implements FinderInterface
+class ResourceNodeFinder extends AbstractFinder
 {
     /** @var AuthorizationCheckerInterface */
     private $authChecker;
@@ -53,7 +53,7 @@ class ResourceNodeFinder implements FinderInterface
         return 'Claroline\CoreBundle\Entity\Resource\ResourceNode';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         $qb->join('obj.resourceType', 'ort');
 

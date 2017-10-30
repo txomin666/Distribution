@@ -11,7 +11,7 @@
 
 namespace Claroline\CoreBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 
@@ -19,14 +19,14 @@ use JMS\DiExtraBundle\Annotation as DI;
  * @DI\Service("claroline.api.finder.theme")
  * @DI\Tag("claroline.finder")
  */
-class ThemeFinder implements FinderInterface
+class ThemeFinder extends AbstractFinder
 {
     public function getClass()
     {
         return 'Claroline\CoreBundle\Entity\Theme\Theme';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         foreach ($searches as $filterName => $filterValue) {
             if (is_string($filterValue)) {

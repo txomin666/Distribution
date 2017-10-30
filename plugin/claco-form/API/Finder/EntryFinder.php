@@ -12,7 +12,7 @@
 namespace Claroline\ClacoFormBundle\API\Finder;
 
 use Claroline\ClacoFormBundle\Entity\ClacoForm;
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Claroline\CoreBundle\Entity\Facet\FieldFacet;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
@@ -28,7 +28,7 @@ use Symfony\Component\Translation\TranslatorInterface;
  * @DI\Service("claroline.api.finder.clacoform.entry")
  * @DI\Tag("claroline.finder")
  */
-class EntryFinder implements FinderInterface
+class EntryFinder extends AbstractFinder
 {
     /** @var AuthorizationCheckerInterface */
     private $authorization;
@@ -88,7 +88,7 @@ class EntryFinder implements FinderInterface
         return 'Claroline\ClacoFormBundle\Entity\Entry';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         $currentUser = $this->tokenStorage->getToken()->getUser();
 

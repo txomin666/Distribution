@@ -259,6 +259,10 @@ class ObjectManager extends ObjectManagerDecorator
         $dql = "SELECT object FROM {$class} object WHERE object.{$property} IN (:list)";
         $query = $this->wrapped->createQuery($dql);
         $query->setParameter('list', $list);
+
+        //for odm
+        //$this->createQueryBuilder->field($property)->in($list)...
+
         $objects = $query->getResult();
 
         if (($entityCount = count($objects)) !== ($idCount = count($list))) {

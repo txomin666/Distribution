@@ -11,7 +11,7 @@
 
 namespace UJM\ExoBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 
@@ -21,14 +21,14 @@ use JMS\DiExtraBundle\Annotation as DI;
  * @DI\Service("ujm_exo.api.finder.paper")
  * @DI\Tag("claroline.finder")
  */
-class PaperFinder implements FinderInterface
+class PaperFinder extends AbstractFinder
 {
     public function getClass()
     {
         return 'UJM\ExoBundle\Entity\Attempt\Paper';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         foreach ($searches as $filterName => $filterValue) {
             if (is_string($filterValue)) {

@@ -11,7 +11,7 @@
 
 namespace UJM\ExoBundle\API\Finder;
 
-use Claroline\CoreBundle\API\FinderInterface;
+use Claroline\CoreBundle\API\AbstractFinder;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -23,7 +23,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
  * @DI\Service("ujm_exo.api.finder.question")
  * @DI\Tag("claroline.finder")
  */
-class QuestionFinder implements FinderInterface
+class QuestionFinder extends AbstractFinder
 {
     /** @var TokenStorageInterface */
     private $tokenStorage;
@@ -47,7 +47,7 @@ class QuestionFinder implements FinderInterface
         return 'UJM\ExoBundle\Entity\Item\Item';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
+    public function configureEntityQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
     {
         // only search in questions (not content items)
         // in any case exclude every mimeType that does not begin with [application] from results
