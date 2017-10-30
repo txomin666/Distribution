@@ -145,9 +145,9 @@ class ObjectManager extends ObjectManagerDecorator
         }
     }
 
-    public function createQueryBuilder()
+    public function createQueryBuilder($class = null)
     {
-        return $this->wrapped->createQueryBuilder();
+        return $this->wrapped->createQueryBuilder($class);
     }
 
     /**

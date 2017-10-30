@@ -4,6 +4,7 @@
       "translator": "translation/browser",
       "organization-field": "symfony/form/organization/index",
       "user-management": "users/module",
+      "log-table": "log",
       "facet-management": "facets/module",
       "workspace-management": "administration/workspace",
       "theme-management": "administration/theme",
