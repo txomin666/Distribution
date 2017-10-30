@@ -216,6 +216,7 @@ class LogListener
         }
         $log->setDetails($details);
 
+        //maybe only use one ?
         if ($this->enableMongo) {
             $this->dm->persist($this->adapter->adapt($log, Options::MONGO));
             $this->dm->flush();
