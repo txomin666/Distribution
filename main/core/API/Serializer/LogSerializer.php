@@ -20,8 +20,53 @@ class LogSerializer
 
     public function serialize(LogInterface $log, array $options = [])
     {
-        return [
+        $data = [
             'id' => $log->getId(),
+            'action' => $log->getAction(),
+            'details' => $log->getDetails(),
+            'doer' => [
+              'ip' => $log->getDoerIp(),
+              'type' => $log->getDoerType(),
+              'session' => $log->getDoerSessionId(),
+              'uuid' => $log->getDoer(),
+              'platform_roles' => [
+                //list of doer roles
+              ],
+              'workspace_roles' => [
+                //again
+              ],
+            ],
+            'owner' => [
+
+            ],
+            'workspace' => [
+
+            ],
+            'resourceNode' => [
+
+            ],
+            'role' => [
+
+            ],
+            'tool' => [
+
+            ],
+            'is_admin' => $log->isDisplayedInAdmin(),
+            'is_workspace' => $log->isDisplayedInWorkspace(),
+            'other_element_id' => $log->getOtherElementId(),
         ];
+
+        if ($log->getDateLog()) {
+            $data['date'] = $log->getDateLog()->format('Y-m-d\TH:i:s');
+        }
+
+        if ($log->getReceiver()) {
+            $data['receiver'] = [
+              'uuid' => $log->getReceiver(),
+              'group' => $log->getReceiver()->getGroup()->getName(),
+          ];
+        }
+
+        return $data;
     }
 }

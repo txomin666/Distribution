@@ -8,7 +8,8 @@ import {t} from '#/main/core/translation'
 import {
   PageContainer as Page,
   PageHeader,
-  PageContent
+  PageContent,
+  PageActions
 } from '#/main/core/layout/page/index'
 
 import {DataList} from '#/main/core/layout/list/components/data-list.jsx'
@@ -21,11 +22,13 @@ class Logs extends Component {
   render() {
     return (
       <Page id="logs-display">
-        <PageHeader title={t('logs_display')} />
+        <PageHeader title={t('logs_display')}>
+          <PageActions></PageActions>
+        </PageHeader>
 
         <PageContent>
           <DataList
-            name="Logs"
+            name="logs"
             data={this.props.data}
             totalResults={this.props.totalResults}
             definition={[
@@ -33,7 +36,26 @@ class Logs extends Component {
                 name: 'id',
                 type: 'string',
                 label: t('name'),
-                displayed: true
+                displayed: true,
+                filterable: false
+              },
+              {
+                name: 'action',
+                type: 'string',
+                label: t('action'),
+                displayed: true,
+                searchable: true
+              },
+              {
+                name: 'createdAfter',
+                label: t('created_after'),
+                type: 'date',
+                displayable: false
+              }, {
+                name: 'createdBefore',
+                label: t('created_before'),
+                type: 'date',
+                displayable: false
               }
             ]}
             card={(row) => ({
