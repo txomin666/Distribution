@@ -27,7 +27,7 @@ interface LogInterface
     public function getId();
     public function setAction($action);
     public function getAction();
-    public function setDateLog(\DateTime $date);
+    public function setDateLog(\DateTime $date = null);
     public function getDateLog();
     public function getShortDateLog();
     public function setDetails($details);

@@ -23,6 +23,11 @@ final class Options
      */
     const NO_FETCH = 'no_fetch';
 
+    /*
+     * Do we want to hydrate the object in a adapter ?
+     */
+    const NO_HYDRATE = 'no_hydrate';
+
     /*******************************/
     /* SPECIFIC SERIALIZER OPTIONS */
     /*******************************/

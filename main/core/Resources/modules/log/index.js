@@ -3,6 +3,8 @@ import merge from 'lodash/merge'
 import {bootstrap} from '#/main/core/utilities/app/bootstrap'
 import {generateUrl} from '#/main/core/fos-js-router'
 
+import {reducer as modalReducer} from '#/main/core/layout/modal/reducer'
+
 // reducers
 import {reducer as apiReducer} from '#/main/core/api/reducer'
 import {reducer} from '#/main/core/log/reducer'
@@ -21,7 +23,8 @@ bootstrap(
     // app reducers
     logs: reducer,
     // generic reducers
-    currentRequests: apiReducer
+    currentRequests: apiReducer,
+    modal: modalReducer
   },
 
   // remap data-attributes set on the app DOM container

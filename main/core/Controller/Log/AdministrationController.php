@@ -35,8 +35,11 @@ class AdministrationController
      */
     public function logListAction()
     {
-        return ['logs' => $this->container->get('claroline.api.finder')
-        ->search('Claroline\CoreBundle\Model\LogInterface', ['page' => 0, 'limit' => 20]),
-      ];
+        return ['
+          logs' => $this->container->get('claroline.api.finder')->search(
+            'Claroline\CoreBundle\Model\LogInterface',
+            ['filters' => [], 'page' => 0, 'limit' => 20]
+          ),
+        ];
     }
 }

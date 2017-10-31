@@ -114,8 +114,8 @@ class FinderProvider
         $page = isset($queryParams['page']) ? (int) $queryParams['page'] : 0;
         $limit = isset($queryParams['limit']) ? (int) $queryParams['limit'] : -1;
 
-        $data = $this->fetch($class, $page, $limit, $filters, $sortBy);
-        $count = $this->fetch($class, $page, $limit, $filters, $sortBy, true);
+        $data = $this->fetch($class, $page, $limit, $filters, $sortBy, false, $serializerOptions);
+        $count = $this->fetch($class, $page, $limit, $filters, $sortBy, true, $serializerOptions);
 
         return [
             'data' => array_map(function ($result) use ($serializerOptions) {
@@ -129,8 +129,15 @@ class FinderProvider
         ];
     }
 
-    public function fetch($class, $page, $limit, array $filters, array $sortBy = null, $count = false)
-    {
+    public function fetch(
+        $class,
+        $page,
+        $limit,
+        array $filters,
+        array $sortBy = null,
+        $count = false,
+        $options = []
+    ) {
         $enableMongo = $this->adapter->has($class) && $this->ch->getParameter('enable_mongo');
 
         if ($this->adapter->has($class)) {
@@ -162,7 +169,8 @@ class FinderProvider
         $limit,
         array $filters,
         array $sortBy = null,
-        $count = false
+        $count = false,
+        $options = []
     ) {
         $om = new ObjectManager($this->em);
 
@@ -192,7 +200,8 @@ class FinderProvider
         $limit,
         array $filters,
         array $sortBy = null,
-        $count = false
+        $count = false,
+        $options = []
     ) {
         $om = new ObjectManager($this->dm);
         $qb = $om->createQueryBuilder($fetched);
@@ -200,7 +209,16 @@ class FinderProvider
         $qb = $this->get($class)->configureDocumentQueryBuilder($qb, $filters, $sortBy);
 
         if (!$count && 0 < $limit) {
-            return array_values($qb->skip($page * $limit)->limit($limit)->getQuery()->execute()->toArray());
+            $documents = array_values($qb->skip($page * $limit)->limit($limit)->getQuery()->execute()->toArray());
+
+            if (in_array(Options::NO_HYDRATE, $options)) {
+                return $documents;
+            }
+
+            //this line can be removed if only mongo is supported because the seralizer will handle what's needed
+            return array_map(function ($document) use ($class) {
+                return $this->adapter->get($class)->fromMongo($document);
+            }, $documents);
         } else {
             return $qb->count()->getQuery()->execute();
         }

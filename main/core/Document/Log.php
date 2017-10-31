@@ -22,6 +22,7 @@ use Doctrine\ODM\MongoDB\Mapping\Annotations as MongoDB;
 
 /**
  * @MongoDB\Document
+ * We might to serialize the entities in this Document instead of storing the uuid
  */
 class Log implements LogInterface
 {
@@ -186,7 +187,7 @@ class Log implements LogInterface
      *
      * @param \DateTime $date
      */
-    public function setDateLog(\DateTime $date)
+    public function setDateLog(\DateTime $date = null)
     {
         $this->dateLog = $date;
         $this->shortDateLog = $date;

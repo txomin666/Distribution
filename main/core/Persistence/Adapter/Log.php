@@ -16,6 +16,7 @@ use Claroline\CoreBundle\Entity\Log\Log as MySqlLog;
 use Claroline\CoreBundle\Model\Log as ModelLog;
 use Claroline\CoreBundle\Model\LogInterface;
 use Claroline\CoreBundle\Persistence\AdapterInterface;
+use Claroline\CoreBundle\Persistence\ObjectManager;
 use Claroline\CoreBundle\Persistence\Options;
 use JMS\DiExtraBundle\Annotation as DI;
 
@@ -25,6 +26,21 @@ use JMS\DiExtraBundle\Annotation as DI;
  */
 class Log implements AdapterInterface
 {
+    /**
+     * Finder constructor.
+     *
+     * @DI\InjectParams({
+     *     "om" = @DI\Inject("claroline.persistence.object_manager")
+     * })
+     *
+     * @param ObjectManager $om
+     */
+    public function __construct(
+      ObjectManager $om
+  ) {
+        $this->om = $om;
+    }
+
     //only adapt from model atm, maybe never allow the others
     public function adapt($log, $to)
     {
@@ -68,8 +84,50 @@ class Log implements AdapterInterface
         return $new;
     }
 
-    public function fromMongo($mongoLog)
+    /**
+     * Depending on how we store datas (serialized data for mongodb)
+     * this might not be (as) usefull
+     * as it is now (because serialization could be already done).
+     */
+    public function fromMongo($model)
     {
+        $new = new ModelLog();
+
+        $new->setAction($model->getAction());
+        $new->setDateLog($model->getDateLog());
+        $new->setDetails($model->getDetails());
+        $new->setDoerType($model->getDoerType());
+        $new->setDoerIp($model->getDoerIp());
+        $new->setDoerSessionId($model->getDoerSessionId());
+        $new->setDoer($this->find('ClarolineCoreBundle:User', 'findOneByUuid', $model->getDoer()));
+
+        foreach ($model->getDoerPlatformRoles() as $doerPlatformRole) {
+            $role = $this->find('ClarolineCoreBundle:Role', 'findOneByUuid', $doerPlatformRole);
+            if ($role) {
+                $new->addDoerPlatformRole($role);
+            }
+        }
+
+        foreach ($model->getDoerWorkspaceRoles() as $workspaceRole) {
+            $role = $this->find('ClarolineCoreBundle:Role', 'findOneByUuid', $workspaceRole);
+            if ($role) {
+                $new->addDoerWorkspaceRole($role);
+            }
+        }
+
+        $new->setReceiver($this->find('ClarolineCoreBundle:User', 'findOneByUuid', $model->getReceiver()));
+        $new->setReceiverGroup($this->find('ClarolineCoreBundle:User', 'findOneByUuid', $model->getReceiverGroup()));
+        $new->setOwner($this->find('ClarolineCoreBundle:User', 'findOneByUuid', $model->getOwner()));
+        $new->setWorkspace($this->find('ClarolineCoreBundle:Workspace\Workspace', 'findOneByGuid', $model->getWorkspace()));
+        $new->setResourceNode($this->find('ClarolineCoreBundle:Resource\ResourceNode', 'findOneByGuid', $model->getResourceNode()));
+        $new->setResourceType($this->find('ClarolineCoreBundle:Resource\ResourceType', 'findOneByName', $model->getResourceType()));
+        $new->setRole($this->find('ClarolineCoreBundle:Role', 'findOneByUuid', $model->getRole()));
+        $new->setToolName($model->getToolName());
+        $new->setIsDisplayedInAdmin($model->isDisplayedInAdmin());
+        $new->setIsDisplayedInWorkspace($model->isDisplayedInWorkspace());
+        $new->setOtherElementId($model->getOtherElementId());
+
+        return $new;
         //some database fetches will be required at this point
     }
 
@@ -94,5 +152,12 @@ class Log implements AdapterInterface
     public function getEntityClass()
     {
         return 'Claroline\CoreBundle\Entity\Log\Log';
+    }
+
+    private function find($class, $method, $value)
+    {
+        if ($value) {
+            return $this->om->getRepository($class)->$method($value);
+        }
     }
 }

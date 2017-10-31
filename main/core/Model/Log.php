@@ -97,7 +97,7 @@ class Log implements LogInterface
      *
      * @param \DateTime $date
      */
-    public function setDateLog(\DateTime $date)
+    public function setDateLog(\DateTime $date = null)
     {
         $this->dateLog = $date;
         $this->shortDateLog = $date;

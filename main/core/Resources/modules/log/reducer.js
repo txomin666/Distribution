@@ -5,6 +5,9 @@ const logReducer = makeReducer([], {})
 
 const reducer = makeListReducer({
   data: logReducer
+}, {
+  selectable: false,
+  deletable : false
 })
 
 export {

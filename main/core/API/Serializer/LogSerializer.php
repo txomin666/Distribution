@@ -4,6 +4,7 @@ namespace Claroline\CoreBundle\API\Serializer;
 
 use Claroline\CoreBundle\Model\LogInterface;
 use JMS\DiExtraBundle\Annotation as DI;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * @DI\Service("claroline.serializer.log")
@@ -13,22 +14,38 @@ class LogSerializer
 {
     use SerializerTrait;
 
+    /**
+     * @DI\InjectParams({
+     *     "translator" = @DI\Inject("translator")
+     * })
+     *
+     * @param TranslatorInterface $translator
+     */
+    public function __construct(
+      TranslatorInterface $translator
+    ) {
+        $this->translator = $translator;
+    }
+
     public function getClass()
     {
         return 'Claroline\CoreBundle\Model\LogInterface';
     }
 
+    /*
+     * If it's fetched from MongoDB with already serialized objects, some chunck of this method
+     * might be useless but it's not the case (yet) - SEE the NO_HYDRATE option
+     */
     public function serialize(LogInterface $log, array $options = [])
     {
         $data = [
-            'id' => $log->getId(),
-            'action' => $log->getAction(),
+            'action' => $this->translator->trans('log_'.$log->getAction().'_shortname', [], 'log'),
+            'explanation' => $this->translator->trans('log_'.$log->getAction().'_sentence', [], 'log'),
             'details' => $log->getDetails(),
             'doer' => [
               'ip' => $log->getDoerIp(),
               'type' => $log->getDoerType(),
               'session' => $log->getDoerSessionId(),
-              'uuid' => $log->getDoer(),
               'platform_roles' => [
                 //list of doer roles
               ],
@@ -60,11 +77,20 @@ class LogSerializer
             $data['date'] = $log->getDateLog()->format('Y-m-d\TH:i:s');
         }
 
+        $doer = $log->getDoer() ? ['username' => $log->getDoer()->getUsername()] : null;
+        $data['doer']['user'] = $doer;
+
         if ($log->getReceiver()) {
-            $data['receiver'] = [
-              'uuid' => $log->getReceiver(),
-              'group' => $log->getReceiver()->getGroup()->getName(),
-          ];
+            $receiver = ['username' => $log->getReceiver()->getUsername()];
+
+            $data['receiver'] = $receiver;
+
+            if ($log->getReceiverGroup()) {
+                $data['receiver']['group'] = [
+                    'uuid' => $log->getReceiverGroup()->getUuid(),
+                    'name' => $log->getReceiverGroup()->getName(),
+                ];
+            }
         }
 
         return $data;

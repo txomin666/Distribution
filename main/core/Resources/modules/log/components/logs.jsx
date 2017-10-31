@@ -9,21 +9,33 @@ import {
   PageContainer as Page,
   PageHeader,
   PageContent,
-  PageActions
+  PageActions,
+  PageAction
 } from '#/main/core/layout/page/index'
 
-import {DataList} from '#/main/core/layout/list/components/data-list.jsx'
+import {DataListContainer as DataList} from '#/main/core/layout/list/containers/data-list.jsx'
 
 class Logs extends Component {
   constructor(props) {
     super(props)
   }
 
+  componentDidMount() {
+    this.setState({enumActions: {}})
+  }
+
   render() {
     return (
       <Page id="logs-display">
         <PageHeader title={t('logs_display')}>
-          <PageActions></PageActions>
+          <PageActions>
+            <PageAction
+              id="log-download"
+              title={t('import_csv')}
+              icon="fa fa-download"
+              action="#"
+            />
+          </PageActions>
         </PageHeader>
 
         <PageContent>
@@ -31,11 +43,35 @@ class Logs extends Component {
             name="logs"
             data={this.props.data}
             totalResults={this.props.totalResults}
+            display={{available: ['table'], current: 'table'}}
             definition={[
               {
-                name: 'id',
+                name: 'subject',
+                type: 'enum',
+                label: t('subject'),
+                displayed: false,
+                filterable: true,
+                options: {
+                  enum: {
+                    'yolo': 'lol',
+                    'yala': 'lal'
+                  }
+                }
+              },
+              {
+                name: 'search_action',
+                type: 'enum',
+                label: t('action'),
+                displayed: false,
+                filterable: true,
+                options: {
+                  enum: this.state ? this.state.enumActions: {}
+                }
+              },
+              {
+                name: 'date',
                 type: 'string',
-                label: t('name'),
+                label: t('date'),
                 displayed: true,
                 filterable: false
               },
@@ -44,37 +80,42 @@ class Logs extends Component {
                 type: 'string',
                 label: t('action'),
                 displayed: true,
-                searchable: true
+                filterable: false
               },
               {
-                name: 'createdAfter',
-                label: t('created_after'),
+                name: 'doer.user.username',
+                type: 'string',
+                label: t('user'),
+                displayed: true,
+                filterable: true
+              },
+              {
+                name: 'group',
+                type: 'string',
+                label: t('group'),
+                displayed: false,
+                filterable: true
+              },
+              {
+                name: 'explanation',
+                type: 'string',
+                label: t('explanation'),
+                displayed: true,
+                filterable: false
+              },
+              {
+                name: 'from',
+                label: t('from'),
                 type: 'date',
-                displayable: false
+                filterable: true
               }, {
-                name: 'createdBefore',
-                label: t('created_before'),
+                name: 'to',
+                label: t('to'),
                 type: 'date',
-                displayable: false
+                filterable: true
               }
             ]}
-            card={(row) => ({
-              onClick: '#',
-              poster: null,
-              icon: 'fa fa-users',
-              title: row.id,
-              subtitle: row.id,
-              contentText: '',
-              flags: [],
-              footer:
-                <span>
-                  footer
-                </span>,
-              footerLong:
-                <span>
-                  footerLong
-                </span>
-            })}
+            card={() => ({})}
             actions={[]}
           />
         </PageContent>
