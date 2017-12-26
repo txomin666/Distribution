@@ -11,21 +11,16 @@
 
 namespace Claroline\LdapBundle;
 
-use Claroline\CoreBundle\Library\PluginBundle;
+use Claroline\CoreBundle\Library\DistributionPluginBundle;
 use Claroline\KernelBundle\Bundle\ConfigurationBuilder;
 
-class ClarolineLdapBundle extends PluginBundle
+class ClarolineLdapBundle extends DistributionPluginBundle
 {
-    public function hasMigrations()
-    {
-        return false;
-    }
-
     public function getConfiguration($environment)
     {
         $config = new ConfigurationBuilder();
 
-        return $config->addRoutingResource(__DIR__.'/Resources/config/routing.yml', null, 'admin/ldap');
+        return $config->addRoutingResource(__DIR__.'/Resources/config/routing.yml');
     }
 
     public function getRequiredExtensions()

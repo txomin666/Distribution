@@ -139,7 +139,6 @@ class RemoveWorkspaceCommand extends ContainerAwareCommand
 
         if (count($toDelete) > 0) {
             $this->confirmWorkspaceDelete($toDelete);
-            $this->deleteWorkspaceByCode($code, null, self::BATCH_SIZE);
         }
     }
 
@@ -151,7 +150,7 @@ class RemoveWorkspaceCommand extends ContainerAwareCommand
         $empty = $this->getInput()->getOption('empty');
         $workspaceManager = $this->getContainer()->get('claroline.manager.workspace_manager');
         $workspacesToDelete = $all ?
-            $workspaceManager->getPersonalWorkspaceExcudingRoles($rolesSearch, $includeOrphans, $empty, null, self::BATCH_SIZE) :
+            $workspaceManager->getPersonalWorkspaceExcludingRoles($rolesSearch, $includeOrphans, $empty, null, self::BATCH_SIZE) :
             $workspaceManager->getPersonalWorkspaceByRolesIncludingGroups($rolesSearch, $includeOrphans, $empty, null, self::BATCH_SIZE);
 
         if (count($workspacesToDelete) > 0) {

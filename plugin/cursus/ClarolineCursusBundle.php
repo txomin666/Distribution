@@ -11,10 +11,10 @@
 
 namespace Claroline\CursusBundle;
 
-use Claroline\CoreBundle\Library\PluginBundle;
+use Claroline\CoreBundle\Library\DistributionPluginBundle;
 use Claroline\CursusBundle\Library\Installation\AdditionalInstaller;
 
-class ClarolineCursusBundle extends PluginBundle
+class ClarolineCursusBundle extends DistributionPluginBundle
 {
     public function hasMigrations()
     {
@@ -29,5 +29,14 @@ class ClarolineCursusBundle extends PluginBundle
     public function getRequiredFixturesDirectory($environment)
     {
         return 'DataFixtures';
+    }
+
+    public function getRequiredPlugins()
+    {
+        return [
+            'Claroline\\MessageBundle\\ClarolineMessageBundle',
+            'Claroline\\TagBundle\\ClarolineTagBundle',
+            'FormaLibre\\ReservationBundle\\FormaLibreReservationBundle',
+        ];
     }
 }

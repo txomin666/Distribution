@@ -11,18 +11,18 @@
 
 namespace Claroline\CoreBundle\Controller\Administration;
 
+use Claroline\CoreBundle\Entity\Icon\IconSetTypeEnum;
 use Claroline\CoreBundle\Entity\SecurityToken;
 use Claroline\CoreBundle\Event\StrictDispatcher;
 use Claroline\CoreBundle\Form\Administration as AdminForm;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Library\Configuration\UnwritableException;
 use Claroline\CoreBundle\Library\Installation\Refresher;
-use Claroline\CoreBundle\Library\Installation\Settings\MailingChecker;
-use Claroline\CoreBundle\Library\Installation\Settings\MailingSettings;
 use Claroline\CoreBundle\Library\Maintenance\MaintenanceHandler;
 use Claroline\CoreBundle\Library\Session\DatabaseSessionValidator;
 use Claroline\CoreBundle\Manager\CacheManager;
 use Claroline\CoreBundle\Manager\ContentManager;
+use Claroline\CoreBundle\Manager\IconSetManager;
 use Claroline\CoreBundle\Manager\IPWhiteListManager;
 use Claroline\CoreBundle\Manager\LocaleManager;
 use Claroline\CoreBundle\Manager\MailManager;
@@ -30,7 +30,7 @@ use Claroline\CoreBundle\Manager\PluginManager;
 use Claroline\CoreBundle\Manager\RoleManager;
 use Claroline\CoreBundle\Manager\SecurityTokenManager;
 use Claroline\CoreBundle\Manager\TermsOfServiceManager;
-use Claroline\CoreBundle\Manager\ThemeManager;
+use Claroline\CoreBundle\Manager\Theme\ThemeManager;
 use Claroline\CoreBundle\Manager\ToolManager;
 use Claroline\CoreBundle\Manager\UserManager;
 use Claroline\CoreBundle\Manager\WorkspaceManager;
@@ -63,7 +63,6 @@ class ParametersController extends Controller
     private $cacheManager;
     private $dbSessionValidator;
     private $refresher;
-    private $hwiManager;
     private $router;
     private $tokenManager;
     private $ipwlm;
@@ -73,6 +72,7 @@ class ParametersController extends Controller
     private $themeManager;
     private $pluginManager;
     private $session;
+    private $iconSetManager;
 
     /**
      * @DI\InjectParams({
@@ -97,7 +97,8 @@ class ParametersController extends Controller
      *     "eventDispatcher"    = @DI\Inject("claroline.event.event_dispatcher"),
      *     "themeManager"       = @DI\Inject("claroline.manager.theme_manager"),
      *     "pluginManager"      = @DI\Inject("claroline.manager.plugin_manager"),
-     *     "session"            = @DI\Inject("session")
+     *     "session"            = @DI\Inject("session"),
+     *     "iconSetManager"        = @DI\Inject("claroline.manager.icon_set_manager")
      * })
      */
     public function __construct(
@@ -122,7 +123,8 @@ class ParametersController extends Controller
         StrictDispatcher $eventDispatcher,
         ThemeManager $themeManager,
         PluginManager $pluginManager,
-        SessionInterface $session
+        SessionInterface $session,
+        IconSetManager $iconSetManager
     ) {
         $this->configHandler = $configHandler;
         $this->roleManager = $roleManager;
@@ -147,6 +149,7 @@ class ParametersController extends Controller
         $this->themeManager = $themeManager;
         $this->pluginManager = $pluginManager;
         $this->session = $session;
+        $this->iconSetManager = $iconSetManager;
     }
 
     /**
@@ -175,6 +178,16 @@ class ParametersController extends Controller
         $descriptions = $this->contentManager->getTranslatedContent(['type' => 'platformDescription']);
         $platformConfig = $this->configHandler->getPlatformConfig();
         $role = $this->roleManager->getRoleByName($platformConfig->getDefaultRole());
+        $targetEvent = $this->eventDispatcher->dispatch('external_login_target_url_event', 'LoginTargetUrl');
+        $targetLoginUrls = $targetEvent->getTargets();
+        $targetLoginUrls = array_merge(['Claroline' => 'claro_security_login'], $targetLoginUrls);
+        $currentTargetLoginUrl = $this->configHandler->getParameter('login_target_route');
+        if (!empty($currentTargetLoginUrl) && !in_array($currentTargetLoginUrl, $targetLoginUrls)) {
+            $targetLoginUrls = array_merge(
+                ["Custom [${currentTargetLoginUrl}]" => $currentTargetLoginUrl],
+                $targetLoginUrls
+            );
+        }
         $form = $this->formFactory->create(
             new AdminForm\GeneralType(
                 $this->localeManager->getAvailableLocales(),
@@ -182,7 +195,8 @@ class ParametersController extends Controller
                 $descriptions,
                 $this->translator->trans('date_form_format', [], 'platform'),
                 $this->localeManager->getUserLocale($request),
-                $this->configHandler->getLockedParamaters()
+                $this->configHandler->getLockedParamaters(),
+                $targetLoginUrls
             ),
             $platformConfig
         );
@@ -191,41 +205,14 @@ class ParametersController extends Controller
             $form->handleRequest($request);
             if ($form->isValid()) {
                 try {
-                    $portfolioUrlOptions = $request->get('portfolioUrlOptions', 0);
-                    $this->configHandler->setParameters(
-                        [
-                            'allow_self_registration' => $form['selfRegistration']->getData(),
-                            'locale_language' => $form['localeLanguage']->getData(),
-                            'name' => $form['name']->getData(),
-                            'support_email' => $form['support_email']->getData(),
-                            'default_role' => $form['defaultRole']->getData()->getName(),
-                            'redirect_after_login_option' => $form['redirect_after_login_option']->getData(),
-                            'redirect_after_login_url' => $form['redirect_after_login_url']->getData(),
-                            'form_captcha' => $form['formCaptcha']->getData(),
-                            'form_honeypot' => $form['formHoneypot']->getData(),
-                            'platform_init_date' => $form['platform_init_date']->getData(),
-                            'platform_limit_date' => $form['platform_limit_date']->getData(),
-                            'account_duration' => $form['account_duration']->getData(),
-                            'anonymous_public_profile' => $form['anonymous_public_profile']->getData(),
-                            'portfolio_url' => $portfolioUrlOptions ? $form['portfolio_url']->getData() : null,
-                            'is_notification_active' => $form['isNotificationActive']->getData(),
-                            'max_storage_size' => $form['maxStorageSize']->getData(),
-                            'max_upload_resources' => $form['maxUploadResources']->getData(),
-                            'max_workspace_users' => $form['workspaceMaxUsers']->getData(),
-                            'show_help_button' => $form['showHelpButton']->getData(),
-                            'help_url' => $form['helpUrl']->getData(),
-                            'register_button_at_login' => $form['registerButtonAtLogin']->getData(),
-                            'send_mail_at_workspace_registration' => $form['sendMailAtWorkspaceRegistration']->getData(),
-                            'domain_name' => $form['domainName']->getData(),
-                            'default_workspace_tag' => $form['defaultWorkspaceTag']->getData(),
-                            'registration_mail_validation' => $form['registrationMailValidation']->getData(),
-                            'is_pdf_export_active' => $form['isPdfExportActive']->getData(),
-                            'ssl_enabled' => $form['sslEnabled']->getData(),
-                            'enable_opengraph' => $form['enableOpengraph']->getData(),
-                            'tmp_dir' => $form['tmpDir']->getData(),
-                        ]
-                    );
+                    $platformConfig = $form->getData();
+                    $portfolioOptions = $request->get('portfolioUrlOptions', 0);
 
+                    if ($portfolioOptions === 0 || $portfolioOptions === '0') {
+                        $platformConfig->setPortfolioUrl(null);
+                    }
+
+                    $this->configHandler->setPlatformConfig($platformConfig);
                     $content = $request->get('platform_parameters_form');
 
                     if (isset($content['description'])) {
@@ -261,7 +248,7 @@ class ParametersController extends Controller
         }
         $event = $this->eventDispatcher->dispatch(
             'claroline_retrieve_tags',
-            'GenericDatas',
+            'GenericData',
             []
         );
         $response = $event->getResponse();
@@ -287,6 +274,7 @@ class ParametersController extends Controller
         $form = $this->formFactory->create(
             new AdminForm\AppearanceType(
                 $this->themeManager->listThemeNames(),
+                $this->iconSetManager->listIconSetNamesByType(IconSetTypeEnum::RESOURCE_ICON_SET),
                 $this->configHandler->getLockedParamaters()
             ),
             $platformConfig
@@ -298,13 +286,16 @@ class ParametersController extends Controller
                 try {
                     $this->configHandler->setParameters(
                         [
-                            'nameActive' => $form['name_active']->getData(),
+                            'name_active' => $form['name_active']->getData(),
                             'theme' => $form['theme']->getData(),
+                            'resource_icon_set' => $form['resource_icon_set']->getData(),
                             'footer' => $form['footer']->getData(),
                             'logo' => $this->request->get('selectlogo'),
                         ]
                     );
                     $theme = $this->themeManager->getThemeByNormalizedName($form['theme']->getData());
+
+                    $this->iconSetManager->setActiveResourceIconSetByCname($form['resource_icon_set']->getData());
 
                     if (!is_null($theme)) {
                         $this->configHandler->setParameter('theme_extending_default', $theme->isExtendingDefault());
@@ -401,28 +392,17 @@ class ParametersController extends Controller
             'auth_mode' => $form['mailer_auth_mode']->getData(),
             'encryption' => $form['mailer_encryption']->getData(),
             'port' => $form['mailer_port']->getData(),
+            'api_key' => $form['mailer_api_key']->getData(),
+            'tag' => $form['mailer_tag']->getData(),
         ];
 
-        $settings = new MailingSettings();
-        $settings->setTransport($data['transport']);
-        $settings->setTransportOptions($data);
-        $errors = $settings->validate();
+        $errors = $this->container->get('claroline.library.mailing.mailer')->test($data);
 
         if (count($errors) > 0) {
             foreach ($errors as $field => $error) {
                 $trans = $this->translator->trans($error, [], 'platform');
                 $form->get('mailer_'.$field)->addError(new FormError($trans));
             }
-
-            return ['form_mail' => $form->createView()];
-        }
-
-        $checker = new MailingChecker($settings);
-        $error = $checker->testTransport();
-
-        if ($error !== true) {
-            $session = $this->request->getSession();
-            $session->getFlashBag()->add('error', $this->translator->trans($error, [], 'platform'));
 
             return ['form_mail' => $form->createView()];
         }
@@ -436,6 +416,8 @@ class ParametersController extends Controller
                 'mailer_auth_mode' => $data['auth_mode'],
                 'mailer_encryption' => $data['encryption'],
                 'mailer_port' => $data['port'],
+                'mailer_api_key' => $data['api_key'],
+                'mailer_tag' => $data['tag'],
             ]
         );
 
@@ -462,6 +444,8 @@ class ParametersController extends Controller
             'mailer_auth_mode' => null,
             'mailer_encryption' => null,
             'mailer_port' => null,
+            'mailer_api_key' => null,
+            'mailer_tag' => null,
         ];
 
         $this->configHandler->setParameters($data);
@@ -753,6 +737,18 @@ class ParametersController extends Controller
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function oauthIndexAction()
+    {
+        return [];
+    }
+
+    /**
+     * @EXT\Route("/third-party-authentication", name="claro_admin_parameters_third_party_authentication_index")
+     * @EXT\Template
+     * @SEC\PreAuthorize("canOpenAdminTool('platform_parameters')")
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function thirdPartyAuthenticationIndexAction()
     {
         return [];
     }

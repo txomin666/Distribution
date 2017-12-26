@@ -14,13 +14,12 @@ namespace Claroline\CursusBundle\Controller\API;
 use Claroline\CoreBundle\Entity\Group;
 use Claroline\CoreBundle\Entity\Organization\Location;
 use Claroline\CoreBundle\Entity\User;
-use Claroline\CoreBundle\Event\GenericDatasEvent;
+use Claroline\CoreBundle\Event\GenericDataEvent;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Manager\ApiManager;
 use Claroline\CoreBundle\Manager\Organization\LocationManager;
 use Claroline\CoreBundle\Manager\UserManager;
 use Claroline\CoreBundle\Manager\WorkspaceManager;
-use Claroline\CoreBundle\Manager\WorkspaceModelManager;
 use Claroline\CursusBundle\Entity\Course;
 use Claroline\CursusBundle\Entity\CourseSession;
 use Claroline\CursusBundle\Entity\CourseSessionGroup;
@@ -47,6 +46,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -57,6 +57,7 @@ use Symfony\Component\Translation\TranslatorInterface;
 class AdminManagementController extends Controller
 {
     private $apiManager;
+    private $authorization;
     private $configHandler;
     private $cursusManager;
     private $eventDispatcher;
@@ -67,26 +68,26 @@ class AdminManagementController extends Controller
     private $translator;
     private $userManager;
     private $workspaceManager;
-    private $workspaceModelManager;
 
     /**
      * @DI\InjectParams({
-     *     "apiManager"            = @DI\Inject("claroline.manager.api_manager"),
-     *     "configHandler"         = @DI\Inject("claroline.config.platform_config_handler"),
-     *     "cursusManager"         = @DI\Inject("claroline.manager.cursus_manager"),
-     *     "eventDispatcher"       = @DI\Inject("event_dispatcher"),
-     *     "locationManager"       = @DI\Inject("claroline.manager.organization.location_manager"),
-     *     "request"               = @DI\Inject("request"),
-     *     "serializer"            = @DI\Inject("jms_serializer"),
-     *     "tagManager"            = @DI\Inject("claroline.manager.tag_manager"),
-     *     "translator"            = @DI\Inject("translator"),
-     *     "userManager"           = @DI\Inject("claroline.manager.user_manager"),
-     *     "workspaceManager"      = @DI\Inject("claroline.manager.workspace_manager"),
-     *     "workspaceModelManager" = @DI\Inject("claroline.manager.workspace_model_manager")
+     *     "apiManager"       = @DI\Inject("claroline.manager.api_manager"),
+     *     "authorization"    = @DI\Inject("security.authorization_checker"),
+     *     "configHandler"    = @DI\Inject("claroline.config.platform_config_handler"),
+     *     "cursusManager"    = @DI\Inject("claroline.manager.cursus_manager"),
+     *     "eventDispatcher"  = @DI\Inject("event_dispatcher"),
+     *     "locationManager"  = @DI\Inject("claroline.manager.organization.location_manager"),
+     *     "request"          = @DI\Inject("request"),
+     *     "serializer"       = @DI\Inject("jms_serializer"),
+     *     "tagManager"       = @DI\Inject("claroline.manager.tag_manager"),
+     *     "translator"       = @DI\Inject("translator"),
+     *     "userManager"      = @DI\Inject("claroline.manager.user_manager"),
+     *     "workspaceManager" = @DI\Inject("claroline.manager.workspace_manager")
      * })
      */
     public function __construct(
         ApiManager $apiManager,
+        AuthorizationCheckerInterface $authorization,
         PlatformConfigurationHandler $configHandler,
         CursusManager $cursusManager,
         EventDispatcherInterface $eventDispatcher,
@@ -96,10 +97,10 @@ class AdminManagementController extends Controller
         TagManager $tagManager,
         TranslatorInterface $translator,
         UserManager $userManager,
-        WorkspaceManager $workspaceManager,
-        WorkspaceModelManager $workspaceModelManager
+        WorkspaceManager $workspaceManager
     ) {
         $this->apiManager = $apiManager;
+        $this->authorization = $authorization;
         $this->configHandler = $configHandler;
         $this->cursusManager = $cursusManager;
         $this->eventDispatcher = $eventDispatcher;
@@ -110,7 +111,6 @@ class AdminManagementController extends Controller
         $this->translator = $translator;
         $this->userManager = $userManager;
         $this->workspaceManager = $workspaceManager;
-        $this->workspaceModelManager = $workspaceModelManager;
     }
 
     /**
@@ -120,10 +120,17 @@ class AdminManagementController extends Controller
      * )
      * @EXT\ParamConverter("user", converter="current_user")
      * @EXT\Template()
+     *
+     * @param User $user
+     *
+     * @return array
      */
-    public function indexAction()
+    public function indexAction(User $user)
     {
-        return [];
+        $isAdmin = $this->authorization->isGranted('ROLE_ADMIN');
+        $organizations = $isAdmin ? [] : $user->getAdministratedOrganizations()->toArray();
+
+        return ['isAuthorized' => $isAdmin || count($organizations) > 0];
     }
 
     /**
@@ -142,25 +149,27 @@ class AdminManagementController extends Controller
     {
         $cursusDatas = $this->request->request->get('cursusDatas', false);
         $worskpace = null;
-        $icon = null;
 
         if ($cursusDatas['workspace']) {
             $worskpace = $this->workspaceManager->getWorkspaceById($cursusDatas['workspace']);
         }
-        if ($this->request->files->get('cursusDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('cursusDatas')['icon']);
-        }
+        $organizations = isset($cursusDatas['organizations']) && count($cursusDatas['organizations']) > 0 ?
+            $this->cursusManager->getOrganizationsByIds($cursusDatas['organizations']) :
+            [];
+        $blocking = is_bool($cursusDatas['blocking']) ? $cursusDatas['blocking'] : $cursusDatas['blocking'] === 'true';
         $createdCursus = $this->cursusManager->createCursus(
             $cursusDatas['title'],
             $cursusDatas['code'],
             null,
             null,
             $cursusDatas['description'],
-            $cursusDatas['blocking'],
-            $icon,
+            $blocking,
+            $this->request->files->get('cursusDatas')['icon'],
             $cursusDatas['color'],
-            $worskpace
+            $worskpace,
+            $organizations
         );
+
         $serializedCursus = $this->serializer->serialize(
             $createdCursus,
             'json',
@@ -180,28 +189,30 @@ class AdminManagementController extends Controller
      *
      * Creates a child cursus
      *
+     * @param User   $user
+     * @param Cursus $parent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postCursusChildCreationAction(Cursus $parent)
+    public function postCursusChildCreationAction(User $user, Cursus $parent)
     {
+        $this->cursusManager->checkCursusAccess($user, $parent);
         $cursusDatas = $this->request->request->get('cursusDatas', false);
         $worskpace = null;
-        $icon = null;
 
         if ($cursusDatas['workspace']) {
             $worskpace = $this->workspaceManager->getWorkspaceById($cursusDatas['workspace']);
         }
-        if ($this->request->files->get('cursusDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('cursusDatas')['icon']);
-        }
+
+        $blocking = is_bool($cursusDatas['blocking']) ? $cursusDatas['blocking'] : $cursusDatas['blocking'] === 'true';
         $createdCursus = $this->cursusManager->createCursus(
             $cursusDatas['title'],
             $cursusDatas['code'],
             $parent,
             null,
             $cursusDatas['description'],
-            $cursusDatas['blocking'],
-            $icon,
+            $blocking,
+            $this->request->files->get('cursusDatas')['icon'],
             $cursusDatas['color'],
             $worskpace
         );
@@ -224,15 +235,20 @@ class AdminManagementController extends Controller
      *
      * Edits a cursus
      *
+     * @param User   $user
+     * @param Cursus $cursus
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putCursusEditionAction(Cursus $cursus)
+    public function putCursusEditionAction(User $user, Cursus $cursus)
     {
+        $this->cursusManager->checkCursusAccess($user, $cursus);
         $cursusDatas = $this->request->request->get('cursusDatas', false);
         $cursus->setTitle($cursusDatas['title']);
         $cursus->setCode($cursusDatas['code']);
         $cursus->setDescription($cursusDatas['description']);
-        $cursus->setBlocking((bool) $cursusDatas['blocking']);
+        $blocking = is_bool($cursusDatas['blocking']) ? $cursusDatas['blocking'] : $cursusDatas['blocking'] === 'true';
+        $cursus->setBlocking($blocking);
         $color = $cursusDatas['color'];
         $details = ['color' => $color];
         $cursus->setDetails($details);
@@ -242,8 +258,14 @@ class AdminManagementController extends Controller
             $cursus->setWorkspace($worskpace);
         }
         if ($this->request->files->get('cursusDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('cursusDatas')['icon']);
+            $icon = $this->cursusManager->saveIcon($this->request->files->get('cursusDatas')['icon'], $cursus);
             $cursus->setIcon($icon);
+        }
+        if (empty($cursus->getParent())) {
+            $organizations = isset($cursusDatas['organizations']) && count($cursusDatas['organizations']) > 0 ?
+                $this->cursusManager->getOrganizationsByIds($cursusDatas['organizations']) :
+                [];
+            $this->cursusManager->updateCursusOrganizations($cursus, $organizations);
         }
         $this->cursusManager->persistCursus($cursus);
         $event = new LogCursusEditEvent($cursus);
@@ -267,10 +289,14 @@ class AdminManagementController extends Controller
      *
      * Deletes cursus
      *
+     * @param User   $user
+     * @param Cursus $cursus
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteCursusAction(Cursus $cursus)
+    public function deleteCursusAction(User $user, Cursus $cursus)
     {
+        $this->cursusManager->checkCursusAccess($user, $cursus);
         $serializedCursus = $this->serializer->serialize(
             $cursus,
             'json',
@@ -288,9 +314,16 @@ class AdminManagementController extends Controller
      *     options={"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Imports cursus
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postCursusImportAction()
+    public function postCursusImportAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $file = $this->request->files->get('archive');
         $zip = new \ZipArchive();
 
@@ -305,7 +338,7 @@ class AdminManagementController extends Controller
         }
         fclose($coursesStream);
         $courses = json_decode($coursesContents, true);
-        $importedCourses = $this->cursusManager->importCourses($courses);
+        $importedCourses = $this->cursusManager->importCourses($courses, $user->getAdministratedOrganizations()->toArray());
         $iconsDir = $this->container->getParameter('claroline.param.thumbnails_directory').'/';
 
         for ($i = 0; $i < $zip->numFiles; ++$i) {
@@ -333,11 +366,15 @@ class AdminManagementController extends Controller
         fclose($cursusStream);
         $zip->close();
         $cursus = json_decode($cursuscontents, true);
-        $rootCursus = $this->cursusManager->importCursus($cursus, $importedCourses);
+        $rootCursus = $this->cursusManager->importCursus(
+            $cursus,
+            $user->getAdministratedOrganizations()->toArray(),
+            $importedCourses
+        );
         $serializedCursus = $this->serializer->serialize(
             $rootCursus,
             'json',
-            SerializationContext::create()->setGroups(['api_cursus'])
+            SerializationContext::create()->setGroups(['api_workspace_min'])
         );
 
         return new JsonResponse($serializedCursus, 200);
@@ -350,51 +387,70 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User   $user
+     * @param Cursus $cursus
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postCursusCourseCreateAction(Cursus $cursus)
+    public function postCursusCourseCreateAction(User $user, Cursus $cursus)
     {
+        $this->cursusManager->checkCursusAccess($user, $cursus);
         $courseDatas = $this->request->request->get('courseDatas', false);
         $worskpace = null;
         $worskpaceModel = null;
-        $icon = null;
-
-        if ($courseDatas['workspace']) {
-            $worskpace = $this->workspaceManager->getWorkspaceById($courseDatas['workspace']);
-        }
-        if ($courseDatas['workspaceModel']) {
-            $worskpaceModel = $this->workspaceModelManager->getModelById($courseDatas['workspaceModel']);
-        }
+        $publicRegistration = is_bool($courseDatas['publicRegistration']) ?
+            $courseDatas['publicRegistration'] :
+            $courseDatas['publicRegistration'] === 'true';
+        $publicUnregistration = is_bool($courseDatas['publicUnregistration']) ?
+            $courseDatas['publicUnregistration'] :
+            $courseDatas['publicUnregistration'] === 'true';
+        $registrationValidation = is_bool($courseDatas['registrationValidation']) ?
+            $courseDatas['registrationValidation'] :
+            $courseDatas['registrationValidation'] === 'true';
+        $userValidation = is_bool($courseDatas['userValidation']) ?
+            $courseDatas['userValidation'] :
+            $courseDatas['userValidation'] === 'true';
+        $organizationValidation = is_bool($courseDatas['organizationValidation']) ?
+            $courseDatas['organizationValidation'] :
+            $courseDatas['organizationValidation'] === 'true';
+        $withSessionEvent = is_bool($courseDatas['withSessionEvent']) ?
+            $courseDatas['withSessionEvent'] :
+            $courseDatas['withSessionEvent'] === 'true';
         if ($this->request->files->get('courseDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('courseDatas')['icon']);
         }
         $validators = isset($courseDatas['validators']) && count($courseDatas['validators']) > 0 ?
             $this->userManager->getUsersByIds($courseDatas['validators']) :
+            [];
+        $organizations = isset($courseDatas['organizations']) && count($courseDatas['organizations']) > 0 ?
+            $this->cursusManager->getOrganizationsByIds($courseDatas['organizations']) :
             [];
         $createdCourse = $this->cursusManager->createCourse(
             $courseDatas['title'],
             $courseDatas['code'],
             $courseDatas['description'],
-            $courseDatas['publicRegistration'],
-            $courseDatas['publicUnregistration'],
-            $courseDatas['registrationValidation'],
+            $publicRegistration,
+            $publicUnregistration,
+            $registrationValidation,
             $courseDatas['tutorRoleName'],
             $courseDatas['learnerRoleName'],
             $worskpaceModel,
             $worskpace,
-            $icon,
-            $courseDatas['userValidation'],
-            $courseDatas['organizationValidation'],
+            $this->request->files->get('courseDatas')['icon'],
+            $userValidation,
+            $organizationValidation,
             $courseDatas['maxUsers'],
             $courseDatas['defaultSessionDuration'],
-            $courseDatas['withSessionEvent'],
+            $withSessionEvent,
             $validators,
-            $courseDatas['displayOrder']
+            $courseDatas['displayOrder'],
+            $organizations
         );
         $createdCursus = $this->cursusManager->addCoursesToCursus($cursus, [$createdCourse]);
         $serializedCursus = $this->serializer->serialize(
             $createdCursus,
             'json',
-            SerializationContext::create()->setGroups(['api_cursus'])
+            SerializationContext::create()->setGroups(['api_workspace_min'])
         );
 
         return new JsonResponse($serializedCursus, 200);
@@ -407,45 +463,66 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function postCourseCreateAction()
     {
         $courseDatas = $this->request->request->get('courseDatas', false);
         $worskpace = null;
         $worskpaceModel = null;
-        $icon = null;
+        $publicRegistration = is_bool($courseDatas['publicRegistration']) ?
+            $courseDatas['publicRegistration'] :
+            $courseDatas['publicRegistration'] === 'true';
+        $publicUnregistration = is_bool($courseDatas['publicUnregistration']) ?
+            $courseDatas['publicUnregistration'] :
+            $courseDatas['publicUnregistration'] === 'true';
+        $registrationValidation = is_bool($courseDatas['registrationValidation']) ?
+            $courseDatas['registrationValidation'] :
+            $courseDatas['registrationValidation'] === 'true';
+        $userValidation = is_bool($courseDatas['userValidation']) ?
+            $courseDatas['userValidation'] :
+            $courseDatas['userValidation'] === 'true';
+        $organizationValidation = is_bool($courseDatas['organizationValidation']) ?
+            $courseDatas['organizationValidation'] :
+            $courseDatas['organizationValidation'] === 'true';
+        $withSessionEvent = is_bool($courseDatas['withSessionEvent']) ?
+            $courseDatas['withSessionEvent'] :
+            $courseDatas['withSessionEvent'] === 'true';
 
         if ($courseDatas['workspace']) {
             $worskpace = $this->workspaceManager->getWorkspaceById($courseDatas['workspace']);
         }
         if ($courseDatas['workspaceModel']) {
-            $worskpaceModel = $this->workspaceModelManager->getModelById($courseDatas['workspaceModel']);
+            $worskpaceModel = $this->workspaceManager->getWorkspaceById($courseDatas['workspaceModel']);
         }
-        if ($this->request->files->get('courseDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('courseDatas')['icon']);
-        }
+
         $validators = isset($courseDatas['validators']) && count($courseDatas['validators']) > 0 ?
             $this->userManager->getUsersByIds($courseDatas['validators']) :
+            [];
+        $organizations = isset($courseDatas['organizations']) && count($courseDatas['organizations']) > 0 ?
+            $this->cursusManager->getOrganizationsByIds($courseDatas['organizations']) :
             [];
         $createdCourse = $this->cursusManager->createCourse(
             $courseDatas['title'],
             $courseDatas['code'],
             $courseDatas['description'],
-            $courseDatas['publicRegistration'],
-            $courseDatas['publicUnregistration'],
-            $courseDatas['registrationValidation'],
+            $publicRegistration,
+            $publicUnregistration,
+            $registrationValidation,
             $courseDatas['tutorRoleName'],
             $courseDatas['learnerRoleName'],
             $worskpaceModel,
             $worskpace,
-            $icon,
-            $courseDatas['userValidation'],
-            $courseDatas['organizationValidation'],
+            $this->request->files->get('courseDatas')['icon'],
+            $userValidation,
+            $organizationValidation,
             $courseDatas['maxUsers'],
             $courseDatas['defaultSessionDuration'],
-            $courseDatas['withSessionEvent'],
+            $withSessionEvent,
             $validators,
-            $courseDatas['displayOrder']
+            $courseDatas['displayOrder'],
+            $organizations
         );
         $serializedCourse = $this->serializer->serialize(
             $createdCourse,
@@ -463,14 +540,22 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User   $user
+     * @param Cursus $cursus
+     * @param Course $course
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postCursusCourseAddAction(Cursus $cursus, Course $course)
+    public function postCursusCourseAddAction(User $user, Cursus $cursus, Course $course)
     {
+        $this->cursusManager->checkCursusAccess($user, $cursus);
+        $this->cursusManager->checkCourseAccess($user, $course);
         $createdCursus = $this->cursusManager->addCoursesToCursus($cursus, [$course]);
         $serializedCursus = $this->serializer->serialize(
             $createdCursus,
             'json',
-            SerializationContext::create()->setGroups(['api_cursus'])
+            SerializationContext::create()->setGroups(['api_workspace_min'])
         );
 
         return new JsonResponse($serializedCursus, 200);
@@ -486,18 +571,40 @@ class AdminManagementController extends Controller
      *
      * Edits a course
      *
+     * @param User   $user
+     * @param Course $course
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putCourseEditionAction(Course $course)
+    public function putCourseEditionAction(User $user, Course $course)
     {
+        $this->cursusManager->checkCourseAccess($user, $course);
         $courseDatas = $this->request->request->get('courseDatas', false);
         $course->setTitle($courseDatas['title']);
         $course->setCode($courseDatas['code']);
         $description = $courseDatas['description'] ? $courseDatas['description'] : null;
         $course->setDescription($description);
-        $course->setPublicRegistration((bool) $courseDatas['publicRegistration']);
-        $course->setPublicUnregistration((bool) $courseDatas['publicUnregistration']);
-        $course->setRegistrationValidation((bool) $courseDatas['registrationValidation']);
+        $publicRegistration = is_bool($courseDatas['publicRegistration']) ?
+            $courseDatas['publicRegistration'] :
+            $courseDatas['publicRegistration'] === 'true';
+        $publicUnregistration = is_bool($courseDatas['publicUnregistration']) ?
+            $courseDatas['publicUnregistration'] :
+            $courseDatas['publicUnregistration'] === 'true';
+        $registrationValidation = is_bool($courseDatas['registrationValidation']) ?
+            $courseDatas['registrationValidation'] :
+            $courseDatas['registrationValidation'] === 'true';
+        $userValidation = is_bool($courseDatas['userValidation']) ?
+            $courseDatas['userValidation'] :
+            $courseDatas['userValidation'] === 'true';
+        $organizationValidation = is_bool($courseDatas['organizationValidation']) ?
+            $courseDatas['organizationValidation'] :
+            $courseDatas['organizationValidation'] === 'true';
+        $withSessionEvent = is_bool($courseDatas['withSessionEvent']) ?
+            $courseDatas['withSessionEvent'] :
+            $courseDatas['withSessionEvent'] === 'true';
+        $course->setPublicRegistration($publicRegistration);
+        $course->setPublicUnregistration($publicUnregistration);
+        $course->setRegistrationValidation($registrationValidation);
         $tutorRoleName = $courseDatas['tutorRoleName'] ? $courseDatas['tutorRoleName'] : null;
         $course->setTutorRoleName($tutorRoleName);
         $learnerRoleName = $courseDatas['learnerRoleName'] ? $courseDatas['learnerRoleName'] : null;
@@ -510,21 +617,21 @@ class AdminManagementController extends Controller
             $course->setWorkspace(null);
         }
         if ($courseDatas['workspaceModel']) {
-            $worskpaceModel = $this->workspaceModelManager->getModelById($courseDatas['workspaceModel']);
+            $worskpaceModel = $this->workspaceManager->getWorkspaceById($courseDatas['workspaceModel']);
             $course->setWorkspaceModel($worskpaceModel);
         } else {
             $course->setWorkspaceModel(null);
         }
         if ($this->request->files->get('courseDatas')['icon']) {
-            $icon = $this->cursusManager->saveIcon($this->request->files->get('courseDatas')['icon']);
+            $icon = $this->cursusManager->saveIcon($this->request->files->get('courseDatas')['icon'], $course);
             $course->setIcon($icon);
         }
-        $course->setUserValidation((bool) $courseDatas['userValidation']);
-        $course->setOrganizationValidation((bool) $courseDatas['organizationValidation']);
+        $course->setUserValidation($userValidation);
+        $course->setOrganizationValidation($organizationValidation);
         $maxUsers = $courseDatas['maxUsers'] ? $courseDatas['maxUsers'] : null;
         $course->setMaxUsers($maxUsers);
         $course->setDefaultSessionDuration($courseDatas['defaultSessionDuration']);
-        $course->setWithSessionEvent((bool) $courseDatas['withSessionEvent']);
+        $course->setWithSessionEvent($withSessionEvent);
         $course->setDisplayOrder($courseDatas['displayOrder']);
         $course->emptyValidators();
         $validators = isset($courseDatas['validators']) && count($courseDatas['validators']) > 0 ?
@@ -533,6 +640,14 @@ class AdminManagementController extends Controller
 
         foreach ($validators as $validator) {
             $course->addValidator($validator);
+        }
+        $course->emptyOrganizations();
+        $organizations = isset($courseDatas['organizations']) && count($courseDatas['organizations']) > 0 ?
+            $this->cursusManager->getOrganizationsByIds($courseDatas['organizations']) :
+            [];
+
+        foreach ($organizations as $organization) {
+            $course->addOrganization($organization);
         }
         $this->cursusManager->persistCourse($course);
         $event = new LogCourseEditEvent($course);
@@ -556,10 +671,14 @@ class AdminManagementController extends Controller
      *
      * Deletes course
      *
+     * @param User   $user
+     * @param Course $course
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteCourseAction(Course $course)
+    public function deleteCourseAction(User $user, Course $course)
     {
+        $this->cursusManager->checkCourseAccess($user, $course);
         $serializedCourse = $this->serializer->serialize(
             $course,
             'json',
@@ -577,9 +696,16 @@ class AdminManagementController extends Controller
      *     options={"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Imports courses
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postCoursesImportAction()
+    public function postCoursesImportAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $file = $this->request->files->get('archive');
         $zip = new \ZipArchive();
 
@@ -594,7 +720,11 @@ class AdminManagementController extends Controller
         }
         fclose($coursesStream);
         $courses = json_decode($coursesContents, true);
-        $importedCourses = $this->cursusManager->importCourses($courses, false);
+        $importedCourses = $this->cursusManager->importCourses(
+            $courses,
+            $user->getAdministratedOrganizations()->toArray(),
+            false
+        );
         $iconsDir = $this->container->getParameter('claroline.param.thumbnails_directory').'/';
 
         for ($i = 0; $i < $zip->numFiles; ++$i) {
@@ -633,10 +763,14 @@ class AdminManagementController extends Controller
      *
      * Returns the course
      *
+     * @param User   $user
+     * @param Course $course
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getCourseByIdAction(Course $course)
+    public function getCourseByIdAction(User $user, Course $course)
     {
+        $this->cursusManager->checkCourseAccess($user, $course);
         $serializedCourse = $this->serializer->serialize(
             $course,
             'json',
@@ -656,9 +790,13 @@ class AdminManagementController extends Controller
      *
      * Returns the cursus
      *
+     * @param User   $user
+     * @param string $code
+     * @param int    $id
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getCursusByCodeWithoutIdAction($code, $id = 0)
+    public function getCursusByCodeWithoutIdAction(User $user, $code, $id = 0)
     {
         $cursus = $this->cursusManager->getCursusByCodeWithoutId($code, $id);
         $serializedCursus = $this->serializer->serialize(
@@ -680,9 +818,13 @@ class AdminManagementController extends Controller
      *
      * Returns the course
      *
+     * @param User   $user
+     * @param string $code
+     * @param int    $id
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getCourseByCodeWithoutIdAction($code, $id = 0)
+    public function getCourseByCodeWithoutIdAction(User $user, $code, $id = 0)
     {
         $course = $this->cursusManager->getCourseByCodeWithoutId($code, $id);
         $serializedCourse = $this->serializer->serialize(
@@ -704,10 +846,14 @@ class AdminManagementController extends Controller
      *
      * Returns the session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionByIdAction(CourseSession $session)
+    public function getSessionByIdAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $serializedSession = $this->serializer->serialize(
             $session,
             'json',
@@ -723,11 +869,34 @@ class AdminManagementController extends Controller
      *     name="api_post_session_creation",
      *     options = {"expose"=true}
      * )
+     *
+     * @param User   $user
+     * @param Course $course
+     *
      * @EXT\ParamConverter("user", converter="current_user")
      */
-    public function postSessionCreateAction(Course $course)
+    public function postSessionCreateAction(User $user, Course $course)
     {
+        $this->cursusManager->checkCourseAccess($user, $course);
         $sessionDatas = $this->request->request->get('sessionDatas', false);
+        $defaultSession = is_bool($sessionDatas['defaultSession']) ?
+            $sessionDatas['defaultSession'] :
+            $sessionDatas['defaultSession'] === 'true';
+        $publicRegistration = is_bool($sessionDatas['publicRegistration']) ?
+            $sessionDatas['publicRegistration'] :
+            $sessionDatas['publicRegistration'] === 'true';
+        $publicUnregistration = is_bool($sessionDatas['publicUnregistration']) ?
+            $sessionDatas['publicUnregistration'] :
+            $sessionDatas['publicUnregistration'] === 'true';
+        $registrationValidation = is_bool($sessionDatas['registrationValidation']) ?
+            $sessionDatas['registrationValidation'] :
+            $sessionDatas['registrationValidation'] === 'true';
+        $userValidation = is_bool($sessionDatas['userValidation']) ?
+            $sessionDatas['userValidation'] :
+            $sessionDatas['userValidation'] === 'true';
+        $organizationValidation = is_bool($sessionDatas['organizationValidation']) ?
+            $sessionDatas['organizationValidation'] :
+            $sessionDatas['organizationValidation'] === 'true';
         $trimmedStartDate = trim($sessionDatas['startDate'], 'Zz');
         $trimmedEndDate = trim($sessionDatas['endDate'], 'Zz');
         $startDate = new \DateTime($trimmedStartDate);
@@ -744,12 +913,12 @@ class AdminManagementController extends Controller
             null,
             $startDate,
             $endDate,
-            $sessionDatas['defaultSession'],
-            $sessionDatas['publicRegistration'],
-            $sessionDatas['publicUnregistration'],
-            $sessionDatas['registrationValidation'],
-            $sessionDatas['userValidation'],
-            $sessionDatas['organizationValidation'],
+            $defaultSession,
+            $publicRegistration,
+            $publicUnregistration,
+            $registrationValidation,
+            $userValidation,
+            $organizationValidation,
             $sessionDatas['maxUsers'],
             0,
             $validators,
@@ -776,11 +945,33 @@ class AdminManagementController extends Controller
      *
      * Edits a session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putSessionEditionAction(CourseSession $session)
+    public function putSessionEditionAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $sessionDatas = $this->request->request->get('sessionDatas', false);
+        $defaultSession = is_bool($sessionDatas['defaultSession']) ?
+            $sessionDatas['defaultSession'] :
+            $sessionDatas['defaultSession'] === 'true';
+        $publicRegistration = is_bool($sessionDatas['publicRegistration']) ?
+            $sessionDatas['publicRegistration'] :
+            $sessionDatas['publicRegistration'] === 'true';
+        $publicUnregistration = is_bool($sessionDatas['publicUnregistration']) ?
+            $sessionDatas['publicUnregistration'] :
+            $sessionDatas['publicUnregistration'] === 'true';
+        $registrationValidation = is_bool($sessionDatas['registrationValidation']) ?
+            $sessionDatas['registrationValidation'] :
+            $sessionDatas['registrationValidation'] === 'true';
+        $userValidation = is_bool($sessionDatas['userValidation']) ?
+            $sessionDatas['userValidation'] :
+            $sessionDatas['userValidation'] === 'true';
+        $organizationValidation = is_bool($sessionDatas['organizationValidation']) ?
+            $sessionDatas['organizationValidation'] :
+            $sessionDatas['organizationValidation'] === 'true';
         $trimmedStartDate = trim($sessionDatas['startDate'], 'Zz');
         $trimmedEndDate = trim($sessionDatas['endDate'], 'Zz');
         $startDate = new \DateTime($trimmedStartDate);
@@ -789,13 +980,13 @@ class AdminManagementController extends Controller
         $session->setStartDate($startDate);
         $session->setEndDate($endDate);
         $session->setDescription($sessionDatas['description']);
-        $session->setDefaultSession((bool) $sessionDatas['defaultSession']);
-        $session->setPublicRegistration((bool) $sessionDatas['publicRegistration']);
-        $session->setPublicUnregistration((bool) $sessionDatas['publicUnregistration']);
-        $session->setUserValidation((bool) $sessionDatas['userValidation']);
+        $session->setDefaultSession($defaultSession);
+        $session->setPublicRegistration($publicRegistration);
+        $session->setPublicUnregistration($publicUnregistration);
+        $session->setUserValidation($userValidation);
         $session->setMaxUsers($sessionDatas['maxUsers']);
-        $session->setOrganizationValidation((bool) $sessionDatas['organizationValidation']);
-        $session->setRegistrationValidation((bool) $sessionDatas['registrationValidation']);
+        $session->setOrganizationValidation($organizationValidation);
+        $session->setRegistrationValidation($registrationValidation);
         $session->setEventRegistrationType($sessionDatas['eventRegistrationType']);
         $session->setDisplayOrder($sessionDatas['displayOrder']);
         $details = $session->getDetails();
@@ -840,10 +1031,15 @@ class AdminManagementController extends Controller
      *
      * Deletes session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param int           $mode
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionAction(CourseSession $session, $mode = 0)
+    public function deleteSessionAction(User $user, CourseSession $session, $mode = 0)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $serializedSession = $this->serializer->serialize(
             $session,
             'json',
@@ -865,10 +1061,15 @@ class AdminManagementController extends Controller
      *
      * Deletes session
      *
+     * @param User          $user
+     * @param Course        $course
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function resetSessionsDefaultAction(Course $course, CourseSession $session)
+    public function resetSessionsDefaultAction(User $user, Course $course, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $course);
         $this->cursusManager->resetDefaultSessionByCourse($course, $session);
 
         return new JsonResponse('success', 200);
@@ -884,10 +1085,14 @@ class AdminManagementController extends Controller
      *
      * Returns the session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionEventByIdAction(SessionEvent $sessionEvent)
+    public function getSessionEventByIdAction(User $user, SessionEvent $sessionEvent)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $serializedSessionEvent = $this->serializer->serialize(
             $sessionEvent,
             'json',
@@ -903,38 +1108,49 @@ class AdminManagementController extends Controller
      *     name="api_post_session_event_creation",
      *     options = {"expose"=true}
      * )
+     *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @EXT\ParamConverter("user", converter="current_user")
      */
-    public function postSessionEventCreateAction(CourseSession $session)
+    public function postSessionEventCreateAction(User $user, CourseSession $session)
     {
-        $sessionEventDatas = $this->request->request->get('sessionEventDatas', false);
-        $trimmedStartDate = trim($sessionEventDatas['startDate'], 'Zz');
-        $trimmedEndDate = trim($sessionEventDatas['endDate'], 'Zz');
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
+        $sessionEventData = $this->request->request->get('sessionEventData', false);
+        $trimmedStartDate = trim($sessionEventData['startDate'], 'Zz');
+        $trimmedEndDate = trim($sessionEventData['endDate'], 'Zz');
         $startDate = new \DateTime($trimmedStartDate);
         $endDate = new \DateTime($trimmedEndDate);
         $location = null;
         $locationResource = null;
-        $tutorsIds = $sessionEventDatas['tutors'] ? $sessionEventDatas['tutors'] : [];
+        $tutorsIds = $sessionEventData['tutors'] ? $sessionEventData['tutors'] : [];
         $tutors = $this->userManager->getUsersByIds($tutorsIds);
 
-        if ($sessionEventDatas['location']) {
-            $location = $this->locationManager->getLocationById($sessionEventDatas['location']);
+        if ($sessionEventData['location']) {
+            $location = $this->locationManager->getLocationById($sessionEventData['location']);
         }
-        if ($sessionEventDatas['locationResource']) {
-            $locationResource = $this->cursusManager->getReservationResourceById($sessionEventDatas['locationResource']);
+        if ($sessionEventData['locationResource']) {
+            $locationResource = $this->cursusManager->getReservationResourceById($sessionEventData['locationResource']);
         }
+        $type = $sessionEventData['type'] ? SessionEvent::TYPE_EVENT : SessionEvent::TYPE_NONE;
+        $eventSet = $sessionEventData['eventSet'] && $sessionEventData['registrationType'] === CourseSession::REGISTRATION_PUBLIC ?
+            $this->cursusManager->getSessionEventSet($session, $sessionEventData['eventSet']) :
+             null;
         $createdSessionEvent = $this->cursusManager->createSessionEvent(
             $session,
-            $sessionEventDatas['name'],
-            $sessionEventDatas['description'],
+            $sessionEventData['name'],
+            $sessionEventData['description'],
             $startDate,
             $endDate,
             $location,
-            $sessionEventDatas['locationExtra'],
+            $sessionEventData['locationExtra'],
             $locationResource,
             $tutors,
-            $sessionEventDatas['registrationType'],
-            $sessionEventDatas['maxUsers']
+            $sessionEventData['registrationType'],
+            $sessionEventData['maxUsers'],
+            $type,
+            $eventSet
         );
         $serializedSessionEvent = $this->serializer->serialize(
             $createdSessionEvent,
@@ -955,46 +1171,56 @@ class AdminManagementController extends Controller
      *
      * Edits a session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putSessionEventEditionAction(SessionEvent $sessionEvent)
+    public function putSessionEventEditionAction(User $user, SessionEvent $sessionEvent)
     {
-        $sessionEventDatas = $this->request->request->get('sessionEventDatas', false);
-        $trimmedStartDate = trim($sessionEventDatas['startDate'], 'Zz');
-        $trimmedEndDate = trim($sessionEventDatas['endDate'], 'Zz');
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
+        $sessionEventData = $this->request->request->get('sessionEventData', false);
+        $trimmedStartDate = trim($sessionEventData['startDate'], 'Zz');
+        $trimmedEndDate = trim($sessionEventData['endDate'], 'Zz');
         $startDate = new \DateTime($trimmedStartDate);
         $endDate = new \DateTime($trimmedEndDate);
-        $sessionEvent->setName($sessionEventDatas['name']);
+        $sessionEvent->setName($sessionEventData['name']);
         $sessionEvent->setStartDate($startDate);
         $sessionEvent->setEndDate($endDate);
-        $sessionEvent->setDescription($sessionEventDatas['description']);
-        $sessionEvent->setLocationExtra($sessionEventDatas['locationExtra']);
-        $sessionEvent->setRegistrationType($sessionEventDatas['registrationType']);
-        $sessionEvent->setMaxUsers($sessionEventDatas['maxUsers']);
+        $sessionEvent->setDescription($sessionEventData['description']);
+        $sessionEvent->setLocationExtra($sessionEventData['locationExtra']);
+        $sessionEvent->setRegistrationType($sessionEventData['registrationType']);
+        $sessionEvent->setMaxUsers($sessionEventData['maxUsers']);
         $sessionEvent->setLocationResource(null);
         $sessionEvent->setLocation(null);
 
-        if ($sessionEventDatas['location']) {
-            $location = $this->locationManager->getLocationById($sessionEventDatas['location']);
+        if ($sessionEventData['location']) {
+            $location = $this->locationManager->getLocationById($sessionEventData['location']);
 
             if (!is_null($location)) {
                 $sessionEvent->setLocation($location);
             }
         }
-        if ($sessionEventDatas['locationResource']) {
-            $locationResource = $this->cursusManager->getReservationResourceById($sessionEventDatas['locationResource']);
+        if ($sessionEventData['locationResource']) {
+            $locationResource = $this->cursusManager->getReservationResourceById($sessionEventData['locationResource']);
 
             if (!is_null($locationResource)) {
                 $sessionEvent->setLocationResource($locationResource);
             }
         }
         $sessionEvent->emptyTutors();
-        $tutorsIds = $sessionEventDatas['tutors'] ? $sessionEventDatas['tutors'] : [];
+        $tutorsIds = $sessionEventData['tutors'] ? $sessionEventData['tutors'] : [];
         $tutors = $this->userManager->getUsersByIds($tutorsIds);
 
         foreach ($tutors as $tutor) {
             $sessionEvent->addTutor($tutor);
         }
+        $type = $sessionEventData['type'] ? SessionEvent::TYPE_EVENT : SessionEvent::TYPE_NONE;
+        $sessionEvent->setType($type);
+        $eventSet = $sessionEventData['eventSet'] && $sessionEventData['registrationType'] === CourseSession::REGISTRATION_PUBLIC ?
+            $this->cursusManager->getSessionEventSet($sessionEvent->getSession(), $sessionEventData['eventSet']) :
+             null;
+        $sessionEvent->setEventSet($eventSet);
         $this->cursusManager->persistSessionEvent($sessionEvent);
         $event = new LogSessionEventEditEvent($sessionEvent);
         $this->eventDispatcher->dispatch('log', $event);
@@ -1022,10 +1248,14 @@ class AdminManagementController extends Controller
      *
      * Deletes session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionEventAction(SessionEvent $sessionEvent)
+    public function deleteSessionEventAction(User $user, SessionEvent $sessionEvent)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $serializedSessionEvent = $this->serializer->serialize(
             $sessionEvent,
             'json',
@@ -1046,10 +1276,15 @@ class AdminManagementController extends Controller
      *
      * Get the session learners list
      *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param int           $type
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionUsersBySessionAndTypeAction(CourseSession $session, $type)
+    public function getSessionUsersBySessionAndTypeAction(User $user, CourseSession $session, $type)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $learners = $this->cursusManager->getSessionUsersBySessionAndType($session, $type);
         $serializedLearners = $this->serializer->serialize(
             $learners,
@@ -1070,10 +1305,14 @@ class AdminManagementController extends Controller
      *
      * Get the session users list
      *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionUsersBySessionAction(CourseSession $session)
+    public function getSessionUsersBySessionAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $sessionUsers = $this->cursusManager->getSessionUsersBySession($session);
         $serializedSessionUsers = $this->serializer->serialize(
             $sessionUsers,
@@ -1094,10 +1333,14 @@ class AdminManagementController extends Controller
      *
      * Get the session groups list
      *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionGroupsBySessionAction(CourseSession $session)
+    public function getSessionGroupsBySessionAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $sessionGroups = $this->cursusManager->getSessionGroupsBySession($session);
         $serializedSessionGroups = $this->serializer->serialize(
             $sessionGroups,
@@ -1118,10 +1361,14 @@ class AdminManagementController extends Controller
      *
      * Get the session pending users list
      *
+     * @param User          $user
+     * @param CourseSession $session
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionPendingUsersBySessionAction(CourseSession $session)
+    public function getSessionPendingUsersBySessionAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $pendingUsers = $this->cursusManager->getSessionQueuesBySession($session);
         $serializedPendingUsers = $this->serializer->serialize(
             $pendingUsers,
@@ -1142,10 +1389,14 @@ class AdminManagementController extends Controller
      *
      * Deletes a session user
      *
+     * @param User              $user
+     * @param CourseSessionUser $sessionUser
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionUserAction(CourseSessionUser $sessionUser)
+    public function deleteSessionUserAction(User $user, CourseSessionUser $sessionUser)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionUser->getSession()->getCourse());
         $serializedSessionUser = $this->serializer->serialize(
             $sessionUser,
             'json',
@@ -1166,10 +1417,14 @@ class AdminManagementController extends Controller
      *
      * Deletes a session group
      *
+     * @param User               $user
+     * @param CourseSessionGroup $sessionGroup
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionGroupAction(CourseSessionGroup $sessionGroup)
+    public function deleteSessionGroupAction(User $user, CourseSessionGroup $sessionGroup)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionGroup->getSession()->getCourse());
         $serializedSessionGroup = $this->serializer->serialize(
             $sessionGroup,
             'json',
@@ -1190,13 +1445,17 @@ class AdminManagementController extends Controller
      *
      * Accepts session registration queue
      *
+     * @param User                           $user
+     * @param CourseSessionRegistrationQueue $queue
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function acceptSessionRegistrationQueueAction(CourseSessionRegistrationQueue $queue)
+    public function acceptSessionRegistrationQueueAction(User $user, CourseSessionRegistrationQueue $queue)
     {
-        $user = $queue->getUser();
         $session = $queue->getSession();
-        $results = $this->cursusManager->registerUsersToSession($session, [$user], CourseSessionUser::LEARNER, true);
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
+        $queueUser = $queue->getUser();
+        $results = $this->cursusManager->registerUsersToSession($session, [$queueUser], CourseSessionUser::LEARNER, true);
 
         if ($results['status'] === 'success') {
             $serializedQueue = $this->serializer->serialize(
@@ -1206,7 +1465,7 @@ class AdminManagementController extends Controller
             );
             $results['queue'] = $serializedQueue;
             $this->cursusManager->deleteSessionQueue($queue);
-            $this->cursusManager->sendSessionRegistrationConfirmationMessage($user, $session, 'validated');
+            $this->cursusManager->sendSessionRegistrationConfirmationMessage($queueUser, $session, 'validated');
         }
 
         return new JsonResponse($results, 200);
@@ -1222,10 +1481,14 @@ class AdminManagementController extends Controller
      *
      * Deletes session registration queue
      *
+     * @param User                           $user
+     * @param CourseSessionRegistrationQueue $queue
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionRegistrationQueueAction(CourseSessionRegistrationQueue $queue)
+    public function deleteSessionRegistrationQueueAction(User $user, CourseSessionRegistrationQueue $queue)
     {
+        $this->cursusManager->checkCourseAccess($user, $queue->getSession()->getCourse());
         $serializedQueue = $this->serializer->serialize(
             $queue,
             'json',
@@ -1246,11 +1509,16 @@ class AdminManagementController extends Controller
      *
      * Displays the list of users who are not registered to the session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param int           $userType
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionUnregisteredUsersAction(CourseSession $session, $userType = 0)
+    public function getSessionUnregisteredUsersAction(User $user, CourseSession $session, $userType = 0)
     {
-        $users = $this->cursusManager->getUnregisteredUsersBySession($session, $userType, '', 'lastName', 'ASC', false);
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
+        $users = $this->cursusManager->getUnregisteredUsersBySession($user, $session, $userType, 'lastName');
         $serializedUsers = $this->serializer->serialize(
             $users,
             'json',
@@ -1270,11 +1538,16 @@ class AdminManagementController extends Controller
      *
      * Displays the list of groups that are not registered to the session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param int           $groupType
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionUnregisteredGroupsAction(CourseSession $session, $groupType = 0)
+    public function getSessionUnregisteredGroupsAction(User $user, CourseSession $session, $groupType = 0)
     {
-        $groups = $this->cursusManager->getUnregisteredGroupsBySession($session, $groupType, '', 'name', 'ASC', false);
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
+        $groups = $this->cursusManager->getUnregisteredGroupsBySession($user, $session, $groupType);
         $serializedGroups = $this->serializer->serialize(
             $groups,
             'json',
@@ -1294,10 +1567,16 @@ class AdminManagementController extends Controller
      *
      * Registers an user to a session
      *
+     * @param User          $authenticatedUser
+     * @param CourseSession $session
+     * @param User          $user
+     * @param int           $userType
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postSessionUserRegisterAction(CourseSession $session, User $user, $userType = 0)
+    public function postSessionUserRegisterAction(User $authenticatedUser, CourseSession $session, User $user, $userType = 0)
     {
+        $this->cursusManager->checkCourseAccess($authenticatedUser, $session->getCourse());
         $results = $this->cursusManager->registerUsersToSession($session, [$user], $userType);
 
         return new JsonResponse($results, 200);
@@ -1313,10 +1592,16 @@ class AdminManagementController extends Controller
      *
      * Registers a group to a session
      *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param Group         $group
+     * @param int           $groupType
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postSessionGroupRegisterAction(CourseSession $session, Group $group, $groupType = 0)
+    public function postSessionGroupRegisterAction(User $user, CourseSession $session, Group $group, $groupType = 0)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $results = $this->cursusManager->registerGroupToSession($session, $group, $groupType);
 
         return new JsonResponse($results, 200);
@@ -1332,10 +1617,14 @@ class AdminManagementController extends Controller
      *
      * Displays the list of users who are not registered to the session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionEventUnregisteredUsersAction(SessionEvent $sessionEvent)
+    public function getSessionEventUnregisteredUsersAction(User $user, SessionEvent $sessionEvent)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $users = $this->cursusManager->getUnregisteredUsersBySessionEvent($sessionEvent);
         $serializedUsers = $this->serializer->serialize(
             $users,
@@ -1356,10 +1645,15 @@ class AdminManagementController extends Controller
      *
      * Registers an user to a session event
      *
+     * @param User         $authenticatedUser
+     * @param SessionEvent $sessionEvent
+     * @param User         $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postSessionEventUserRegisterAction(SessionEvent $sessionEvent, User $user)
+    public function postSessionEventUserRegisterAction(User $authenticatedUser, SessionEvent $sessionEvent, User $user)
     {
+        $this->cursusManager->checkCourseAccess($authenticatedUser, $sessionEvent->getSession()->getCourse());
         $results = $this->cursusManager->registerUsersToSessionEvent($sessionEvent, [$user]);
 
         return new JsonResponse($results, 200);
@@ -1375,10 +1669,14 @@ class AdminManagementController extends Controller
      *
      * Get the users list of the session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getSessionEventUsersBySessionEventAction(SessionEvent $sessionEvent)
+    public function getSessionEventUsersBySessionEventAction(User $user, SessionEvent $sessionEvent)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $sessionEventUsers = $this->cursusManager->getSessionEventUsersBySessionEvent($sessionEvent);
         $serializedSessionEventUsers = $this->serializer->serialize(
             $sessionEventUsers,
@@ -1399,10 +1697,14 @@ class AdminManagementController extends Controller
      *
      * Deletes an user from session event
      *
+     * @param User             $user
+     * @param SessionEventUser $sessionEventUser
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteSessionEventUserAction(SessionEventUser $sessionEventUser)
+    public function deleteSessionEventUserAction(User $user, SessionEventUser $sessionEventUser)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEventUser->getSessionEvent()->getSession()->getCourse());
         $serializedSessionEventUser = $this->serializer->serialize(
             $sessionEventUser,
             'json',
@@ -1423,10 +1725,13 @@ class AdminManagementController extends Controller
      *
      * Retrieves required roles to be validator
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getValidatorsRolesAction()
+    public function getValidatorsRolesAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $roles = $this->cursusManager->getValidatorsRoles();
         $serializedRoles = $this->serializer->serialize(
             $roles,
@@ -1447,10 +1752,13 @@ class AdminManagementController extends Controller
      *
      * Retrieves workspaces list for an user
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getWorkspacesAction()
+    public function getWorkspacesAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $workspaces = $this->cursusManager->getWorkspacesListForCurrentUser();
         $serializedWorkspaces = $this->serializer->serialize(
             $workspaces,
@@ -1471,18 +1779,18 @@ class AdminManagementController extends Controller
      *
      * Retrieves workspace models list for an user
      *
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @param User $user
      */
     public function getWorkspaceModelsAction(User $user)
     {
-        $models = $this->workspaceModelManager->getModelsByUser($user);
-        $serializedModels = $this->serializer->serialize(
-            $models,
-            'json',
-            SerializationContext::create()->setGroups(['api_user_min'])
+        $data = $this->get('claroline.API.finder')->search(
+            'Claroline\CoreBundle\Entity\Workspace\Workspace', [
+                'limit' => 100,
+                'filters' => ['model' => true],
+            ]
         );
 
-        return new JsonResponse($serializedModels, 200);
+        return new JsonResponse($data['data'], 200);
     }
 
     /**
@@ -1495,10 +1803,13 @@ class AdminManagementController extends Controller
      *
      * Retrieves locations list
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getLocationsAction()
+    public function getLocationsAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $locations = $this->locationManager->getByTypes([Location::TYPE_DEPARTMENT, Location::TYPE_TRAINING]);
         $serializedLocations = $this->serializer->serialize(
             $locations,
@@ -1519,10 +1830,13 @@ class AdminManagementController extends Controller
      *
      * Retrieves reservation resources list
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getReservationResourcesAction()
+    public function getReservationResourcesAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $reservationResources = $this->cursusManager->getAllReservationResources();
         $serializedResources = $this->serializer->serialize(
             $reservationResources,
@@ -1543,10 +1857,13 @@ class AdminManagementController extends Controller
      *
      * Retrieves cursus reservation resources list
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getCursusReservationResourcesAction()
+    public function getCursusReservationResourcesAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $options = [
             'tag' => 'cursus_location',
             'strict' => true,
@@ -1555,7 +1872,7 @@ class AdminManagementController extends Controller
             'ordered_by' => 'name',
             'order' => 'ASC',
         ];
-        $event = $this->eventDispatcher->dispatch('claroline_retrieve_tagged_objects', new GenericDatasEvent($options));
+        $event = $this->eventDispatcher->dispatch('claroline_retrieve_tagged_objects', new GenericDataEvent($options));
         $resources = $event->getResponse();
         $serializedResources = $this->serializer->serialize(
             $resources,
@@ -1576,12 +1893,16 @@ class AdminManagementController extends Controller
      *
      * Tags reservation resource
      *
+     * @param User     $user
+     * @param resource $resource
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postReservationResourceTagAction(Resource $resource)
+    public function postReservationResourceTagAction(User $user, Resource $resource)
     {
+        $this->cursusManager->checkAccess($user);
         $options = ['tag' => ['cursus_location'], 'object' => $resource];
-        $this->eventDispatcher->dispatch('claroline_tag_object', new GenericDatasEvent($options));
+        $this->eventDispatcher->dispatch('claroline_tag_object', new GenericDataEvent($options));
 
         return new JsonResponse('success', 200);
     }
@@ -1596,10 +1917,14 @@ class AdminManagementController extends Controller
      *
      * Removes tag from reservation resource
      *
+     * @param User     $user
+     * @param resource $resource
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteReservationResourceTagAction(Resource $resource)
+    public function deleteReservationResourceTagAction(User $user, Resource $resource)
     {
+        $this->cursusManager->checkAccess($user);
         $this->tagManager->removeTaggedObjectByTagNameAndObjectIdAndClass(
             'cursus_location',
             $resource->getId(),
@@ -1619,10 +1944,13 @@ class AdminManagementController extends Controller
      *
      * Returns the general parameters
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getGeneralParametersAction()
+    public function getGeneralParametersAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $datas = [];
         $datas['disableInvitations'] = $this->configHandler->hasParameter('cursus_disable_invitations') ?
             $this->configHandler->getParameter('cursus_disable_invitations') :
@@ -1642,6 +1970,12 @@ class AdminManagementController extends Controller
         $datas['sessionDefaultTotal'] = $this->configHandler->hasParameter('cursus_session_default_total') ?
             $this->configHandler->getParameter('cursus_session_default_total') :
             false;
+        $datas['sessionDefaultDuration'] = $this->configHandler->hasParameter('cursus_session_default_duration') ?
+            $this->configHandler->getParameter('cursus_session_default_duration') :
+            1;
+        $datas['displayUserEventsInDesktopAgenda'] = $this->configHandler->hasParameter('cursus_display_user_events_in_desktop_agenda') ?
+            $this->configHandler->getParameter('cursus_display_user_events_in_desktop_agenda') :
+            false;
 
         return new JsonResponse($datas, 200);
     }
@@ -1656,10 +1990,13 @@ class AdminManagementController extends Controller
      *
      * Sets the general parameters
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postGeneralParametersAction()
+    public function postGeneralParametersAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $parameters = $this->request->request->get('parameters', false);
         $this->configHandler->setParameter('cursus_disable_invitations', $parameters['disableInvitations']);
         $this->configHandler->setParameter('cursus_disable_certificates', $parameters['disableCertificates']);
@@ -1667,6 +2004,8 @@ class AdminManagementController extends Controller
         $this->configHandler->setParameter('cursus_enable_courses_profile_tab', $parameters['enableCoursesProfileTab']);
         $this->configHandler->setParameter('cursus_enable_ws_in_courses_profile_tab', $parameters['enableWsInCoursesProfileTab']);
         $this->configHandler->setParameter('cursus_session_default_total', $parameters['sessionDefaultTotal']);
+        $this->configHandler->setParameter('cursus_session_default_duration', $parameters['sessionDefaultDuration']);
+        $this->configHandler->setParameter('cursus_display_user_events_in_desktop_agenda', $parameters['displayUserEventsInDesktopAgenda']);
 
         return new JsonResponse($parameters, 200);
     }
@@ -1681,10 +2020,13 @@ class AdminManagementController extends Controller
      *
      * Returns the document models list
      *
+     * @param User $user
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getDocumentModelsAction()
+    public function getDocumentModelsAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $models = $this->cursusManager->getAllDocumentModels();
         $serializedModels = $this->serializer->serialize(
             $models,
@@ -1705,10 +2047,14 @@ class AdminManagementController extends Controller
      *
      * Returns the document model
      *
+     * @param User          $user
+     * @param DocumentModel $documentModel
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getDocumentModelAction(DocumentModel $documentModel)
+    public function getDocumentModelAction(User $user, DocumentModel $documentModel)
     {
+        $this->cursusManager->checkAccess($user);
         $serializedModel = $this->serializer->serialize(
             $documentModel,
             'json',
@@ -1725,9 +2071,14 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postDocumentModelCreateAction()
+    public function postDocumentModelCreateAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $documentModelDatas = $this->request->request->get('documentModelDatas', false);
         $documentModel = $this->cursusManager->createDocumentModel(
             $documentModelDatas['name'],
@@ -1750,9 +2101,15 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User          $user
+     * @param DocumentModel $documentModel
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putDocumentModelEditAction(DocumentModel $documentModel)
+    public function putDocumentModelEditAction(User $user, DocumentModel $documentModel)
     {
+        $this->cursusManager->checkAccess($user);
         $documentModelDatas = $this->request->request->get('documentModelDatas', false);
         $documentModel->setName($documentModelDatas['name']);
         $documentModel->setContent($documentModelDatas['content']);
@@ -1777,10 +2134,14 @@ class AdminManagementController extends Controller
      *
      * Deletes session event
      *
+     * @param User          $user
+     * @param DocumentModel $documentModel
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteDocumentModelAction(DocumentModel $documentModel)
+    public function deleteDocumentModelAction(User $user, DocumentModel $documentModel)
     {
+        $this->cursusManager->checkAccess($user);
         $serializedDocumentModel = $this->serializer->serialize(
             $documentModel,
             'json',
@@ -1801,10 +2162,14 @@ class AdminManagementController extends Controller
      *
      * Returns the document models by type
      *
+     * @param User $user
+     * @param int  $type
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getDocumentModelsByTypeAction($type)
+    public function getDocumentModelsByTypeAction(User $user, $type)
     {
+        $this->cursusManager->checkAccess($user);
         $documentModels = $this->cursusManager->getDocumentModelsByType($type);
         $serializedModels = $this->serializer->serialize(
             $documentModels,
@@ -1825,10 +2190,15 @@ class AdminManagementController extends Controller
      *
      * Returns the populated document models by type
      *
+     * @param User $user
+     * @param int  $type
+     * @param int  $sourceId
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getPopulatedDocumentModelsByTypeAction($type, $sourceId)
+    public function getPopulatedDocumentModelsByTypeAction(User $user, $type, $sourceId)
     {
+        $this->cursusManager->checkAccess($user);
         $documentModels = $this->cursusManager->getPopulatedDocumentModelsByType($type, $sourceId);
 
         return new JsonResponse($documentModels, 200);
@@ -1844,10 +2214,16 @@ class AdminManagementController extends Controller
      *
      * Returns the populated document models by type for an user
      *
+     * @param User $authenticatedUser
+     * @param User $user
+     * @param int  $type
+     * @param int  $sourceId
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getPopulatedDocumentModelsByTypeForUserAction(User $user, $type, $sourceId)
+    public function getPopulatedDocumentModelsByTypeForUserAction(User $authenticatedUser, User $user, $type, $sourceId)
     {
+        $this->cursusManager->checkAccess($user);
         $documentModels = $this->cursusManager->getPopulatedDocumentModelsByType($type, $sourceId, $user);
 
         return new JsonResponse($documentModels, 200);
@@ -1863,10 +2239,14 @@ class AdminManagementController extends Controller
      *
      * Repeats a session event
      *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postSessionEventRepeatAction(SessionEvent $sessionEvent)
+    public function postSessionEventRepeatAction(User $user, SessionEvent $sessionEvent)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $parameters = $this->request->request->get('repeatOptionsDatas', false);
         $iteration = [
             'Monday' => $parameters['monday'],
@@ -1896,9 +2276,14 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postLocationCreateAction()
+    public function postLocationCreateAction(User $user)
     {
+        $this->cursusManager->checkAccess($user);
         $locationDatas = $this->request->request->get('locationDatas', false);
         $location = new Location();
         $location->setType(Location::TYPE_TRAINING);
@@ -1927,9 +2312,16 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User     $user
+     * @param Location $location
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function putLocationEditAction(Location $location)
+    public function putLocationEditAction(User $user, Location $location)
     {
+        $this->cursusManager->checkAccess($user);
+
         if ($location->getType() !== Location::TYPE_TRAINING) {
             throw new AccessDeniedException();
         }
@@ -1962,10 +2354,15 @@ class AdminManagementController extends Controller
      *
      * Deletes session event
      *
+     * @param User     $user
+     * @param Location $location
+     *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteLocationAction(Location $location)
+    public function deleteLocationAction(User $user, Location $location)
     {
+        $this->cursusManager->checkAccess($user);
+
         if ($location->getType() !== Location::TYPE_TRAINING) {
             throw new AccessDeniedException();
         }
@@ -1986,9 +2383,15 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User          $user
+     * @param CourseSession $session
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function postSessionMessageSendAction(User $user, CourseSession $session)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $messageDatas = $this->request->request->get('messageDatas', false);
         $this->cursusManager->sendMessageToSession(
             $user,
@@ -2009,9 +2412,16 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User          $user
+     * @param DocumentModel $documentModel
+     * @param int           $sourceId
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postDocumentSendAction(DocumentModel $documentModel, $sourceId)
+    public function postDocumentSendAction(User $user, DocumentModel $documentModel, $sourceId)
     {
+        $this->cursusManager->checkAccess($user);
         $this->cursusManager->generateDocumentFromModel($documentModel, $sourceId);
 
         return new JsonResponse('success', 200);
@@ -2024,9 +2434,17 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("authenticatedUser", converter="current_user")
+     *
+     * @param User          $authenticatedUser
+     * @param DocumentModel $documentModel
+     * @param User          $user
+     * @param int           $sourceId
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function postDocumentForUserSendAction(DocumentModel $documentModel, User $user, $sourceId)
+    public function postDocumentForUserSendAction(User $authenticatedUser, DocumentModel $documentModel, User $user, $sourceId)
     {
+        $this->cursusManager->checkAccess($user);
         $this->cursusManager->generateDocumentFromModelForUser($documentModel, $user, $sourceId);
 
         return new JsonResponse('success', 200);
@@ -2039,9 +2457,16 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User          $user
+     * @param CourseSession $session
+     * @param int           $type
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function exportCsvSessionUsersAction(CourseSession $session, $type)
+    public function exportCsvSessionUsersAction(User $user, CourseSession $session, $type)
     {
+        $this->cursusManager->checkCourseAccess($user, $session->getCourse());
         $exportType = intval($type);
         $users = [];
 
@@ -2100,9 +2525,16 @@ class AdminManagementController extends Controller
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * @param User         $user
+     * @param SessionEvent $sessionEvent
+     * @param int          $type
+     *
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function exportCsvSessionEventUsersAction(SessionEvent $sessionEvent, $type)
+    public function exportCsvSessionEventUsersAction(User $user, SessionEvent $sessionEvent, $type)
     {
+        $this->cursusManager->checkCourseAccess($user, $sessionEvent->getSession()->getCourse());
         $exportType = intval($type);
         $users = [];
 
@@ -2151,5 +2583,221 @@ class AdminManagementController extends Controller
         $response->headers->set('Connection', 'close');
 
         return $response;
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/api/cursus/all/root/cursus/retrieve",
+     *     name="claroline_cursus_all_root_cursus_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns all accessible root cursus for current user
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function allRootCursussRetrieveAction(User $user)
+    {
+        $this->cursusManager->checkAccess($user);
+
+        if ($this->authorization->isGranted('ROLE_ADMIN')) {
+            $cursus = $this->cursusManager->getAllRootCursus();
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $cursus = $this->cursusManager->getAllRootCursusByOrganizations($organizations);
+        }
+        $serializedCursus = $this->serializer->serialize(
+            $cursus,
+            'json',
+            SerializationContext::create()->setGroups(['api_workspace_min'])
+        );
+
+        return new JsonResponse($serializedCursus, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/api/cursus/{cursus}/retrieve",
+     *     name="claroline_cursus_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns cursus
+     *
+     * @param User   $user
+     * @param Cursus $cursus
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function cursusRetrieveAction(User $user, Cursus $cursus)
+    {
+        $this->cursusManager->checkCursusAccess($user, $cursus);
+        $serializedCursus = $this->serializer->serialize(
+            [$cursus],
+            'json',
+            SerializationContext::create()->setGroups(['api_workspace_min'])
+        );
+
+        return new JsonResponse($serializedCursus, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/api/cursus/all/courses/retrieve",
+     *     name="claroline_cursus_all_courses_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns all accessible courses for current user
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function allCoursesRetrieveAction(User $user)
+    {
+        $this->cursusManager->checkAccess($user);
+
+        if ($this->authorization->isGranted('ROLE_ADMIN')) {
+            $courses = $this->cursusManager->getAllCourses('', 'title', 'ASC', false);
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $courses = $this->cursusManager->getAllCoursesByOrganizations($organizations);
+        }
+        $serializedCourses = $this->serializer->serialize(
+            $courses,
+            'json',
+            SerializationContext::create()->setGroups(['api_user_min'])
+        );
+
+        return new JsonResponse($serializedCourses, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/api/cursus/all/sessions/retrieve",
+     *     name="claroline_cursus_all_sessions_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns all accessible sessions for current user
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function allSessionsRetrieveAction(User $user)
+    {
+        $this->cursusManager->checkAccess($user);
+
+        if ($this->authorization->isGranted('ROLE_ADMIN')) {
+            $sessions = $this->cursusManager->getAllSessions();
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $sessions = $this->cursusManager->getAllSessionsByOrganizations($organizations);
+        }
+        $serializedSessions = $this->serializer->serialize(
+            $sessions,
+            'json',
+            SerializationContext::create()->setGroups(['api_user_min'])
+        );
+
+        return new JsonResponse($serializedSessions, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/cursus/organizations/retrieve",
+     *     name="claro_cursus_organizations_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Retrieves organizations for which user is administrator
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function cursusOrganizationsRetrieveAction(User $user)
+    {
+        $this->cursusManager->checkAccess($user);
+        $organizations = $this->authorization->isGranted('ROLE_ADMIN') ?
+            $this->cursusManager->getAllOrganizations() :
+            $user->getAdministratedOrganizations()->toArray();
+        $serializedOrganizations = $this->serializer->serialize(
+            $organizations,
+            'json',
+            SerializationContext::create()->setGroups(['api_user'])
+        );
+
+        return new JsonResponse($serializedOrganizations, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/cursus/{cursus}/unmapped/courses/retrieve",
+     *     name="claroline_cursus_unmapped_courses_retrieve",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns all courses not linked to a curusus
+     *
+     * @param User   $user
+     * @param Cursus $cursus
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getAllUnmappedCoursesAction(User $user, Cursus $cursus)
+    {
+        $this->cursusManager->checkAccess($user);
+
+        if ($this->authorization->isGranted('ROLE_ADMIN')) {
+            $courses = $this->cursusManager->getUnmappedCoursesByCursus($cursus);
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $courses = $this->cursusManager->getUnmappedCoursesByCursusAndOrganizations($cursus, $organizations);
+        }
+        $serializedCourses = $this->serializer->serialize(
+            $courses,
+            'json',
+            SerializationContext::create()->setGroups(['api_cursus'])
+        );
+
+        return new JsonResponse($serializedCourses, 200);
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/api/cursus/document/model/certificate/mail/retrieve",
+     *     name="api_get_cursus_certificate_mail_document_model",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", converter="current_user")
+     *
+     * Returns the document model for the mail sent for certificate
+     *
+     * @param User $user
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function getCertificateMailDocumentModelAction(User $user)
+    {
+        $this->cursusManager->checkAccess($user);
+        $documentModel = $this->cursusManager->getCertificateEmail();
+        $serializedModel = $this->serializer->serialize(
+            $documentModel,
+            'json',
+            SerializationContext::create()->setGroups(['api_cursus'])
+        );
+
+        return new JsonResponse($serializedModel, 200);
     }
 }

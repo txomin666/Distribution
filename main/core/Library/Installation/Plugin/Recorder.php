@@ -59,8 +59,6 @@ class Recorder
      */
     public function register(PluginBundle $plugin, array $pluginConfiguration)
     {
-        $pluginFqcn = get_class($plugin);
-
         return $this->dbWriter->insert($plugin, $pluginConfiguration);
     }
 
@@ -72,7 +70,6 @@ class Recorder
      */
     public function update(PluginBundle $plugin, array $pluginConfiguration)
     {
-        $pluginFqcn = get_class($plugin);
         $this->dbWriter->update($plugin, $pluginConfiguration);
     }
 
@@ -97,5 +94,10 @@ class Recorder
     public function isRegistered(PluginBundle $plugin)
     {
         return $this->dbWriter->isSaved($plugin);
+    }
+
+    public function setLogger($logger)
+    {
+        $this->dbWriter->setLogger($logger);
     }
 }

@@ -11,6 +11,7 @@
 
 namespace Claroline\CursusBundle\Entity;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\Organization\Organization;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -30,6 +31,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Cursus
 {
+    use UuidTrait;
+
     /**
      * @ORM\Column(type="integer")
      * @ORM\Id
@@ -178,6 +181,8 @@ class Cursus
      *     targetEntity="Claroline\CoreBundle\Entity\Organization\Organization"
      * )
      * @ORM\JoinTable(name="claro_cursusbundle_cursus_organizations")
+     * @Groups({"api_cursus", "api_user_min", "api_group_min", "api_workspace_min"})
+     * @SerializedName("organizations")
      */
     protected $organizations;
 
@@ -187,6 +192,7 @@ class Cursus
         $this->cursusUsers = new ArrayCollection();
         $this->cursusGroups = new ArrayCollection();
         $this->organizations = new ArrayCollection();
+        $this->refreshUuid();
     }
 
     public function getId()
@@ -382,6 +388,11 @@ class Cursus
         }
 
         return $this;
+    }
+
+    public function emptyOrganizations()
+    {
+        $this->organizations->clear();
     }
 
     public function getTitleAndCode()

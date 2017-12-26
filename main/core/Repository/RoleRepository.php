@@ -11,14 +11,15 @@
 
 namespace Claroline\CoreBundle\Repository;
 
-use Doctrine\ORM\EntityRepository;
-use Claroline\CoreBundle\Entity\Role;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
-use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Group;
-use Claroline\CoreBundle\Entity\Tool\ToolMaskDecoder;
-use Claroline\CoreBundle\Entity\Tool\AdminTool;
+use Claroline\CoreBundle\Entity\Resource\MaskDecoder;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
+use Claroline\CoreBundle\Entity\Role;
+use Claroline\CoreBundle\Entity\Tool\ToolMaskDecoder;
+use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 
 class RoleRepository extends EntityRepository
 {
@@ -128,9 +129,12 @@ class RoleRepository extends EntityRepository
     /**
      * Returns all platform roles.
      *
-     * @return array[Role]
+     * @param bool $includeRoleUser
+     * @param bool $getBuilder
+     *
+     * @return array|\Doctrine\ORM\QueryBuilder
      */
-    public function findAllPlatformRoles($includeRoleUser = true)
+    public function findAllPlatformRoles($includeRoleUser = true, $getBuilder = false)
     {
         $queryBuilder = $this
             ->createQueryBuilder('role')
@@ -144,9 +148,21 @@ class RoleRepository extends EntityRepository
                 ->setParameter(2, 'ROLE_USER');
         }
 
+        if ($getBuilder) {
+            return $queryBuilder;
+        }
+
         $query = $queryBuilder->getQuery();
 
         return $query->getResult();
+    }
+
+    public function findAllPlatformRoleNamesAndKeys($includeRoleUser = true)
+    {
+        $qb = $this->findAllPlatformRoles($includeRoleUser, true);
+        $qb->select('role.name', 'role.translationKey');
+
+        return $qb->getQuery()->getResult();
     }
 
     public function findByUserAndWorkspace(User $user, Workspace $workspace)
@@ -262,22 +278,6 @@ class RoleRepository extends EntityRepository
         return $query->getOneOrNullResult();
     }
 
-    public function searchByName($search)
-    {
-        $upperSearch = strtoupper(trim($search));
-
-        $dql = "
-            SELECT r
-            FROM Claroline\CoreBundle\Entity\Role r
-            WHERE UPPER(r.name) LIKE :search
-        ";
-
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('search', "%{$upperSearch}%");
-
-        return $query->getResult();
-    }
-
     public function findAll()
     {
         $dql = "
@@ -325,7 +325,7 @@ class RoleRepository extends EntityRepository
     public function findAllWhereWorkspaceIsDisplayableAndInList(array $workspaces)
     {
         if (count($workspaces) === 0) {
-            return array();
+            return [];
         } else {
             $dql = "
                 SELECT r, w
@@ -340,20 +340,6 @@ class RoleRepository extends EntityRepository
 
             return $query->getResult();
         }
-    }
-
-    public function findByAdminTool(AdminTool $adminTool)
-    {
-        $dql = "
-            SELECT r FROM Claroline\CoreBundle\Entity\Role r
-            JOIN r.adminTools t
-            WHERE t.id = :id
-        ";
-
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('id', $adminTool->getId());
-
-        return $query->getResult();
     }
 
     public function findRolesWithRightsByResourceNode(
@@ -466,28 +452,24 @@ class RoleRepository extends EntityRepository
     /**
      * Returns user-type role of an user.
      *
-     * @param User $user
-     * @param bool $executeQuery
+     * @param string $username
+     * @param bool   $executeQuery
      *
-     * @return array[Role]|query
+     * @return Role[]|Query
      */
-    public function findUserRoleByUser(User $user, $executeQuery = true)
+    public function findUserRoleByUsername($username, $executeQuery = true)
     {
-        $username = $user->getUsername();
-        $roleName = 'ROLE_USER_'.strtoupper($username);
-
-        $dql = '
-            SELECT r
-            FROM Claroline\CoreBundle\Entity\Role r
-            WHERE r.type = :type
-            AND r.name = :name
-            AND r.translationKey = :key
-        ';
-
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('type', Role::USER_ROLE);
-        $query->setParameter('name', $roleName);
-        $query->setParameter('key', $username);
+        $query = $this->_em
+            ->createQuery('
+                SELECT r
+                FROM Claroline\CoreBundle\Entity\Role r
+                WHERE r.type = :type
+                AND r.name = :name
+                AND r.translationKey = :key
+            ')
+            ->setParameter('type', Role::USER_ROLE)
+            ->setParameter('name', 'ROLE_USER_'.strtoupper($username))
+            ->setParameter('key', $username);
 
         return $executeQuery ? $query->getOneOrNullResult() : $query;
     }
@@ -613,5 +595,39 @@ class RoleRepository extends EntityRepository
         $query = $this->_em->createQuery($dql);
 
         return $query->getOneOrNullResult();
+    }
+
+    public function findRolesByIds(array $ids, $executeQuery = true)
+    {
+        $dql = '
+            SELECT r
+            FROM Claroline\CoreBundle\Entity\Role r
+            WHERE r.id IN (:ids)
+        ';
+
+        $query = $this->_em->createQuery($dql);
+        $query->setParameter('ids', $ids);
+
+        return $executeQuery ? $query->getResult() : $query;
+    }
+
+    public function findByWorkspaceNonAdministrate(Workspace $workspace)
+    {
+        $administrateMask = MaskDecoder::ADMINISTRATE;
+        $dql = "
+            SELECT r FROM Claroline\CoreBundle\Entity\Role r
+            JOIN r.resourceRights rr
+            JOIN rr.resourceNode rn
+            WHERE r.workspace = :workspaceId
+            AND rn.parent IS NULL
+            AND BIT_AND(rr.mask , {$administrateMask}) = 0
+            AND r.name <> :managerRoleName
+        ";
+        $query = $this->_em->createQuery($dql);
+        $query
+            ->setParameter('workspaceId', $workspace->getId())
+            ->setParameter('managerRoleName', 'ROLE_WS_MANAGER_'.$workspace->getGuid());
+
+        return $query->getResult();
     }
 }

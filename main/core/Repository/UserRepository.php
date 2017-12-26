@@ -12,33 +12,61 @@
 namespace Claroline\CoreBundle\Repository;
 
 use Claroline\CoreBundle\Entity\Group;
-use Claroline\CoreBundle\Entity\Model\WorkspaceModel;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Role;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
+use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
+/**
+ * Class UserRepository.
+ */
 class UserRepository extends EntityRepository implements UserProviderInterface
 {
+    /**
+     * @var PlatformConfigurationHandler
+     */
+    private $platformConfigHandler;
+
+    /**
+     * @param PlatformConfigurationHandler $platformConfigHandler
+     *
+     * @DI\InjectParams({
+     *      "platformConfigHandler" = @DI\Inject("claroline.config.platform_config_handler")
+     * })
+     */
+    public function setPlatformConfigurationHandler(PlatformConfigurationHandler $platformConfigHandler)
+    {
+        $this->platformConfigHandler = $platformConfigHandler;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function loadUserByUsername($username)
     {
+        $isUserAdminCodeUnique = $this->platformConfigHandler->getParameter('is_user_admin_code_unique');
+
         $dql = '
             SELECT u FROM Claroline\CoreBundle\Entity\User u
             WHERE u.username LIKE :username
             OR u.mail LIKE :username
-            OR u.administrativeCode LIKE :username
-            AND u.isEnabled = true
         ';
+
+        if ($isUserAdminCodeUnique) {
+            $dql .= '
+                OR u.administrativeCode LIKE :username';
+        }
+        $dql .= '
+            AND u.isEnabled = true';
         $query = $this->_em->createQuery($dql);
         $query->setParameter('username', $username);
 
@@ -69,10 +97,10 @@ class UserRepository extends EntityRepository implements UserProviderInterface
             JOIN u.roles ur
             LEFT JOIN u.groups g
             LEFT JOIN g.roles gr
-            WHERE u.id = :userId
+            WHERE u.id = :id
         ';
         $query = $this->_em->createQuery($dql);
-        $query->setParameter('userId', $user->getId());
+        $query->setParameter('id', $user->getId());
         $user = $query->getSingleResult();
 
         return $user;
@@ -257,22 +285,38 @@ class UserRepository extends EntityRepository implements UserProviderInterface
      */
     public function findUsersByWorkspaces(array $workspaces, $executeQuery = true)
     {
+        // First find user ids, then retrieve users it's much faster this way, with UNION select in SQL
+        $sql = 'SELECT DISTINCT u.id AS id FROM (
+                  SELECT u1.id AS id FROM claro_user u1
+                  INNER JOIN claro_user_role ur1 ON u1.id = ur1.user_id
+                  INNER JOIN claro_role r1 ON r1.id = ur1.role_id
+                  WHERE r1.workspace_id IN (:workspaces) AND u1.is_removed = :removed
+                  UNION
+                  SELECT u2.id AS id FROM claro_user u2
+                  INNER JOIN claro_user_group ug2 ON u2.id = ug2.user_id
+                  INNER JOIN claro_group g2 ON g2.id = ug2.group_id
+                  INNER JOIN claro_group_role gr2 ON g2.id = gr2.group_id
+                  INNER JOIN claro_role r2 ON r2.id = gr2.role_id
+                  WHERE r2.workspace_id IN (:workspaces) AND u2.is_removed = :removed
+                  ) u
+                ';
+        $rsm = new Query\ResultSetMapping();
+        $rsm->addScalarResult('id', 'id', 'integer');
+        $userIds = array_column($this->_em->createNativeQuery($sql, $rsm)
+            ->setParameter('workspaces', $workspaces)
+            ->setParameter('removed', false)
+            ->getScalarResult(), 'id');
+
         $dql = '
             SELECT DISTINCT u FROM Claroline\CoreBundle\Entity\User u
-            JOIN u.roles wr
-            LEFT JOIN u.groups g
-            LEFT JOIN g.roles gr
-            LEFT JOIN gr.workspace gw
-            LEFT JOIN wr.workspace w
-            WHERE (
-              w IN (:workspaces) OR
-              gw IN (:workspaces)
-            )
-            AND u.isRemoved = false
+            WHERE u.id IN (:ids)
             ORDER BY u.id
         ';
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('workspaces', $workspaces);
+
+        $query = $this->_em
+            ->createQuery($dql)
+            ->setParameter('ids', $userIds)
+            ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true);
 
         return $executeQuery ? $query->getResult() : $query;
     }
@@ -480,7 +524,7 @@ class UserRepository extends EntityRepository implements UserProviderInterface
             )
             AND u.isRemoved = false
             GROUP BY u.id
-            ORDER BY total DESC
+            ORDER BY total DESC, name ASC
         ";
 
         $query = $this->_em->createQuery($dql);
@@ -522,20 +566,38 @@ class UserRepository extends EntityRepository implements UserProviderInterface
      */
     public function findByRolesIncludingGroups(array $roles, $getQuery = false, $orderedBy = 'id', $order = '')
     {
+        // First find user ids, then retrieve users it's much faster this way, with UNION select in SQL
+        $sql = 'SELECT DISTINCT u.id AS id FROM (
+                  SELECT u1.id AS id FROM claro_user u1
+                  INNER JOIN claro_user_role ur1 ON u1.id = ur1.user_id
+                  WHERE ur1.role_id IN (:roles) AND u1.is_removed = :removed
+                  UNION
+                  SELECT u2.id AS id FROM claro_user u2
+                  INNER JOIN claro_user_group ug2 ON u2.id = ug2.user_id
+                  INNER JOIN claro_group g2 ON g2.id = ug2.group_id
+                  INNER JOIN claro_group_role gr2 ON g2.id = gr2.group_id
+                  WHERE gr2.role_id IN (:roles) AND u2.is_removed = :removed
+                  ) u
+                ';
+        $rsm = new Query\ResultSetMapping();
+        $rsm->addScalarResult('id', 'id', 'integer');
+        $userIds = array_column($this->_em->createNativeQuery($sql, $rsm)
+            ->setParameter('roles', $roles)
+            ->setParameter('removed', false)
+            ->getScalarResult(), 'id');
+
         $dql = "
-            SELECT u, r1, g, r2, ws From Claroline\CoreBundle\Entity\User u
-            LEFT JOIN u.roles r1
-            LEFT JOIN u.personalWorkspace ws
+            SELECT u, g, r1, r2 From Claroline\CoreBundle\Entity\User u
+            JOIN u.roles r1
             LEFT JOIN u.groups g
             LEFT JOIN g.roles r2
-            WHERE (r1 in (:roles)
-            OR r2 in (:roles))
-            AND u.isRemoved = false
+            WHERE u.id in (:ids)
             ORDER BY u.{$orderedBy} ".
             $order;
-
         $query = $this->_em->createQuery($dql);
-        $query->setParameter('roles', $roles);
+        $query
+            ->setParameter('ids', $userIds)
+            ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true);
 
         return ($getQuery) ? $query : $query->getResult();
     }
@@ -548,25 +610,44 @@ class UserRepository extends EntityRepository implements UserProviderInterface
      * @return Query|User[]
      */
     public function findUsersByRolesIncludingGroups(
-        array $roles,
-        $executeQuery = true
+        array $roles
     ) {
-        $dql = "
-            SELECT u, r1, g, r2, ws
-            From Claroline\CoreBundle\Entity\User u
+        //very slow otherwise. If we want to do it properly, the OR clause won't do it.
+        //we must use UNION wich is not supported by Doctrine
+        $dql = '
+            SELECT u, r1, ws
+            From Claroline\\CoreBundle\\Entity\\User u
             LEFT JOIN u.roles r1
             LEFT JOIN u.personalWorkspace ws
-            LEFT JOIN u.groups g
-            LEFT JOIN g.roles r2
-            WHERE (r1 in (:roles)
-            OR r2 in (:roles))
+            WHERE r1 in (:roles)
             AND u.isRemoved = false
-            ORDER BY u.lastName, u.firstName ASC";
+            ORDER BY u.lastName, u.firstName ASC
+        ';
 
         $query = $this->_em->createQuery($dql);
         $query->setParameter('roles', $roles);
 
-        return ($executeQuery) ? $query->getResult() : $query;
+        $resA = $query->getResult();
+        $resA = $resA ? $resA : [];
+
+        $dql = '
+            SELECT u, g, r2, ws
+            From Claroline\\CoreBundle\\Entity\\User u
+            LEFT JOIN u.personalWorkspace ws
+            LEFT JOIN u.groups g
+            LEFT JOIN g.roles r2
+            WHERE r2 in (:roles)
+            AND u.isRemoved = false
+            ORDER BY u.lastName, u.firstName ASC
+        ';
+
+        $query = $this->_em->createQuery($dql);
+        $query->setParameter('roles', $roles);
+
+        $resB = $query->getResult();
+        $resB = $resB ? $resB : [];
+
+        return array_merge($resA, $resB);
     }
 
     /**
@@ -607,24 +688,54 @@ class UserRepository extends EntityRepository implements UserProviderInterface
     public function findByRolesAndNameIncludingGroups(array $roles, $name, $getQuery = false, $orderedBy = 'id', $order = null)
     {
         $search = strtoupper($name);
+
+        // First find user ids, then retrieve users it's much faster this way, with UNION select in SQL
+        $sql = 'SELECT DISTINCT u.id AS id FROM (
+                  SELECT u1.id AS id FROM claro_user u1
+                  INNER JOIN claro_user_role ur1 ON u1.id = ur1.user_id
+                  WHERE ur1.role_id IN (:roles)
+                  AND u1.is_removed = :removed
+                  AND (
+                    UPPER(u1.last_name) LIKE :search
+                    OR UPPER(u1.first_name) LIKE :search
+                    OR UPPER(u1.username) LIKE :search
+                    OR UPPER (u1.mail) LIKE :search
+                  )
+                  UNION
+                  SELECT u2.id AS id FROM claro_user u2
+                  INNER JOIN claro_user_group ug2 ON u2.id = ug2.user_id
+                  INNER JOIN claro_group g2 ON g2.id = ug2.group_id
+                  INNER JOIN claro_group_role gr2 ON g2.id = gr2.group_id
+                  WHERE gr2.role_id IN (:roles)
+                  AND u2.is_removed = :removed
+                  AND (
+                    UPPER(u2.last_name) LIKE :search
+                    OR UPPER(u2.first_name) LIKE :search
+                    OR UPPER(u2.username) LIKE :search
+                    OR UPPER (u2.mail) LIKE :search
+                  )
+                  ) u
+                ';
+        $rsm = new Query\ResultSetMapping();
+        $rsm->addScalarResult('id', 'id', 'integer');
+        $userIds = array_column($this->_em->createNativeQuery($sql, $rsm)
+            ->setParameter('roles', $roles)
+            ->setParameter('removed', false)
+            ->setParameter('search', "%{$search}%")
+            ->getScalarResult(), 'id');
+
         $dql = "
             SELECT u, ur, g, gr FROM Claroline\CoreBundle\Entity\User u
             JOIN u.roles ur
             LEFT JOIN u.groups g
             LEFT JOIN g.roles gr
-            WHERE u.isRemoved = false
-            AND (
-                ur IN (:roles) OR gr IN (:roles)
-            )
-            AND (
-                UPPER(u.lastName) LIKE :search
-                OR UPPER(u.firstName) LIKE :search
-            )
+            WHERE u.id IN (:ids)
             ORDER BY u.{$orderedBy} {$order}
         ";
         $query = $this->_em->createQuery($dql);
-        $query->setParameter('roles', $roles);
-        $query->setParameter('search', "%{$search}%");
+        $query
+            ->setParameter('ids', $userIds)
+            ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true);
 
         return ($getQuery) ? $query : $query->getResult();
     }
@@ -768,19 +879,30 @@ class UserRepository extends EntityRepository implements UserProviderInterface
 
     public function countUsersByRoleIncludingGroup(Role $role)
     {
-        $dql = '
-            SELECT count(distinct u)
-            FROM Claroline\CoreBundle\Entity\User u
-            JOIN u.roles r1
-            LEFT JOIN  u.groups g
-            LEFT JOIN g.roles r2
-            WHERE r1.id = :roleId OR r2.id = :roleId
+        $sql = '
+            SELECT count(distinct usr.id) AS total
+            FROM (
+              SELECT u1.id AS id
+              FROM claro_user u1
+              INNER JOIN claro_user_role ur1 ON u1.id = ur1.user_id
+              WHERE ur1.role_id = :roleId
+              UNION
+              SELECT u2.id AS id
+              FROM claro_user u2
+              INNER JOIN claro_user_group ug2 ON u2.id = ug2.user_id
+              INNER JOIN claro_group g2 ON g2.id = ug2.group_id
+              INNER JOIN claro_group_role gr2 ON g2.id = gr2.group_id
+              WHERE gr2.role_id = :roleId
+            ) AS usr
         ';
 
-        $query = $this->_em->createQuery($dql);
+        $rsm = new Query\ResultSetMapping();
+        $rsm->addScalarResult('total', 'total', 'integer');
+
+        $query = $this->_em->createNativeQuery($sql, $rsm);
         $query->setParameter('roleId', $role->getId());
 
-        return $query->getSingleScalarResult();
+        return (int) $query->getSingleScalarResult();
     }
 
     public function countUsersOfGroup(Group $group)
@@ -820,51 +942,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         $query->setParameter('groupName', $group->getName());
 
         return $query->getSingleScalarResult();
-    }
-
-    /**
-     * @todo Make the correct sql request
-     *
-     * @param WorkspaceModel $model
-     * @param bool           $executeQuery
-     *
-     * @return array|Query
-     */
-    public function findUsersNotSharingModel(WorkspaceModel $model, $executeQuery = true)
-    {
-        $dql = '
-            SELECT u FROM Claroline\CoreBundle\Entity\User u
-        ';
-
-        $query = $this->_em->createQuery($dql);
-
-        return $executeQuery ? $query->getResult() : $query;
-    }
-
-    /**
-     * @todo Make the correct sql request
-     *
-     * @param WorkspaceModel $model
-     * @param $search
-     * @param bool $executeQuery
-     *
-     * @return array|Query
-     */
-    public function findUsersNotSharingModelBySearch(WorkspaceModel $model, $search, $executeQuery = true)
-    {
-        $search = strtoupper($search);
-
-        $dql = '
-            SELECT u FROM Claroline\CoreBundle\Entity\User u
-            WHERE UPPER(u.lastName) LIKE :search
-            OR UPPER(u.firstName) LIKE :search
-            OR UPPER(u.username) LIKE :search
-        ';
-
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('search', "%$search%");
-
-        return $executeQuery ? $query->getResult() : $query;
     }
 
     public function findAllEnabledUsers($executeQuery = true)
@@ -1140,6 +1217,22 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         return $executeQuery ? $query->getOneOrNullResult() : $query;
     }
 
+    public function findUsersByUsernamesOrMails($usernames, $mails, $executeQuery = true)
+    {
+        $dql = '
+            SELECT u
+            FROM Claroline\CoreBundle\Entity\User u
+            WHERE u.username IN (:usernames)
+            OR u.mail IN (:mails)
+        ';
+
+        $query = $this->_em->createQuery($dql);
+        $query->setParameter('usernames', $usernames);
+        $query->setParameter('mails', $mails);
+
+        return $executeQuery ? $query->getResult() : $query;
+    }
+
     public function findUserByUsernameOrMailOrCode($username, $mail, $code)
     {
         $dql = '
@@ -1222,6 +1315,8 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         array $forcedGroups = [],
         array $forcedRoles = [],
         array $forcedWorkspaces = [],
+        $withOrganizations = false,
+        array $forcedOrganizations = [],
         $executeQuery = true
     ) {
         $withSearch = !empty($search);
@@ -1237,6 +1332,14 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         $dql = '
             SELECT DISTINCT u
             FROM Claroline\CoreBundle\Entity\User u
+        ';
+
+        if ($withOrganizations) {
+            $dql .= '
+                JOIN u.organizations o
+            ';
+        }
+        $dql .= '
             WHERE u.isRemoved = false
         ';
 
@@ -1262,7 +1365,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                     )
                 ';
             }
-
             if ($withGroups) {
                 if ($withRoles) {
                     $dql .= 'OR';
@@ -1277,7 +1379,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                     )
                 ';
             }
-
             if ($withWorkspaces) {
                 if ($withRoles || $withGroups) {
                     $dql .= 'OR';
@@ -1303,19 +1404,16 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                 )
             ';
         }
-
         if ($withExcludedUsers) {
             $dql .= '
                 AND u NOT IN (:excludedUsers)
             ';
         }
-
         if ($withForcedUsers) {
             $dql .= '
                 AND u IN (:forcedUsers)
             ';
         }
-
         if ($withForcedGroups) {
             $dql .= '
                 AND u IN (
@@ -1326,7 +1424,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                 )
             ';
         }
-
         if ($withForcedRoles) {
             $dql .= '
                 AND (
@@ -1346,7 +1443,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                 )
             ';
         }
-
         if ($withForcedWorkspaces) {
             $dql .= '
                 AND (
@@ -1366,7 +1462,6 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                 )
             ';
         }
-
         if ($withSearch) {
             $dql .= '
                 AND (
@@ -1397,6 +1492,11 @@ class UserRepository extends EntityRepository implements UserProviderInterface
                 )
             ';
         }
+        if ($withOrganizations) {
+            $dql .= '
+                AND o IN (:forcedOrganizations)
+            ';
+        }
         $dql .= "
             ORDER BY u.{$orderedBy} {$order}
         ";
@@ -1405,38 +1505,33 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         if ($withGroups) {
             $query->setParameter('groupRestrictions', $groupRestrictions);
         }
-
         if ($withRoles) {
             $query->setParameter('roleRestrictions', $roleRestrictions);
         }
-
         if ($withWorkspaces) {
             $query->setParameter('workspaceRestrictions', $workspaceRestrictions);
         }
-
         if ($withForcedUsers) {
             $query->setParameter('forcedUsers', $forcedUsers);
         }
-
         if ($withForcedGroups) {
             $query->setParameter('forcedGroups', $forcedGroups);
         }
-
         if ($withForcedRoles) {
             $query->setParameter('forcedRoles', $forcedRoles);
         }
-
         if ($withForcedWorkspaces) {
             $query->setParameter('forcedWorkspaces', $forcedWorkspaces);
         }
-
         if ($withExcludedUsers) {
             $query->setParameter('excludedUsers', $excludedUsers);
         }
-
         if ($withSearch) {
             $upperSearch = strtoupper($search);
             $query->setParameter('search', "%{$upperSearch}%");
+        }
+        if ($withOrganizations) {
+            $query->setParameter('forcedOrganizations', $forcedOrganizations);
         }
 
         return $executeQuery ? $query->getResult() : $query;
@@ -1569,11 +1664,15 @@ class UserRepository extends EntityRepository implements UserProviderInterface
     }
 
     /**
+     * Returns the users who are members of one of the given workspaces. Users's groups ARE
+     * taken into account.
+     *
      * @param Workspace $workspace
+     * @param bool      $executeQuery
      *
      * @return array
      */
-    public function findByWorkspaceWithUsersFromGroup(Workspace $workspace)
+    public function findByWorkspaceWithUsersFromGroup(Workspace $workspace, $executeQuery = true)
     {
         $dql = '
             SELECT u
@@ -1589,9 +1688,8 @@ class UserRepository extends EntityRepository implements UserProviderInterface
          ';
         $query = $this->_em->createQuery($dql);
         $query->setParameter('wsId', $workspace->getId());
-        $res = $query->getResult();
 
-        return $res;
+        return $executeQuery ? $query->getResult() : $query;
     }
 
     public function findUsersExcludingRoles(array $roles, $offset, $limit)
@@ -1614,5 +1712,81 @@ class UserRepository extends EntityRepository implements UserProviderInterface
         $query->setMaxResults($limit);
 
         return $query->getResult();
+    }
+
+    /**
+     * Finds users with a list of IDs.
+     *
+     * @param array $ids
+     *
+     * @return User[]
+     */
+    public function findByIds(array $ids)
+    {
+        return $this->getEntityManager()
+            ->createQuery('
+                SELECT u FROM Claroline\CoreBundle\Entity\User u
+                WHERE u IN (:ids)
+                  AND u.isRemoved = false
+                  AND u.isEnabled = true
+            ')
+            ->setParameter('ids', $ids)
+            ->getResult();
+    }
+
+    public function countUsersNotManagersOfPersonalWorkspace()
+    {
+        $query = $this->getEntityManager()
+            ->createQuery('
+                SELECT COUNT(u.id) AS cnt FROM Claroline\CoreBundle\Entity\User u
+                INNER JOIN u.personalWorkspace ws
+                WHERE u.isRemoved = :notRemoved
+                AND ws.personal = :personal
+                AND u.id NOT IN ('.$this->findUsersManagersOfPersonalWorkspace(false)->getDQL().')
+            ')
+            ->setParameter('notRemoved', false)
+            ->setParameter('personal', true);
+
+        return intval($query->getResult()[0]['cnt']);
+    }
+
+    public function findUsersNotManagersOfPersonalWorkspace($offset = null, $limit = null)
+    {
+        $query = $this->getEntityManager()
+            ->createQuery('
+                SELECT u, ws FROM Claroline\CoreBundle\Entity\User u
+                INNER JOIN u.personalWorkspace ws
+                WHERE u.isRemoved = :notRemoved
+                AND ws.personal = :personal
+                AND u.id NOT IN ('.$this->findUsersManagersOfPersonalWorkspace(false)->getDQL().')
+            ')
+            ->setParameter('notRemoved', false)
+            ->setParameter('personal', true)
+            ->setMaxResults($limit);
+
+        if ($offset) {
+            $query->setFirstResult($offset);
+        }
+
+        return $query->getResult();
+    }
+
+    public function findUsersManagersOfPersonalWorkspace($execute = true)
+    {
+        $query = $this->getEntityManager()
+            ->createQuery('
+                SELECT u1.id FROM Claroline\CoreBundle\Entity\User u1
+                INNER JOIN u1.personalWorkspace ws1
+                INNER JOIN ws1.roles r1
+                INNER JOIN r1.users us1
+                WHERE us1.id = u1.id
+                AND u1.isRemoved = :notRemoved
+                AND ws1.personal = :personal
+                AND r1.name LIKE \'%ROLE_WS_MANAGER_%\'
+            ')
+            ->setParameter('notRemoved', false)
+            ->setParameter('personal', true);
+
+        return $execute ? $query->getResult() : $query;
     }
 }

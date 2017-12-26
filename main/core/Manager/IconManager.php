@@ -11,23 +11,28 @@
 
 namespace Claroline\CoreBundle\Manager;
 
+use Claroline\BundleRecorder\Log\LoggableTrait;
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
-use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Resource\ResourceIcon;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
-use Claroline\CoreBundle\Repository\ResourceIconRepository;
 use Claroline\CoreBundle\Library\Utilities\ClaroUtilities;
+use Claroline\CoreBundle\Library\Utilities\FileUtilities;
 use Claroline\CoreBundle\Library\Utilities\ThumbnailCreator;
-use Symfony\Component\HttpFoundation\File\File;
 use Claroline\CoreBundle\Persistence\ObjectManager;
+use Claroline\CoreBundle\Repository\ResourceIconRepository;
 use JMS\DiExtraBundle\Annotation as DI;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Symfony\Component\HttpFoundation\File\File;
 
 /**
  * @DI\Service("claroline.manager.icon_manager")
  */
 class IconManager
 {
+    use LoggableTrait;
+
     /** @var ThumbnailCreator */
     private $creator;
     /** @var ResourceIconRepository */
@@ -44,6 +49,10 @@ class IconManager
     private $om;
     /** @var string */
     private $basepath;
+    /** @var string */
+    private $iconSetRepo;
+    /** @var FileUtilities */
+    private $fu;
 
     /**
      * @DI\InjectParams({
@@ -53,7 +62,10 @@ class IconManager
      *     "rootDir"  = @DI\Inject("%kernel.root_dir%"),
      *     "ut"       = @DI\Inject("claroline.utilities.misc"),
      *     "om"       = @DI\Inject("claroline.persistence.object_manager"),
-     *     "basepath" = @DI\Inject("%claroline.param.relative_thumbnail_base_path%")
+     *     "basepath" = @DI\Inject("%claroline.param.relative_thumbnail_base_path%"),
+     *     "fu"       = @DI\Inject("claroline.utilities.file"),
+     *     "pdir"     = @DI\Inject("%claroline.param.public_files_directory%"),
+     *     "webdir"   = @DI\Inject("%claroline.param.web_directory%"),
      * })
      */
     public function __construct(
@@ -63,16 +75,23 @@ class IconManager
         $rootDir,
         ClaroUtilities $ut,
         ObjectManager $om,
-        $basepath
+        $basepath,
+        FileUtilities $fu,
+        $pdir,
+        $webdir
     ) {
         $this->creator = $creator;
         $this->repo = $om->getRepository('ClarolineCoreBundle:Resource\ResourceIcon');
+        $this->iconSetRepo = $om->getRepository('ClarolineCoreBundle:Icon\IconSet');
         $this->fileDir = $fileDir;
         $this->thumbDir = $thumbDir;
         $this->rootDir = $rootDir;
         $this->ut = $ut;
         $this->om = $om;
         $this->basepath = $basepath;
+        $this->fu = $fu;
+        $this->pdir = $pdir;
+        $this->webdir = $webdir;
     }
 
     /**
@@ -90,31 +109,30 @@ class IconManager
         // if video or img => generate the thumbnail, otherwise find an existing one.
         if (($mimeElements[0] === 'video' || $mimeElements[0] === 'image')) {
             $this->om->startFlushSuite();
-            $thumbnailPath = $this->createFromFile(
+            $publicFile = $this->createFromFile(
                 $this->fileDir.$ds.$resource->getHashName(),
                 $mimeElements[0],
                 $workspace
             );
 
-            if ($thumbnailPath !== null) {
-                $thumbnailName = pathinfo($thumbnailPath, PATHINFO_BASENAME);
-
-                if (is_null($workspace)) {
-                    $relativeUrl = $this->basepath."/{$thumbnailName}";
-                } else {
-                    $relativeUrl = $this->basepath.
-                        $ds.
-                        $workspace->getCode().
-                        $ds.
-                        $thumbnailName;
-                }
-                $icon = $this->om->factory('Claroline\CoreBundle\Entity\Resource\ResourceIcon');
+            if ($publicFile) {
+                $thumbnailPath = $this->webdir.$ds.$publicFile->getUrl();
+                $relativeUrl = ltrim(str_replace($this->webdir, '', $thumbnailPath), "{$ds}");
+                $icon = new ResourceIcon();
                 $icon->setMimeType('custom');
                 $icon->setRelativeUrl($relativeUrl);
                 $icon->setShortcut(false);
+                $icon->setUuid(uniqid('', true));
                 $this->om->persist($icon);
                 $this->createShortcutIcon($icon, $workspace);
                 $this->om->endFlushSuite();
+
+                $this->fu->createFileUse(
+                  $publicFile,
+                  get_class($icon),
+                  $icon->getUuid(),
+                  'resource-thumbnail'
+                );
 
                 return $icon;
             }
@@ -123,6 +141,11 @@ class IconManager
 
         //default & fallback
         return $this->searchIcon($node->getMimeType());
+    }
+
+    public function listResourceIcons()
+    {
+        return $this->repo->findBaseIcons();
     }
 
     /**
@@ -163,11 +186,12 @@ class IconManager
     {
         $this->om->startFlushSuite();
 
-        $relativeUrl = $this->createShortcutFromRelativeUrl($icon->getRelativeUrl(), $workspace);
+        $relativeUrl = $this->createShortcutFromRelativeUrl($icon->getRelativeUrl());
         $shortcutIcon = new ResourceIcon();
         $shortcutIcon->setRelativeUrl($relativeUrl);
         $shortcutIcon->setMimeType($icon->getMimeType());
         $shortcutIcon->setShortcut(true);
+        $shortcutIcon->setUuid(uniqid('', true));
         $icon->setShortcutIcon($shortcutIcon);
         $shortcutIcon->setShortcutIcon($shortcutIcon);
         $this->om->persist($icon);
@@ -189,32 +213,30 @@ class IconManager
      */
     public function createCustomIcon(File $file, Workspace $workspace = null)
     {
-        $fileName = $file instanceof UploadedFile ? $file->getClientOriginalName() : $file->getFilename();
         $this->om->startFlushSuite();
-        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $mimeElements = explode('/', $file->getMimeType());
+        $ds = DIRECTORY_SEPARATOR;
 
-        if (is_null($workspace)) {
-            $dest = $this->thumbDir;
-            $hashName = $this->ut->generateGuid().'.'.$extension;
-        } else {
-            $dest = $this->thumbDir.DIRECTORY_SEPARATOR.$workspace->getCode();
-            $hashName = $workspace->getCode().
-                DIRECTORY_SEPARATOR.
-                $this->ut->generateGuid().
-                '.'.
-                $extension;
+        $publicFile = $this->createFromFile(
+            $file->getPathname(),
+            $mimeElements[0],
+            $workspace
+        );
+        if ($publicFile) {
+            $thumbnailPath = $this->webdir.$ds.$publicFile->getUrl();
+            $relativeUrl = ltrim(str_replace($this->webdir, '', $thumbnailPath), "{$ds}");
+            //entity creation
+            $icon = new ResourceIcon();
+            $icon->setRelativeUrl($relativeUrl);
+            $icon->setMimeType('custom');
+            $icon->setShortcut(false);
+            $icon->setUuid(uniqid('', true));
+            $this->om->persist($icon);
+            $this->createShortcutIcon($icon);
+            $this->om->endFlushSuite();
+
+            return $icon;
         }
-        $file->move($dest, $hashName);
-        //entity creation
-        $icon = $this->om->factory('Claroline\CoreBundle\Entity\Resource\ResourceIcon');
-        $icon->setRelativeUrl("$this->basepath/{$hashName}");
-        $icon->setMimeType('custom');
-        $icon->setShortcut(false);
-        $this->om->persist($icon);
-        $this->createShortcutIcon($icon, $workspace);
-        $this->om->endFlushSuite();
-
-        return $icon;
     }
 
     /**
@@ -230,24 +252,16 @@ class IconManager
     {
         $ds = DIRECTORY_SEPARATOR;
 
-        if (is_null($workspace)) {
-            $prefix = $this->thumbDir;
-        } else {
-            $prefix = $this->thumbDir.$ds.$workspace->getCode();
-
-            if (!is_dir($prefix)) {
-                @mkdir($prefix);
-            }
-        }
-        $newPath = $prefix.$ds.$this->ut->generateGuid().'.png';
+        $newPath = $this->pdir.$ds.$this->fu->getActiveDirectoryName().$ds.$this->ut->generateGuid().'.png';
 
         $thumbnailPath = null;
+
         if ($baseMime === 'video') {
             try {
                 $thumbnailPath = $this->creator->fromVideo($filePath, $newPath, 100, 100);
             } catch (\Exception $e) {
+                //ffmpege extension might be missing
                 $thumbnailPath = null;
-                //error handling ? $thumbnailPath = null
             }
         }
 
@@ -260,7 +274,9 @@ class IconManager
             }
         }
 
-        return $thumbnailPath;
+        if ($thumbnailPath) {
+            return $this->fu->createFile(new File($thumbnailPath));
+        }
     }
 
     /**
@@ -271,15 +287,15 @@ class IconManager
         if ($icon->getMimeType() === 'custom') {
             //search if this icon is used elsewhere (ie copy)
             $res = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
-                ->findBy(array('icon' => $icon));
+                ->findBy(['icon' => $icon]);
 
             if (count($res) <= 1 && $icon->isShortcut() === false) {
                 $shortcut = $icon->getShortcutIcon();
                 $this->om->remove($shortcut);
                 $this->om->remove($icon);
                 $this->om->flush();
-                $this->removeImageFromThumbDir($icon, $workspace);
-                $this->removeImageFromThumbDir($icon->getShortcutIcon(), $workspace);
+                $this->removeImageFromThumbDir($icon);
+                $this->removeImageFromThumbDir($icon->getShortcutIcon());
             }
         }
     }
@@ -303,7 +319,7 @@ class IconManager
 
             if (!is_null($oldShortcutIcon) && !is_null($shortcutIcon)) {
                 $nodes = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
-                    ->findBy(array('icon' => $oldShortcutIcon));
+                    ->findBy(['icon' => $oldShortcutIcon]);
 
                 foreach ($nodes as $node) {
                     $node->setIcon($shortcutIcon);
@@ -322,22 +338,12 @@ class IconManager
     /**
      * @param \Claroline\CoreBundle\Entity\Resource\ResourceIcon $icon
      */
-    public function removeImageFromThumbDir(ResourceIcon $icon, Workspace $workspace = null)
+    public function removeImageFromThumbDir(ResourceIcon $icon)
     {
-        if (preg_match('#^thumbnails#', $icon->getRelativeUrl())) {
-            $pathName = $this->rootDir.'/../web/'.$icon->getRelativeUrl();
+        $pathName = $this->rootDir.'/../web/'.$icon->getRelativeUrl();
 
-            if (file_exists($pathName)) {
-                unlink($pathName);
-
-                if (!is_null($workspace)) {
-                    $dir = $this->thumbDir.DIRECTORY_SEPARATOR.$workspace->getCode();
-
-                    if (is_dir($dir) && $this->isDirectoryEmpty($dir)) {
-                        rmdir($dir);
-                    }
-                }
-            }
+        if (is_file($pathName) && file_exists($pathName)) {
+            unlink($pathName);
         }
     }
 
@@ -352,150 +358,144 @@ class IconManager
 
     public function getDefaultIconMap()
     {
-        return array(
-            array('res_default.png', 'custom/default'),
-            array('res_activity.png', 'custom/activity'),
-            array('res_file.png', 'custom/file'),
-            array('res_folder.png', 'custom/directory'),
-            array('res_text.png', 'text/plain'),
-            array('res_text.png', 'custom/text'),
+        return [
+            ['res_default.png', 'custom/default'],
+            ['res_activity.png', 'custom/activity'],
+            ['res_file.png', 'custom/file'],
+            ['res_folder.png', 'custom/directory'],
+            ['res_text.png', 'text/plain'],
+            ['res_text.png', 'custom/text'],
 
             //array('res_url.png', 'custom/url'),
             //array('res_exercice.png', 'custom/exercice'),
-            array('res_jpeg.png', 'image'),
-            array('res_audio.png', 'audio'),
-            array('res_avi.png', 'video'),
+            ['res_jpeg.png', 'image'],
+            ['res_audio.png', 'audio'],
+            ['res_avi.png', 'video'],
 
             //images
-            array('res_bmp.png', 'image/bmp'),
-            array('res_bmp.png', 'image/x-windows-bmp'),
-            array('res_jpeg.png', 'image/jpeg'),
-            array('res_jpeg.png', 'image/pjpeg'),
-            array('res_gif.png', 'image/gif'),
-            array('res_tiff.png', 'image/tiff'),
-            array('res_tiff.png', 'image/x-tiff'),
+            ['res_bmp.png', 'image/bmp'],
+            ['res_bmp.png', 'image/x-windows-bmp'],
+            ['res_jpeg.png', 'image/jpeg'],
+            ['res_jpeg.png', 'image/pjpeg'],
+            ['res_gif.png', 'image/gif'],
+            ['res_tiff.png', 'image/tiff'],
+            ['res_tiff.png', 'image/x-tiff'],
 
             //videos
-            array('res_mp4.png', 'video/mp4'),
-            array('res_mpeg.png', 'video/mpeg'),
-            array('res_mpeg.png', 'audio/mpeg'),
+            ['res_mp4.png', 'video/mp4'],
+            ['res_mpeg.png', 'video/mpeg'],
+            ['res_mpeg.png', 'audio/mpeg'],
 
             //sounds
-            array('res_wav.png', 'audio/wav'),
-            array('res_wav.png', 'audio/x-wav'),
+            ['res_wav.png', 'audio/wav'],
+            ['res_wav.png', 'audio/x-wav'],
 
-            array('res_mp3.png', 'audio/mpeg3'),
-            array('res_mp3.png', 'audio/x-mpeg3'),
-            array('res_mp3.png', 'audio/mp3'),
-            array('res_mp3.png', 'audio/mpeg'),
+            ['res_mp3.png', 'audio/mpeg3'],
+            ['res_mp3.png', 'audio/x-mpeg3'],
+            ['res_mp3.png', 'audio/mp3'],
+            ['res_mp3.png', 'audio/mpeg'],
 
             //html
-            array('res_html.png', 'text/html'),
+            ['res_html.png', 'text/html'],
 
             //xls
-            array('res_xls.png', 'application/excel'),
-            array('res_xls.png', 'application/vnd.ms-excel'),
-            array('res_xls.png', 'application/msexcel'),
-            array('res_xls.png', 'application/x-msexcel'),
-            array('res_xls.png', 'application/x-ms-excel'),
-            array('res_xls.png', 'application/x-excel'),
-            array('res_xls.png', 'application/xls'),
-            array('res_xls.png', 'application/x-xls'),
-            array('res_xls.png', 'application/x-dos_ms_excel'),
+            ['res_xls.png', 'application/excel'],
+            ['res_xls.png', 'application/vnd.ms-excel'],
+            ['res_xls.png', 'application/msexcel'],
+            ['res_xls.png', 'application/x-msexcel'],
+            ['res_xls.png', 'application/x-ms-excel'],
+            ['res_xls.png', 'application/x-excel'],
+            ['res_xls.png', 'application/xls'],
+            ['res_xls.png', 'application/x-xls'],
+            ['res_xls.png', 'application/x-dos_ms_excel'],
 
             //xlsx
-            array('res_xlsx.png', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+            ['res_xlsx.png', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
 
             //odt
-            array('res_odt.png', 'application/vnd.oasis.opendocument.text '),
+            ['res_odt.png', 'application/vnd.oasis.opendocument.text '],
 
             //ppt
-            array('res_ppt.png', 'application/mspowerpoint'),
-            array('res_ppt.png', 'application/powerpoint'),
-            array('res_ppt.png', 'application/vnd.ms-powerpoint'),
-            array('res_ppt.png', 'application/application/x-mspowerpoint'),
+            ['res_ppt.png', 'application/mspowerpoint'],
+            ['res_ppt.png', 'application/powerpoint'],
+            ['res_ppt.png', 'application/vnd.ms-powerpoint'],
+            ['res_ppt.png', 'application/application/x-mspowerpoint'],
 
             //pptx
-            array('res_pptx.png', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'),
+            ['res_pptx.png', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
 
             //doc
-            array('res_doc.png', 'application/msword'),
+            ['res_doc.png', 'application/msword'],
 
             //doc
-            array('res_docx.png', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+            ['res_docx.png', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
 
             //pdf
-            array('res_pdf.png', 'application/pdf'),
+            ['res_pdf.png', 'application/pdf'],
 
             //zip
-            array('res_zip.png', 'application/zip'),
-            array('res_rar.png', 'application/x-rar-compressed'),
+            ['res_zip.png', 'application/zip'],
+            ['res_rar.png', 'application/x-rar-compressed'],
 
             //rar
-            array('res_archive.png', 'application/x-gtar'),
-            array('res_archive.png', 'application/x-7z-compressed'),
+            ['res_archive.png', 'application/x-gtar'],
+            ['res_archive.png', 'application/x-7z-compressed'],
 
             //gz
-            array('res_gz.png', 'application/x-compressed'),
-            array('res_gz.png', 'application/x-gzip'),
-            array('res_gz.png', 'multipart/x-gzip'),
+            ['res_gz.png', 'application/x-compressed'],
+            ['res_gz.png', 'application/x-gzip'],
+            ['res_gz.png', 'multipart/x-gzip'],
 
             //tar
-            array('res_tar.png', 'application/x-tar'),
+            ['res_tar.png', 'application/x-tar'],
 
             //array('res_dot.png') alias for msword
 
             //odp
-            array('res_odp.png', 'application/vnd.oasis.opendocument.presentation'),
+            ['res_odp.png', 'application/vnd.oasis.opendocument.presentation'],
 
             //ods
-            array('res_ods.png', 'application/vnd.oasis.opendocument.spreadsheet'),
+            ['res_ods.png', 'application/vnd.oasis.opendocument.spreadsheet'],
 
             //array('res_pps.png') alias for powerpoint
             //array('res_psp.png') couldn't find mime type
 
-            array('res_rtf.png', 'application/rtf'),
-            array('res_rtf.png', 'application/x-rtf'),
-            array('res_rtf.png', 'text/richtext'),
-        );
+            ['res_rtf.png', 'application/rtf'],
+            ['res_rtf.png', 'application/x-rtf'],
+            ['res_rtf.png', 'text/richtext'],
+        ];
     }
 
-    private function isDirectoryEmpty($dirName)
-    {
-        $files = array();
-        $dirHandle = opendir($dirName);
-
-        if ($dirHandle) {
-            while ($file = readdir($dirHandle)) {
-                if ($file !== '.' && $file !== '..') {
-                    $files[] = $file;
-                    break;
-                }
-            }
-            closedir($dirHandle);
-        }
-
-        return count($files) === 0;
-    }
-
-    private function createShortcutFromRelativeUrl($url, $workspace = null)
+    private function createShortcutFromRelativeUrl($url)
     {
         $ds = DIRECTORY_SEPARATOR;
 
         try {
+            // Get active icon set stamp image to create thumbnail
+            $stampImg = $this->iconSetRepo->findActiveRepositoryResourceStampIcon();
+            $stampImg = (empty($stampImg)) ? null : "{$this->rootDir}{$ds}..{$ds}web{$ds}{$stampImg}";
             $originalIconLocation = "{$this->rootDir}{$ds}..{$ds}web{$ds}{$url}";
-            $shortcutLocation = $this->creator->shortcutThumbnail($originalIconLocation, $workspace);
+            $shortcutLocation = $this->creator->shortcutThumbnail($originalIconLocation, $stampImg);
         } catch (\Exception $e) {
-            $shortcutLocation = "{$this->rootDir}{$ds}.."
-                ."{$ds}web{$ds}bundles{$ds}clarolinecore{$ds}images{$ds}resources{$ds}icons{$ds}shortcut-default.png";
+            $this->log("Couldn't create the shortcut icon: using the default one...", LogLevel::ERROR);
+            $this->log(get_class($e).": {$e->getMessage()}", LogLevel::ERROR);
+            $shortcutLocation = "{$this->rootDir}{$ds}..{$ds}web{$ds}{$url}";
         }
 
-        if (strstr($shortcutLocation, 'bundles')) {
-            $tmpRelativeUrl = strstr($shortcutLocation, 'bundles');
-        } else {
-            $tmpRelativeUrl = strstr($shortcutLocation, $this->basepath);
-        }
+        $tmpRelativeUrl = (strstr($shortcutLocation, 'bundles')) ?
+            strstr($shortcutLocation, 'bundles') :
+            strstr($shortcutLocation, $this->basepath);
 
         return str_replace('\\', '/', $tmpRelativeUrl);
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

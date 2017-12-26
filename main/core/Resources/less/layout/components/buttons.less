@@ -1,0 +1,25 @@
+/*
+ * Buttons styles
+ */
+
+
+/* CHROME HACK FOR OUTLINED BUTTON WHEN FOCUSED */
+.btn:focus {
+    outline: none;
+}
+
+.btn-link-danger {
+    .btn-link-variant(@brand-danger, darken(@brand-danger, 10%), @link-hover-decoration);
+}
+
+.btn-link-default {
+    .btn-link-variant(@gray, @gray-dark, @link-hover-decoration);
+}
+
+// remove push effect on dropdown links
+.btn-group.open .dropdown-toggle {
+    &.btn-link-default,
+    &.btn-link-danger {
+        box-shadow: none;
+    }
+}

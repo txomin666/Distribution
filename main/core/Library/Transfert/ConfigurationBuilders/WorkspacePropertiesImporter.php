@@ -11,13 +11,13 @@
 
 namespace Claroline\CoreBundle\Library\Transfert\ConfigurationBuilders;
 
-use Symfony\Component\Config\Definition\ConfigurationInterface;
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Library\Transfert\Importer;
-use Symfony\Component\Config\Definition\Processor;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use JMS\DiExtraBundle\Annotation as DI;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Processor;
 
 /**
  * @DI\Service("claroline.importer.properties_importer")
@@ -55,6 +55,7 @@ class WorkspacePropertiesImporter extends Importer implements ConfigurationInter
                 ->booleanNode('visible')->defaultTrue()->example('true')->isRequired()->end()
                 ->booleanNode('self_registration')->defaultFalse()->example('true')->isRequired()->end()
                 ->booleanNode('self_unregistration')->defaultFalse()->example('true')->isRequired()->end()
+                ->booleanNode('disabled_notifications')->defaultFalse()->example('true')->isRequired()->end()
                 ->scalarNode('owner')->info('The workspace owner username')->example('jdoe')->end()
             ->end()
         ->end();
@@ -82,7 +83,7 @@ class WorkspacePropertiesImporter extends Importer implements ConfigurationInter
     {
         $ws = $this->om->getRepository('ClarolineCoreBundle:Workspace\AbstractWorkspace')->findByCode($code);
 
-        if ($ws !== array()) {
+        if ($ws !== []) {
             throw new \Exception('The code '.$code.' already exists');
         }
     }
@@ -108,8 +109,8 @@ class WorkspacePropertiesImporter extends Importer implements ConfigurationInter
         return true;
     }
 
-    public function export(Workspace $workspace, array &$files, $object)
+    public function export($workspace, array &$files, $object)
     {
-        return array();
+        return [];
     }
 }

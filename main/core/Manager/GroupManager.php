@@ -12,7 +12,6 @@
 namespace Claroline\CoreBundle\Manager;
 
 use Claroline\CoreBundle\Entity\Group;
-use Claroline\CoreBundle\Entity\Model\WorkspaceModel;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Event\StrictDispatcher;
 use Claroline\CoreBundle\Pager\PagerFactory;
@@ -75,7 +74,6 @@ class GroupManager
      */
     public function insertGroup(Group $group)
     {
-        $group->setGuid($this->container->get('claroline.utilities.misc')->generateGuid());
         $this->om->persist($group);
         $this->eventDispatcher->dispatch('log', 'Log\LogGroupCreate', [$group]);
         $this->om->flush();
@@ -92,7 +90,7 @@ class GroupManager
     {
         $this->eventDispatcher->dispatch(
             'claroline_groups_delete',
-            'GenericDatas',
+            'GenericData',
             [[$group]]
         );
 
@@ -391,30 +389,6 @@ class GroupManager
     }
 
     /**
-     * Returns users who don't have access to the model $model.
-     *
-     * @param WorkspaceModel $model
-     */
-    public function getUsersNotSharingModel(WorkspaceModel $model, $page = 1, $max = 20)
-    {
-        $res = $this->groupRepo->findGroupsNotSharingModel($model, false);
-
-        return $this->pagerFactory->createPager($res, $page, $max);
-    }
-
-    /**
-     * Returns users who don't have access to the model $model.
-     *
-     * @param WorkspaceModel $model
-     */
-    public function getUsersNotSharingModelBySearch(WorkspaceModel $model, $page, $search, $max = 20)
-    {
-        $res = $this->groupRepo->findGroupsNotSharingModelBySearch($model, $search, false);
-
-        return $this->pagerFactory->createPager($res, $page, $max);
-    }
-
-    /**
      * Sets an array of platform role to a group.
      *
      * @param \Claroline\CoreBundle\Entity\Group $group
@@ -447,6 +421,11 @@ class GroupManager
         }
 
         return true;
+    }
+
+    public function getGroupById($id)
+    {
+        return $this->groupRepo->findById($id);
     }
 
     public function getGroupByName($name, $executeQuery = true)

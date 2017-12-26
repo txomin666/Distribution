@@ -1,0 +1,382 @@
+/*
+ * Default theme values for claroline vars
+ */
+
+// Import bootstrap vars
+@import "variables.bootstrap.less";
+
+
+// -
+// Base & utilities
+// ---
+@brand-secondary:         #C51162;
+
+@enable-box-shadow:       true;
+@enable-border-radius:    true;
+@enable-border:           true;
+
+@font-size-modifier:      1;
+
+@box-shadow-base:               0 0 2px rgba(0, 0, 0, 0.15);
+@component-margin-bottom:       @line-height-computed; // ~20px
+@component-margin-bottom-small: floor(@line-height-computed / 2); // ~10px
+
+// react strips whitespaces, so we need to move icons to avoid from text
+@icon-text-spacer:     7px;
+@icon-dropdown-spacer: 15px;
+
+@images-path: "images/";
+
+// -
+// Z-indexes
+// ---
+@zindex-sidebar:       @zindex-navbar-fixed - 1;
+// z-index for full screen pages.
+// we want to pass over navbars but under tooltips, popovers and modals
+// modify with caution !
+@zindex-fullscreen:    1035;
+@zindex-list-search:   @zindex-popover;
+@zindex-flying-alerts: @zindex-modal + 10;
+
+
+// -
+// Application
+// ---
+@app-max-width:           1200px; // max width for the app content
+
+
+// -
+// Login
+// ---
+@login-bg-image:  "@{images-path}login-bg.jpg"; // will fallback on @body-bg if theme has no image
+@login-max-width: 740px;
+
+
+// -
+// Header
+// ---
+@top-bar-max-width:           none; // max width for the top bar content (do not affect top bar container)
+@top-bar-height:              @navbar-height + @top-bar-border-bottom-size;
+@top-bar-font-size:           @font-size-base;
+@top-bar-color:               lighten(@top-bar-bg, 30%);
+@top-bar-bg:                  @navbar-inverse-bg;
+@top-bar-border-bottom-size:  3px;
+@top-bar-border-bottom-color: @brand-primary;
+@top-bar-border-bottom:       @top-bar-border-bottom-size solid @top-bar-border-bottom-color;
+@top-bar-box-shadow:          0 0 3px rgba(0, 0, 0, 0.5);
+
+@top-bar-logo-height:         35px;
+
+@top-bar-brand-font-size:     22px;
+@top-bar-brand-color:         #FFFFFF;
+@top-bar-brand-hover-color:   #FFFFFF;
+@top-bar-brand-hover-bg:      transparent;
+
+@top-bar-link-color:          lighten(@top-bar-bg, 60%);
+@top-bar-link-hover-color:    lighten(@top-bar-bg, 70%);
+@top-bar-link-hover-bg:       darken(@top-bar-bg, 5%);
+@top-bar-link-active-color:   lighten(@top-bar-bg, 80%);
+@top-bar-link-active-bg:      darken(@top-bar-bg, 6.5%);
+@top-bar-link-disabled-color: lighten(@top-bar-bg, 30%);
+@top-bar-link-disabled-bg:    transparent;
+@top-bar-inner-border-color:  darken(@top-bar-bg, 5%);
+
+@top-bar-toggle-border-color: transparent;
+@top-bar-toggle-hover-bg:     transparent;
+@top-bar-toggle-icon-bar-bg:  @top-bar-link-color;
+
+
+// -
+// Loader
+// ---
+@loader-bg:            @label-primary-bg;
+@loader-color:         @label-color;
+@loader-border:        transparent;
+@loader-font-size:     @font-size-small;
+@loader-padding:       @padding-small-vertical @padding-small-horizontal;
+@loader-border-radius: @border-radius-base;
+@loader-box-shadow:    @box-shadow-base;
+
+
+// -
+// Breadcrumb
+// ---
+@breadcrumb-box-shadow:     none;
+@breadcrumb-font-size:      @font-size-small;
+@breadcrumb-text-transform: inherit;
+@breadcrumb-margin-bottom:  5px;
+
+
+// -
+// Sidebars
+// ---
+@sidebar-bg:           white;
+@sidebar-color:        #555555;
+@sidebar-font-size:    floor(16px * @font-size-modifier);
+
+@left-bar-box-shadow:  0 0 3px rgba(0, 0, 0, 0.5);
+@right-bar-box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+
+
+// -
+// Page
+// ---
+@page-header-padding:          0;
+@page-header-font-size:        @font-size-h1;
+@page-header-weight:           700;
+@page-header-link-color:       @gray; // todo : should be #666 for WCAG AA or #555 for AAA
+@page-header-link-hover-color: @gray-darker;
+
+
+// -
+// Flying alerts
+// ---
+@flying-alert-opacity:        .8; // becomes 1 on alert hover
+@flying-alert-width:          400px;
+@flying-alert-padding:        5px;
+@flying-alert-border-radius:  @panel-border-radius;
+@flying-alert-box-shadow:     0 0 3px rgba(0,0,0,.5); // same as topbar
+@flying-alert-margin-bottom:  10px;
+@flying-alert-icon-size:      32px;
+
+// variants
+@flying-alert-primary-color:  white;
+@flying-alert-primary-bg:     @brand-primary;
+@flying-alert-primary-border: @flying-alert-primary-bg;
+
+@flying-alert-success-color:  white;
+@flying-alert-success-bg:     @brand-success;
+@flying-alert-success-border: @flying-alert-success-bg;
+
+@flying-alert-warning-color:  white;
+@flying-alert-warning-bg:     @brand-warning;
+@flying-alert-warning-border: @flying-alert-warning-bg;
+
+@flying-alert-error-color:    white;
+@flying-alert-error-bg:       @brand-danger;
+@flying-alert-error-border:   @flying-alert-error-bg;
+
+@flying-alert-info-color:     white;
+@flying-alert-info-bg:        @brand-info;
+@flying-alert-info-border:    @flying-alert-info-bg;
+
+@flying-alert-pending-color:  white;
+@flying-alert-pending-bg:     #666;
+@flying-alert-pending-border: @flying-alert-pending-bg;
+
+// -
+// Summaries
+//
+// As summaries can have very different forms and usage (eg. path, quiz)
+// there is no default implementation in the base layout
+// but each UI component intended to be used as a summary MUST use this vars
+// and adapt to the use case in order to keep common look & feel between all summary implementations
+// ---
+@summary-padding:           15px;
+@summary-font:              16px;
+@summary-bg:                #262626;
+@summary-color:             white;
+@summary-border-radius:     0;
+@summary-box-shadow:        0 0 4px 0 rgba(0, 0, 0, 0.4);
+@summary-box-shadow-v:      2px 0 4px 0 rgba(0, 0, 0, 0.4); // box shadow for vertical summaries
+@summary-box-shadow-h:      0 2px 4px 0 rgba(0, 0, 0, 0.4); // box shadow for horizontal summaries
+
+// Links
+@summary-link-bg:           transparent;
+@summary-link-color:        @gray-light;
+@summary-link-border-color: #444444;
+@summary-link-hover-bg:     transparent;
+@summary-link-hover-color:  #BBBBBB;
+@summary-link-active-bg:    transparent;
+@summary-link-active-color: white;
+
+
+// -
+// Footer
+// ---
+@footer-height:            @navbar-height;
+@footer-max-width:         none; // max width for the footer content (do not affect footer container)
+@footer-bg:                #F3F3F3;
+@footer-color:             @gray-light;
+@footer-border-color:      transparent;
+@footer-box-shadow:        @box-shadow-base;
+
+// Links
+@footer-link-color:        @gray;
+@footer-link-hover-color:  @gray-dark;
+@footer-link-active-color: @gray-darker;
+
+
+// -
+// Forms
+// ---
+@help-block-color:          @brand-info;
+@help-block-font-size:      12px;
+
+// Labels
+@input-label-color:         @text-color;
+@input-success-label-color: @text-color; // default bootstrap behavior : @state-success-text
+@input-warning-label-color: @text-color; // default bootstrap behavior : @state-warning-text
+@input-error-label-color:   @text-color; // default bootstrap behavior : @state-error-text
+
+
+// -
+// Lists
+// ---
+@list-controls-bg:             #EBEBEB;
+@list-controls-color:          #3A3A3A;
+@list-controls-border:         #E1E1E1;
+@list-controls-disabled-bg:    #F4F4F4;
+@list-controls-disabled-color: #666666;
+@list-controls-active-bg:      #E4E4E4;
+@list-controls-active-color:   #262626;
+
+
+// -
+// Panels
+// ---
+@panel-box-shadow:         @box-shadow-base;
+@panel-margin-bottom:      @component-margin-bottom;
+
+// Groups
+@panel-group-panel-margin: 5px;
+
+
+// -
+// Navs
+// ---
+@nav-spacing:            5px; // margin between 2 tabs
+
+@nav-tabs-link-color:    @gray;
+@nav-tabs-border-radius: @border-radius-base @border-radius-base 0 0;
+
+@nav-pills-link-color:   @brand-primary;
+@nav-pills-link-bg:      transparent;
+
+
+// -
+// Widgets (by default give the same look as panels)
+// ---
+@widget-bg:                 @panel-bg;
+@widget-text:               @panel-default-text;
+@widget-border:             @panel-default-border;
+@widget-inner-border:       transparent;
+@widget-border-radius:      @panel-border-radius;
+@widget-box-shadow:         @panel-box-shadow;
+@widget-margin-bottom:      @panel-margin-bottom;
+
+@widget-header-bg:          transparent;
+@widget-header-padding:     @panel-heading-padding;
+@widget-title-font-size:    ceil((@font-size-base * 1.125));
+@widget-header-btn-padding: 4px;
+
+// This is mostly used to avoid having the full widget to be colored
+// if the user choose a custom color for his widget.
+// This permits to fake the old behavior (only header and borders were colored)
+// by setting it to `@panel-bg` or `@widget-bg`
+@widget-content-bg:      @widget-bg;
+
+// Slideshow widget
+@widget-sideshow-control-width: 5%;
+
+@widget-card-header-height:     40%; // in percent
+@widget-card-header-padding:    0;
+
+// Widget cards (for slideshow and tills widgets)
+@widget-card-margin:            floor(@grid-gutter-width / 2);
+@widget-card-bg:                @panel-bg;
+@widget-card-border:            @panel-default-border;
+@widget-card-box-shadow:        @box-shadow-base;
+@widget-card-border-radius:     0;
+@widget-card-content-padding:   @panel-body-padding;
+@widget-card-content-font-size: @font-size-large;
+
+
+// -
+// Carousel
+// ---
+@carousel-indicator-size:        10px;
+@carousel-indicator-active-size: 12px;
+
+
+// -
+// Dropdown
+// ---
+@dropdown-menu-box-shadow:    0 1px 2px rgba(0, 0, 0, 0.2);
+@dropdown-menu-border-radius: 0;
+
+@dropdown-link-padding:       5px 15px;
+
+
+// -
+// Labels
+// ---
+@label-border-radius: .25em;
+@label-font-size:     75%;
+
+
+// -
+// Modal
+// ---
+@modal-content-box-shadow:    0 0 10px rgba(0, 0, 0, 0.5);
+@modal-content-border-radius: 0;
+@modal-footer-bg:             #f5f5f5;
+
+
+// -
+// Popover
+// ---
+@popover-box-shadow:         0 1px 2px rgba(0, 0, 0, 0.25);
+@popover-border-radius:      @border-radius-base;
+@popover-title-padding:      10px;
+@popover-title-border-color: @modal-header-border-color;
+@popover-content-padding:    10px;
+
+
+// -
+// Tooltip
+// ---
+@tooltip-border-radius: 0;
+@tooltip-padding:       5px 10px;
+
+
+// -
+// Placeholders
+// ---
+@placeholder-color:            @gray;
+@placeholder-hover-color:      @brand-primary;
+
+// default variant
+@placeholder-font-size:        @font-size-base;
+@placeholder-border:           1px dashed @placeholder-color;
+@placeholder-hover-border:     1px dashed @placeholder-hover-color;
+@placeholder-border-radius:    @border-radius-base;
+@placeholder-padding:          @padding-base-vertical @padding-base-horizontal;
+
+// small variant
+@placeholder-sm-font-size:     @font-size-small;
+@placeholder-sm-border:        1px dashed @placeholder-color;
+@placeholder-sm-hover-border:  1px dashed @placeholder-hover-color;
+@placeholder-sm-border-radius: @border-radius-small;
+@placeholder-sm-padding:       @padding-small-vertical @padding-small-horizontal;
+
+// large variant
+@placeholder-lg-font-size:     @font-size-large;
+@placeholder-lg-border:        1px dashed @placeholder-color;
+@placeholder-lg-hover-border:  1px dashed @placeholder-hover-color;
+@placeholder-lg-border-radius: @border-radius-large;
+@placeholder-lg-padding:       @padding-large-vertical @padding-large-horizontal;
+
+// -
+// User
+// ---
+@user-message-bg:            @panel-bg;
+@user-message-border:        @panel-default-border;
+@user-message-inner-border:  @panel-default-border;
+@user-message-border-radius: @border-radius-large;
+
+
+// -
+// Thumbnails
+// ---
+@thumbnail-box-shadow: @box-shadow-base;

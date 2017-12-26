@@ -11,8 +11,10 @@
 
 namespace Claroline\CoreBundle\Library\Transfert;
 
+use Claroline\BundleRecorder\Log\LoggableTrait;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use Claroline\CoreBundle\Event\RichTextFormatEvent;
 use Claroline\CoreBundle\Event\StrictDispatcher;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Manager\MaskManager;
@@ -28,11 +30,14 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 class RichTextFormatter
 {
+    use LoggableTrait;
+
     //placeholder = [[uid=123]]
-    const REGEX_PLACEHOLDER = '#\[\[uid=([^\]]+)\]\]#';
+    const REGEX_PLACEHOLDER = '#\[\[(uid=[^\]]+)\]\]#';
 
     private $data;
     private $router;
+    private $resourceManager;
     private $resourceManagerData;
     private $om;
     private $listImporters;
@@ -43,6 +48,8 @@ class RichTextFormatter
     private $config;
 
     /**
+     * RichTextFormatter constructor.
+     *
      * @DI\InjectParams({
      *     "router"          = @DI\Inject("router"),
      *     "resourceManager" = @DI\Inject("claroline.manager.resource_manager"),
@@ -52,6 +59,14 @@ class RichTextFormatter
      *     "eventDispatcher" = @DI\Inject("claroline.event.event_dispatcher"),
      *     "config"          = @DI\Inject("claroline.config.platform_config_handler")
      * })
+     *
+     * @param UrlGeneratorInterface        $router
+     * @param ResourceManager              $resourceManager
+     * @param ObjectManager                $om
+     * @param TransferManager              $transferManager
+     * @param MaskManager                  $maskManager
+     * @param StrictDispatcher             $eventDispatcher
+     * @param PlatformConfigurationHandler $config
      */
     public function __construct(
         UrlGeneratorInterface $router,
@@ -74,9 +89,20 @@ class RichTextFormatter
         $this->config = $config;
     }
 
+    private function extractFormatOptions($placeholder)
+    {
+        $output = [];
+        //split on comma, ignoring potential commas in quoted text
+        foreach (preg_split("#(?!\B['\"][^\"']*),(?![^\"']*['\"]\B)#", $placeholder) as $pair) {
+            list($key, $val) = explode('=', trim($pair), 2);
+            $output[$key] = trim($val, "'\"");
+        }
+
+        return $output;
+    }
+
     /**
      * @param $text
-     * @param array $resources
      *
      * The $resource array MUST be formatter this way:
      * where the sub array key is an the element uid.
@@ -90,25 +116,44 @@ class RichTextFormatter
         preg_match_all(self::REGEX_PLACEHOLDER, $text, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
-            $uid = (int) $match[1];
+            $options = $this->extractFormatOptions($match[1]);
+            $uid = $options['uid'];
+            // optional parameters
+            $option_text = null;
+            if (isset($options['text'])) {
+                $option_text = $options['text'];
+            }
+            $option_style = null;
+            if (isset($options['style'])) {
+                $option_style = $options['style'];
+            }
+            $option_embed = null;
+            if (isset($options['embed'])) {
+                $option_embed = (bool) $options['embed'];
+            }
+            $option_target = null;
+            if (isset($options['target'])) {
+                $option_target = $options['target'];
+            }
+
             //meh, fix the following lines late
             $parent = $this->findParentFromDataUid($uid);
             $el = $this->findItemFromUid($uid);
-            $node = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
-                ->findOneBy(
-                    [
-                        'parent' => $parent,
-                        'name' => $el['name'],
-                        'resourceType' => $this->resourceManager->getResourceTypeByName($el['type']),
-                    ]
-                );
+
+            /** @var ResourceNode $node */
+            $node = $this->om
+                ->getRepository('ClarolineCoreBundle:Resource\ResourceNode')
+                ->findOneBy([
+                    'parent' => $parent,
+                    'name' => $el['name'],
+                    'resourceType' => $this->resourceManager->getResourceTypeByName($el['type']),
+                ]);
 
             if ($node) {
-                $toReplace = $this->generateDisplayedUrlForTinyMce($node);
+                $toReplace = $this->generateDisplayedUrlForTinyMce($node, $option_text, $option_embed, $option_style, $option_target);
                 $text = str_replace($match[0], $toReplace, $text);
             }
         }
-
         $event = $this->eventDispatcher->dispatch(
             'rich_text_format_event_import',
             'RichTextFormat',
@@ -148,70 +193,135 @@ class RichTextFormatter
     }
 
     /**
-     * If we find an resource id wich is a file and not in the export yet, then we
-     * export is aswell. It's a link towards "something else".
+     * If we find an resource id which is a file and not in the export yet, then we
+     * export it as well. It's a link towards "something else".
+     *
+     * URLs to be matched :
+     *   - '/file/resource/media/([^']+)#'
+     *   - '/resource/open/([^/]+)/([^']+)'
+     *   - '/video-player/api/video/([^']+)/stream' (this one is really ugly, see `getOldVideos` for more info)
+     *
+     * @param string $file
+     * @param array  $_data
+     * @param array  $_files
+     *
+     * @return string
      */
     private function setPlaceHolder($file, &$_data, &$_files)
     {
-        //urls to be matched...
-        //'/file/resource/media/([^']+)#'
-        //'/resource/open/([^/]+)/([^']+)'
         $text = file_get_contents($file);
         $baseUrl = $this->router->getContext()->getBaseUrl();
 
-        //first regex
+        $nodes = []; // nodes referenced into current HTML text
+
+        // Get file resources
         $regex = '#'.$baseUrl.'/file/resource/media/([^\'"]+)#';
-
         preg_match_all($regex, $text, $matches, PREG_SET_ORDER);
-
         if (count($matches) > 0) {
             foreach ($matches as $match) {
-                if (!$this->getItemFromUid($match[1], $_data)) {
-                    $this->createDataFolder($_data);
-                    $node = $this->resourceManager->getNode($match[1]);
-
-                    if ($node && $node->getResourceType()->getName() === 'file') {
-                        $el = $this->getImporterByName('resource_manager')->getResourceElement(
-                            $node,
-                            $node->getWorkspace(),
-                            $_files,
-                            $_data,
-                            true
-                        );
-                        $el['item']['parent'] = 'data_folder';
-                        $el['item']['roles'] = [['role' => [
-                            'name' => 'ROLE_USER',
-                            'rights' => $this->maskManager->decodeMask(7, $this->resourceManager->getResourceTypeByName('file')),
-                        ]]];
-                        $_data['data']['items'][] = $el;
-                    }
-                }
-
-                $text = $this->replaceLink($text, $match[0], $match[1], $_data);
+                $nodes[$match[0]] = $this->resourceManager->getNode($match[1]);
             }
         }
 
-        //second regex
+        // Get other resources
         $regex = '#'.$baseUrl.'/resource/open/([^/]+)/([^\'"]+)#';
         preg_match_all($regex, $text, $matches, PREG_SET_ORDER);
-
         if (count($matches) > 0) {
             foreach ($matches as $match) {
-                $text = $this->replaceLink($text, $match[0], $match[2]);
+                $nodes[$match[0]] = $this->resourceManager->getNode($match[2]);
             }
         }
 
+        // Get videos with old URL format
+        $nodes = array_merge($nodes, $this->getOldVideos($text));
+
+        // Replace placeholders for all found nodes
+        // Will also import missing ones
+        foreach ($nodes as $match => $node) {
+            if ($node) {
+                // if not yet in export data array, start its import
+                $this->includeNodeIfMissing($node, $_data, $_files);
+                $text = $this->replaceLink($node, $text, $match);
+            }
+        }
+
+        /** @var RichTextFormatEvent $event */
         $event = $this->eventDispatcher->dispatch(
             'rich_text_format_event_export',
             'RichTextFormat',
             [$text, &$_data, &$_files]
         );
-        $text = $event->getText();
 
-        return $text;
+        return $event->getText();
     }
 
-    private function replaceLink($txt, $fullMatch, $nodeId)
+    /**
+     * Get videos from HTML text which uses old URL format.
+     *
+     * This is for retro compatibility purpose.
+     * In last version, video URLs have the same format than other file types.
+     *
+     * Old format :
+     *   '/BASE_PATH/video-player/api/video/([^']+)/stream'
+     *
+     * Problems / differences with other resources :
+     *   - main format pattern is not the same has other files
+     *   - the ID in the URL is not the ResourceNode ID
+     *   - the URL does not contain scheme and host
+     *
+     * @param string $text
+     *
+     * @return array
+     */
+    private function getOldVideos($text)
+    {
+        $nodes = [];
+
+        $basePath = str_replace(
+            $this->router->getContext()->getScheme().'://'.$this->router->getContext()->getHost(),
+            '',
+            $this->router->getContext()->getBaseUrl()
+        );
+
+        $regex = '#'.$basePath.'/video-player/api/video/([^/]+)/stream#';
+        preg_match_all($regex, $text, $matches, PREG_SET_ORDER);
+        if (count($matches) > 0) {
+            foreach ($matches as $match) {
+                $video = $this->om->getRepository('ClarolineCoreBundle:Resource\File')->find($match[1]);
+                if ($video) {
+                    $nodes[$match[0]] = $video->getResourceNode();
+                }
+            }
+        }
+
+        return $nodes;
+    }
+
+    private function includeNodeIfMissing(ResourceNode $node, &$_data, &$_files)
+    {
+        if (!$this->getItemFromUid($node->getId(), $_data)) {
+            $this->createDataFolder($_data);
+
+            $el = $this->getImporterByName('resource_manager')->getResourceElement(
+                $node,
+                $node->getWorkspace(),
+                $_files,
+                $_data,
+                true
+            );
+            $el['item']['parent'] = 'data_folder';
+            $el['item']['roles'] = [['role' => [
+                'name' => 'ROLE_USER',
+                'rights' => $this->maskManager->decodeMask(7, $node->getResourceType()),
+            ]]];
+
+            if (!$this->getItemFromUid($el['item']['uid'], $_data)) {
+                $_data['data']['items'][] = $el;
+            }
+        }
+    }
+
+    private function replaceLink(ResourceNode $node, $txt, $fullMatch)
     {
         //videos <source type="video/webm" src=...media...></source>
         //files <a href=...open...> - name - </a>
@@ -219,17 +329,86 @@ class RichTextFormatter
         $matchReplaced = [];
         $fullMatch = preg_quote($fullMatch);
 
+        //match hyperlink and extract text
         preg_match(
-            "#(<source|<a)(.*){$fullMatch}(.*)(</a>|</source>)#",
+            "#<a.*{$fullMatch}[^>]+>(.*)<\/a>#i",
             $txt,
             $matchReplaced
         );
-
         if (count($matchReplaced) > 0) {
-            $txt = str_replace($matchReplaced[0], "[[uid={$nodeId}]]", $txt);
+            //custom hyperlink text, if different from node name
+            $text_option = '';
+            if (isset($matchReplaced[1]) && $matchReplaced[1] !== $node->getName()) {
+                $text_option = ",text='".addslashes(strip_tags($matchReplaced[1]))."'";
+            }
+            //css style option
+            $css_style_option = '';
+            $css_style = $this->extractCssStyle($matchReplaced[0]);
+            if (isset($css_style)) {
+                $css_style_option = ",style='".addslashes($css_style)."'";
+            }
+            //target option
+            $target_option = '';
+            $target = $this->extractTarget($matchReplaced[0]);
+            if (isset($target)) {
+                $target_option = ",target='".$target."'";
+            }
+            //simple hyperlink, no embed, option only necessary for medias
+            $embed_option = '';
+            if (strpos('_'.$node->getMimeType(), 'image') > 0 || strpos('_'.$node->getMimeType(), 'video') > 0 || strpos('_'.$node->getMimeType(), 'audio') > 0) {
+                $embed_option = ',embed=0';
+            }
+
+            $tag = '[[uid='.$node->getGuid().$text_option.$embed_option.$css_style_option.$target_option.']]';
+            $txt = str_replace($matchReplaced[0], $tag, $txt);
+        } else {
+            //match embeded media
+            preg_match(
+                "#<(source|img).*{$fullMatch}[^>]+>(<\/source>)?#i",
+                $txt,
+                $matchReplaced
+            );
+            if (count($matchReplaced) > 0) {
+                //css style option
+                $css_style_option = '';
+                $css_style = $this->extractCssStyle($matchReplaced[0]);
+                if (isset($css_style)) {
+                    $css_style_option = ",style='".addslashes($css_style)."'";
+                }
+                $tag = '[[uid='.$node->getGuid().$css_style_option.']]';
+                $txt = str_replace($matchReplaced[0], $tag, $txt);
+            }
         }
 
         return $txt;
+    }
+
+    private function extractCssStyle($txt)
+    {
+        preg_match(
+            "#style=[\"\']([^\"\']+)[\"\']#i",
+            $txt,
+            $match
+        );
+        if (count($match) > 0) {
+            return $match[1];
+        }
+
+        return null;
+    }
+
+    private function extractTarget($txt)
+    {
+        preg_match(
+            "#target=[\"\']([^\"\']+)[\"\']#i",
+            $txt,
+            $match
+        );
+        if (count($match) > 0) {
+            return $match[1];
+        }
+
+        return null;
     }
 
     /**
@@ -286,7 +465,8 @@ class RichTextFormatter
     {
         if (isset($this->resourceManagerData['data']['items'])) {
             foreach ($this->resourceManagerData['data']['items'] as $item) {
-                if ($item['item']['uid'] === $uid) {
+                //without cast, comparaison would fail in some instances (uid is either int or string, depending)
+                if ((string) ($item['item']['uid']) === (string) $uid) {
                     return $item['item'];
                 }
             }
@@ -297,7 +477,8 @@ class RichTextFormatter
     {
         if (isset($resManagerData['data']['items'])) {
             foreach ($resManagerData['data']['items'] as $item) {
-                if ($item['item']['uid'] === $uid) {
+                //without cast, comparaison would fail in some instances (uid is either int or string, depending)
+                if ((string) ($item['item']['uid']) === (string) $uid) {
                     return $item['item'];
                 }
             }
@@ -312,7 +493,8 @@ class RichTextFormatter
     {
         if (isset($this->resourceManagerData['data']['directories'])) {
             foreach ($this->resourceManagerData['data']['directories'] as $item) {
-                if ($item['directory']['uid'] === $uid) {
+                //without cast, comparaison would fail in some instances (uid is either int or string, depending)
+                if ((string) ($item['directory']['uid']) === (string) $uid) {
                     return $item['directory'];
                 }
             }
@@ -323,7 +505,8 @@ class RichTextFormatter
     {
         if (isset($resManagerData['data']['directories'])) {
             foreach ($resManagerData['data']['directories'] as $item) {
-                if ($item['directory']['uid'] === $uid) {
+                //without cast, comparaison would fail in some instances (uid is either int or string, depending)
+                if ((string) ($item['directory']['uid']) === (string) $uid) {
                     return $item['directory'];
                 }
             }
@@ -347,8 +530,10 @@ class RichTextFormatter
      *
      * @param ResourceNode $node
      */
-    public function generateDisplayedUrlForTinyMce(ResourceNode $node)
+    public function generateDisplayedUrlForTinyMce(ResourceNode $node, $text, $embed, $style = null, $target = null)
     {
+        $cssStyle = isset($style) ? "style='".stripslashes($style)."'" : '';
+
         if (strpos('_'.$node->getMimeType(), 'image') > 0) {
             $url = $this->router->generate(
                 'claro_file_get_media',
@@ -356,29 +541,72 @@ class RichTextFormatter
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
 
-            return "<img style='max-width: 100%;' src='{$url}' alt='{$node->getName()}'>";
+            //embed images by default
+            if (!isset($embed) || $embed) {
+                if (empty($cssStyle)) {
+                    $cssStyle = "style='max-width:100%;'";
+                }
+
+                return '<img '.$cssStyle." src='".$url."' alt='".$node->getName()."'>";
+            }
         }
 
-        if (strpos('_'.$node->getMimeType(), 'video') > 0) {
+        if (strpos('_'.$node->getMimeType(), 'video') > 0 || strpos('_'.$node->getMimeType(), 'audio') > 0) {
             $url = $this->router->generate(
                 'claro_file_get_media',
                 ['node' => $node->getId()],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
-
-            return "<source type='{$node->getMimeType()}' src='{$url}'></source>";
+            //embed audio/video by default
+            if (!isset($embed) || $embed) {
+                return "<source type='".$node->getMimeType()."' src='".$url."'></source>";
+            }
         }
 
-        $url = $this->router->generate(
-            'claro_resource_open',
-            [
-                'resourceType' => $node->getResourceType()->getName(),
-                'node' => $node->getId(),
-            ],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
+        if (strpos('_'.$node->getMimeType(), 'x-shockwave-flash') > 0) {
+            $url = $this->router->generate(
+                'claro_file_get_media',
+                ['node' => $node->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+            //embed flash by default
+            if (!isset($embed) || $embed) {
+                return '<object '.$cssStyle." type='".$node->getMimeType()."' data='".$url."'>".
+                            "<param name='allowFullScreen' value='true' />".
+                            "<param name='src' value='".$url."' />".
+                        '</object>';
+            }
+        }
 
-        return "<a href='{$url}'>{$node->getName()}</a>";
+        //hyperlink text, fallback to node name if none
+        $link_text = isset($text) ? stripslashes($text) : $node->getName();
+        $targetProperty = isset($target) ? "target='".$target."'" : '';
+
+        //no embed by default
+        if ($embed) {
+            $url = $this->router->generate(
+                'claro_resource_open',
+                [
+                    'resourceType' => $node->getResourceType()->getName(),
+                    'node' => $node->getId(),
+                    'iframe' => 1,
+                ],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+
+            return "<iframe {$cssStyle} src='{$url}'></iframe>";
+        } else {
+            $url = $this->router->generate(
+                'claro_resource_open',
+                [
+                    'resourceType' => $node->getResourceType()->getName(),
+                    'node' => $node->getId(),
+                ],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+
+            return "<a {$cssStyle} {$targetProperty} href='{$url}'>{$link_text}</a>";
+        }
     }
 
     public function addImporter(Importer $importer)

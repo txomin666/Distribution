@@ -81,12 +81,12 @@
                                       height="70px"
                                  >
                             {% else %}
-                                <h1><i class="fa fa-user col-md-12"></i><h1>
+                                <h1><i class="fa fa-user col-md-12"></i></h1>
                             {% endif %}
                         </div>
                         <div>
                             {% if not creator.isRemoved() %}
-                                <a href="{{ path('claro_public_profile_view', {'publicUrl': creator.getPublicUrl()}) }}">
+                                <a href="{{ path('claro_user_profile', {'publicUrl': creator.getPublicUrl()}) }}">
                             {% endif %}
 
                             {{ message.getAuthor() }}

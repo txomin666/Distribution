@@ -30,7 +30,9 @@ export default class SessionEventCreationModalCtrl {
       locationResource: null,
       tutors: [],
       maxUsers: null,
-      registrationType: 0
+      registrationType: 0,
+      type: false,
+      eventSet: null
     }
     this.sessionEventErrors = {
       name: null,
@@ -64,7 +66,7 @@ export default class SessionEventCreationModalCtrl {
     this.initializeSessionEvent()
   }
 
-  initializeSessionEvent () {
+  initializeSessionEvent() {
     if (this.session['description']) {
       this.sessionEvent['description'] = this.session['description']
     }
@@ -88,7 +90,7 @@ export default class SessionEventCreationModalCtrl {
     })
   }
 
-  submit () {
+  submit() {
     this.resetErrors()
 
     if (!this.sessionEvent['name']) {
@@ -156,20 +158,20 @@ export default class SessionEventCreationModalCtrl {
 
     if (this.isValid()) {
       const url = Routing.generate('api_post_session_event_creation', {session: this.session['id']})
-      this.$http.post(url, {sessionEventDatas: this.sessionEvent}).then(d => {
+      this.$http.post(url, {sessionEventData: this.sessionEvent}).then(d => {
         this.callback(d['data'])
         this.$uibModalInstance.close()
       })
     }
   }
 
-  resetErrors () {
+  resetErrors() {
     for (const key in this.sessionEventErrors) {
       this.sessionEventErrors[key] = null
     }
   }
 
-  isValid () {
+  isValid() {
     let valid = true
 
     for (const key in this.sessionEventErrors) {
@@ -182,7 +184,7 @@ export default class SessionEventCreationModalCtrl {
     return valid
   }
 
-  openDatePicker (type) {
+  openDatePicker(type) {
     if (type === 'start') {
       this.dates['start']['open'] = true
     } else if (type === 'end') {
@@ -190,7 +192,7 @@ export default class SessionEventCreationModalCtrl {
     }
   }
 
-  isAuto () {
+  isAuto() {
     return this.registrationType === this.registrationTypeChoices[0]
   }
 }

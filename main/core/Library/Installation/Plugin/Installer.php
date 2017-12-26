@@ -13,9 +13,9 @@ namespace Claroline\CoreBundle\Library\Installation\Plugin;
 
 use Claroline\BundleRecorder\Log\LoggableTrait;
 use Claroline\CoreBundle\Library\PluginBundleInterface;
+use Claroline\CoreBundle\Manager\PluginManager;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use Claroline\InstallationBundle\Manager\InstallationManager;
-use Claroline\CoreBundle\Manager\PluginManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -33,6 +33,7 @@ class Installer
     private $recorder;
     private $baseInstaller;
     private $om;
+    private $versionManager;
 
     /**
      * Constructor.
@@ -47,7 +48,8 @@ class Installer
      *     "installer"     = @DI\Inject("claroline.installation.manager"),
      *     "om"            = @DI\Inject("claroline.persistence.object_manager"),
      *     "pluginManager" = @DI\Inject("claroline.manager.plugin_manager"),
-     *     "translator"    = @DI\Inject("translator")
+     *     "translator"    = @DI\Inject("translator"),
+     *     "versionManager" = @DI\Inject("claroline.manager.version_manager")
      * })
      */
     public function __construct(
@@ -56,7 +58,8 @@ class Installer
         InstallationManager $installer,
         ObjectManager $om,
         PluginManager $pluginManager,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        $versionManager
     ) {
         $this->validator = $validator;
         $this->recorder = $recorder;
@@ -64,6 +67,7 @@ class Installer
         $this->om = $om;
         $this->pluginManager = $pluginManager;
         $this->translator = $translator;
+        $this->versionManager = $versionManager;
     }
 
     /**
@@ -73,6 +77,7 @@ class Installer
     {
         $this->logger = $logger;
         $this->baseInstaller->setLogger($logger);
+        $this->recorder->setLogger($logger);
     }
 
     /**
@@ -86,13 +91,15 @@ class Installer
      */
     public function install(PluginBundleInterface $plugin)
     {
+        $this->versionManager->setLogger($this->logger);
+        $version = $this->versionManager->register($plugin);
         $this->checkInstallationStatus($plugin, false);
         $this->validatePlugin($plugin);
-        $this->log('Saving plugin configuration...');
+        $this->log('Saving configuration...');
         $pluginEntity = $this->recorder->register($plugin, $this->validator->getPluginConfiguration());
-        $this->baseInstaller->install($plugin);
+        $this->baseInstaller->install($plugin, false);
 
-        if (!$this->pluginManager->isReady($pluginEntity)) {
+        if (!$this->pluginManager->isReady($pluginEntity) || !$this->pluginManager->isActivatedByDefault($pluginEntity)) {
             $errors = $this->pluginManager->getMissingRequirements($pluginEntity);
 
             foreach ($errors['extensions'] as $extension) {
@@ -104,12 +111,14 @@ class Installer
             }
 
             foreach ($errors['extras'] as $extra) {
-                $this->log(sprintf('<fg=red>The plugin %s has extra requirements ! %s.</fg=red>', $plugin->getName(), $this->translator->trans($extra, array(), 'error')));
+                $this->log(sprintf('<fg=red>The plugin %s has extra requirements ! %s.</fg=red>', $plugin->getName(), $this->translator->trans($extra, [], 'error')));
             }
 
             $this->log(sprintf('<fg=red>Disabling %s...</fg=red>', $plugin->getName()));
             $this->pluginManager->disable($pluginEntity);
         }
+
+        $version = $this->versionManager->execute($version);
     }
 
     /**
@@ -134,6 +143,8 @@ class Installer
      */
     public function update(PluginBundleInterface $plugin, $currentVersion, $targetVersion)
     {
+        $this->versionManager->setLogger($this->logger);
+        $version = $this->versionManager->register($plugin);
         $this->checkInstallationStatus($plugin, true);
         $this->validator->activeUpdateMode();
         $this->validatePlugin($plugin);
@@ -141,9 +152,15 @@ class Installer
         $this->log('Updating plugin configuration...');
         $this->baseInstaller->update($plugin, $currentVersion, $targetVersion);
         $this->recorder->update($plugin, $this->validator->getPluginConfiguration());
+        $this->versionManager->execute($version);
     }
 
-    private function checkInstallationStatus(PluginBundleInterface $plugin, $shouldBeInstalled = true)
+    public function end(PluginBundleInterface $plugin)
+    {
+        $this->baseInstaller->end($plugin);
+    }
+
+    public function checkInstallationStatus(PluginBundleInterface $plugin, $shouldBeInstalled = true)
     {
         $this->log(sprintf('<fg=blue>Checking installation status for plugin %s</fg=blue>', $plugin->getName()));
 
@@ -156,9 +173,9 @@ class Installer
         }
     }
 
-    private function validatePlugin(PluginBundleInterface $plugin)
+    public function validatePlugin(PluginBundleInterface $plugin)
     {
-        $this->log('Validating plugin...');
+        $this->log('Validating configuration...');
         $errors = $this->validator->validate($plugin);
 
         if (0 !== count($errors)) {
@@ -170,6 +187,21 @@ class Installer
             }
 
             throw new \Exception($report);
+        }
+    }
+
+    public function updateAllConfigurations()
+    {
+        $bundles = $this->pluginManager->getInstalledBundles();
+
+        foreach ($bundles as $bundle) {
+            $this->log('Updating configuration for '.get_class($bundle['instance']));
+            $this->validator->activeUpdateMode();
+            $this->validatePlugin($bundle['instance']);
+            $this->validator->deactivateUpdateMode();
+            $this->log('Plugin validated: proceed to database changes...');
+            $this->om->clear();
+            $this->recorder->update($bundle['instance'], $this->validator->getPluginConfiguration());
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Icap\BadgeBundle\Entity;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Rule\Rulable;
@@ -10,13 +11,13 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\Validator\Constraints as Assert;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 use Icap\BadgeBundle\Form\Constraints as BadgeAssert;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
-use Gedmo\Mapping\Annotation as Gedmo;
-use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Table(name="claro_badge")
@@ -33,6 +34,7 @@ use Gedmo\SoftDeleteable\Traits\SoftDeleteableEntity;
 class Badge extends Rulable
 {
     use SoftDeleteableEntity;
+    use UuidTrait;
 
     const EXPIRE_PERIOD_DAY = 0;
     const EXPIRE_PERIOD_DAY_LABEL = 'day';
@@ -655,10 +657,10 @@ class Badge extends Rulable
      */
     public static function getExpirePeriodTypes()
     {
-        return array(self::EXPIRE_PERIOD_DAY,
+        return [self::EXPIRE_PERIOD_DAY,
                      self::EXPIRE_PERIOD_WEEK,
                      self::EXPIRE_PERIOD_MONTH,
-                     self::EXPIRE_PERIOD_YEAR, );
+                     self::EXPIRE_PERIOD_YEAR, ];
     }
 
     /**
@@ -666,10 +668,10 @@ class Badge extends Rulable
      */
     public static function getExpirePeriodLabels()
     {
-        return array(self::EXPIRE_PERIOD_DAY_LABEL,
+        return [self::EXPIRE_PERIOD_DAY_LABEL,
                      self::EXPIRE_PERIOD_WEEK_LABEL,
                      self::EXPIRE_PERIOD_MONTH_LABEL,
-                     self::EXPIRE_PERIOD_YEAR_LABEL, );
+                     self::EXPIRE_PERIOD_YEAR_LABEL, ];
     }
 
     /**
@@ -721,7 +723,15 @@ class Badge extends Rulable
      */
     public function getWebPath()
     {
-        return (null === $this->imagePath) ? null : self::getUploadDir().DIRECTORY_SEPARATOR.$this->imagePath;
+        if ($this->imagePath) {
+            //legacy
+          if (file_exists(self::getUploadDir().DIRECTORY_SEPARATOR.$this->imagePath)) {
+              return self::getUploadDir().DIRECTORY_SEPARATOR.$this->imagePath;
+            //new and much better (right ? :))
+          } else {
+              return $this->imagePath;
+          }
+        }
     }
 
     /**
@@ -735,11 +745,10 @@ class Badge extends Rulable
     protected function dealWithAtLeastOneTranslation(ObjectManager $objectManager)
     {
         $translations = $this->getTranslations();
-        $hasEmptyTranslation = 0;
         /** @var \Icap\BadgeBundle\Entity\BadgeTranslation[] $emptyTranslations */
-        $emptyTranslations = array();
+        $emptyTranslations = [];
         /** @var \Icap\BadgeBundle\Entity\BadgeTranslation[] $nonEmptyTranslations */
-        $nonEmptyTranslations = array();
+        $nonEmptyTranslations = [];
 
         foreach ($translations as $translation) {
             // Have to put all method call in variable because of empty doesn't
@@ -788,7 +797,7 @@ class Badge extends Rulable
      */
     public function getRestriction()
     {
-        $restriction = array();
+        $restriction = [];
         if (null !== $this->getWorkspace()) {
             $restriction['workspace'] = $this->getWorkspace();
         }
@@ -820,5 +829,10 @@ class Badge extends Rulable
             $this->userBadges = new ArrayCollection();
             $this->badgeClaims = new ArrayCollection();
         }
+    }
+
+    public function __toString()
+    {
+        return 'badge'.$this->getId();
     }
 }

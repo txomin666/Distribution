@@ -12,6 +12,8 @@
 namespace Claroline\CoreBundle\Library\Utilities;
 
 use JMS\DiExtraBundle\Annotation as DI;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\Debug\Exception\ContextErrorException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -59,10 +61,10 @@ class ClaroUtilities
     {
         ksort($fillable);
         $saveKey = 1;
-        $filledArray = array();
+        $filledArray = [];
 
         foreach ($fillable as $key => $value) {
-            if ($key - $saveKey != 0) {
+            if ($key - $saveKey !== 0) {
                 while ($key - $saveKey >= 1) {
                     $filledArray[$saveKey] = array_shift($array);
                     ++$saveKey;
@@ -84,60 +86,15 @@ class ClaroUtilities
     }
 
     /**
-     * From http://php.net/manual/en/function.time.php.
-     *
-     * @param int $secs
-     *
-     * @return string
-     */
-    public function timeElapsed($secs)
-    {
-        if ($secs === 0) {
-            return '0s';
-        }
-
-        $bit = array(
-            'y' => $secs / 31556926 % 12,
-            'w' => $secs / 604800 % 52,
-            'd' => $secs / 86400 % 7,
-            'h' => $secs / 3600 % 24,
-            'm' => $secs / 60 % 60,
-            's' => $secs % 60,
-            );
-
-        foreach ($bit as $k => $v) {
-            if ($v > 0) {
-                $ret[] = $v.$k;
-            }
-        }
-
-        return implode(' ', $ret);
-    }
-
-    /**
      * Generates a globally unique identifier.
      *
-     * @see http://php.net/manual/fr/function.com-create-guid.php
-     *
      * @return string
+     *
+     * @deprecated use UuidTrait instead
      */
     public function generateGuid()
     {
-        if (function_exists('com_create_guid') === true) {
-            return trim(com_create_guid(), '{}');
-        }
-
-        return sprintf(
-            '%04X%04X-%04X-%04X-%04X-%04X%04X%04X',
-            mt_rand(0, 65535),
-            mt_rand(0, 65535),
-            mt_rand(0, 65535),
-            mt_rand(16384, 20479),
-            mt_rand(32768, 49151),
-            mt_rand(0, 65535),
-            mt_rand(0, 65535),
-            mt_rand(0, 65535)
-        );
+        return Uuid::uuid4()->toString();
     }
 
     public function getDefaultEncoding()
@@ -193,7 +150,7 @@ class ClaroUtilities
     public function formatFileSize($fileSize)
     {
         //don't format if it's already formatted.
-        $validUnits = array('KB', 'MB', 'GB', 'TB');
+        $validUnits = ['KB', 'MB', 'GB', 'TB'];
 
         foreach ($validUnits as $unit) {
             if (strpos($unit, $fileSize)) {
@@ -220,12 +177,11 @@ class ClaroUtilities
     public function getRealFileSize($fileSize)
     {
         //B goes at the end because it's always matched otherwise
-        $validUnits = array('KB', 'MB', 'GB', 'TB');
+        $validUnits = ['KB', 'MB', 'GB', 'TB'];
         $value = str_replace(' ', '', $fileSize);
 
-        $replacements = array('');
         $pattern = '/(\d+)/';
-        $data = preg_grep($pattern, array($value));
+        $data = preg_grep($pattern, [$value]);
 
         foreach ($validUnits as $unit) {
             if (strpos($fileSize, $unit)) {
@@ -249,10 +205,55 @@ class ClaroUtilities
 
     public function formatCsvOutput($data)
     {
+        // If encoding not UTF-8 then convert it to UTF-8
+        $data = $this->stringToUtf8($data);
         $data = str_replace("\r\n", PHP_EOL, $data);
         $data = str_replace("\r", PHP_EOL, $data);
         $data = str_replace("\n", PHP_EOL, $data);
 
         return $data;
+    }
+
+    /**
+     * Detect if encoding is UTF-8, ASCII, ISO-8859-1 or Windows-1252.
+     *
+     * @param $string
+     *
+     * @return bool|string
+     */
+    public function detectEncoding($string)
+    {
+        static $enclist = ['UTF-8', 'ASCII', 'ISO-8859-1', 'Windows-1252'];
+
+        if (function_exists('mb_detect_encoding')) {
+            return mb_detect_encoding($string, $enclist, true);
+        }
+
+        $result = false;
+
+        foreach ($enclist as $item) {
+            try {
+                $sample = iconv($item, $item, $string);
+                if (md5($sample) === md5($string)) {
+                    $result = $item;
+                    break;
+                }
+            } catch (ContextErrorException $e) {
+                unset($e);
+            }
+        }
+
+        return $result;
+    }
+
+    public function stringToUtf8($string)
+    {
+        // If encoding not UTF-8 then convert it to UTF-8
+        $encoding = $this->detectEncoding($string);
+        if ($encoding && $encoding !== 'UTF-8') {
+            $string = iconv($encoding, 'UTF-8', $string);
+        }
+
+        return $string;
     }
 }

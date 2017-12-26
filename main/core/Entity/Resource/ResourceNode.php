@@ -17,7 +17,8 @@ use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation as Serializer;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -40,9 +41,16 @@ class ResourceNode
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
-     * @Groups({"api_resource_node"})
+     * @Serializer\Groups({"api_resource_node"})
      */
     protected $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column()
+     */
+    protected $guid;
 
     /**
      * @var string
@@ -68,7 +76,7 @@ class ResourceNode
     protected $modificationDate;
 
     /**
-     * @var ArrayCollection
+     * @var ResourceType
      *
      * @ORM\ManyToOne(
      *     targetEntity="Claroline\CoreBundle\Entity\Resource\ResourceType",
@@ -103,14 +111,32 @@ class ResourceNode
     protected $icon;
 
     /**
+     * @var ResourceThumbnail
+     *
+     * @ORM\OneToOne(
+     *     targetEntity="Claroline\CoreBundle\Entity\Resource\ResourceThumbnail",
+     *     cascade={"persist"}
+     * )
+     * @ORM\JoinColumn(onDelete="SET NULL")
+     */
+    protected $thumbnail;
+
+    /**
      * @var string
      *
      * @Gedmo\TreePathSource
      * @ORM\Column()
      * @Assert\NotBlank()
-     * @Groups({"api_resource_node"})
+     * @Serializer\Groups({"api_resource_node"})
      */
     protected $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="text", nullable=true)
+     */
+    protected $description = null;
 
     /**
      * @var ResourceNode
@@ -262,13 +288,6 @@ class ResourceNode
     protected $active = true;
 
     /**
-     * @var string
-     *
-     * @ORM\Column()
-     */
-    protected $guid;
-
-    /**
      * @ORM\OneToMany(
      *     targetEntity="Claroline\CoreBundle\Entity\Facet\FieldFacet",
      *     mappedBy="resourceNode"
@@ -276,12 +295,43 @@ class ResourceNode
      */
     protected $fields;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+    protected $fullscreen = false;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+    protected $closable = false;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(nullable=false, type="integer")
+     */
+    protected $closeTarget = 0;
+
+    /**
+     * @ORM\Column(type="json_array", nullable=true)
+     */
+    protected $accesses = [];
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(nullable=false, type="integer", name="views_count", options={"default": 0})
+     */
+    protected $viewsCount = 0;
+
     public function __construct()
     {
+        $this->guid = Uuid::uuid4()->toString();
         $this->rights = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->logs = new ArrayCollection();
         $this->fields = new ArrayCollection();
+        $this->shortcuts = new ArrayCollection();
     }
 
     /**
@@ -292,6 +342,22 @@ class ResourceNode
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
     }
 
     /**
@@ -372,7 +438,7 @@ class ResourceNode
     /**
      * Returns the resource type.
      *
-     * @return \Claroline\CoreBundle\Entity\Resource\ResourceType
+     * @return ResourceType
      */
     public function getResourceType()
     {
@@ -382,7 +448,7 @@ class ResourceNode
     /**
      * Sets the resource type.
      *
-     * @param \Claroline\CoreBundle\Entity\Resource\ResourceType
+     * @param ResourceType
      */
     public function setResourceType(ResourceType $resourceType)
     {
@@ -392,7 +458,7 @@ class ResourceNode
     /**
      * Returns the resource creator.
      *
-     * @return \Claroline\CoreBundle\Entity\User
+     * @return User
      */
     public function getCreator()
     {
@@ -402,7 +468,7 @@ class ResourceNode
     /**
      * Sets the resource creator.
      *
-     * @param \Claroline\CoreBundle\Entity\User
+     * @param User $creator
      */
     public function setCreator(User $creator)
     {
@@ -422,7 +488,7 @@ class ResourceNode
     /**
      * Sets the workspace containing the resource instance.
      *
-     * @param \Claroline\CoreBundle\Entity\Workspace\Workspace $workspace
+     * @param Workspace $workspace
      */
     public function setWorkspace(Workspace $workspace)
     {
@@ -432,7 +498,7 @@ class ResourceNode
     /**
      * Returns the workspace containing the resource instance.
      *
-     * @return \Claroline\CoreBundle\Entity\Workspace\Workspace
+     * @return Workspace
      */
     public function getWorkspace()
     {
@@ -457,6 +523,26 @@ class ResourceNode
     public function setIcon(ResourceIcon $icon)
     {
         $this->icon = $icon;
+    }
+
+    /**
+     * Returns the resource thumbnail.
+     *
+     * @return ResourceThumbnail
+     */
+    public function getThumbnail()
+    {
+        return $this->thumbnail;
+    }
+
+    /**
+     * Sets the resource thumbnail.
+     *
+     * @param ResourceThumbnail $thumbnail
+     */
+    public function setThumbnail(ResourceThumbnail $thumbnail)
+    {
+        $this->thumbnail = $thumbnail;
     }
 
     /**
@@ -831,7 +917,7 @@ class ResourceNode
     public function addField(FieldFacet $field)
     {
         if (!$this->fields->contains($field)) {
-            $this->fileds->add($field);
+            $this->fields->add($field);
         }
 
         return $this;
@@ -842,6 +928,120 @@ class ResourceNode
         if ($this->fields->contains($field)) {
             $this->fields->removeElement($field);
         }
+
+        return $this;
+    }
+
+    public function setFullscreen($fullscreen)
+    {
+        $this->fullscreen = $fullscreen;
+    }
+
+    public function getFullscreen()
+    {
+        return $this->fullscreen;
+    }
+
+    public function isFullscreen()
+    {
+        return $this->getFullscreen();
+    }
+
+    public function getClosable()
+    {
+        return $this->closable;
+    }
+
+    public function isClosable()
+    {
+        return $this->getClosable();
+    }
+
+    public function setClosable($closable)
+    {
+        $this->closable = $closable;
+    }
+
+    public function getCloseTarget()
+    {
+        return $this->closeTarget;
+    }
+
+    public function setCloseTarget($closeTarget)
+    {
+        $this->closeTarget = $closeTarget;
+    }
+
+    public function setAllowedIps($ips)
+    {
+        $this->accesses['ips'] = $ips;
+    }
+
+    public function getAllowedIps()
+    {
+        return $this->accesses['ips'];
+    }
+
+    public function getAccesses()
+    {
+        //todo
+        //maybe remove the code from the front end
+        if (!$this->accesses) {
+            return $this->getDefaultAccesses();
+        }
+
+        return $this->accesses;
+    }
+
+    public function setAccesses($accesses)
+    {
+        $this->accesses = $accesses;
+    }
+
+    public function getDefaultAccesses()
+    {
+        return [
+            'ip' => [
+                'ips' => [],
+                'activateFilters' => false,
+            ],
+            'code' => null,
+        ];
+    }
+
+    public function getIPData()
+    {
+        return $this->getAccesses()['ip'];
+    }
+
+    public function getAccessCode()
+    {
+        if (
+            !empty($this->getAccesses()['code']) &&
+            trim($this->getAccesses()['code'], ' ') !== ''
+        ) {
+            return $this->getAccesses()['code'];
+        }
+    }
+
+    /**
+     * Gets how many times a resource has been viewed.
+     *
+     * @return int
+     */
+    public function getViewsCount()
+    {
+        return $this->viewsCount;
+    }
+
+    /**
+     * Adds one unit to the resource view count.
+     *
+     * @return ResourceNode
+     */
+    public function addView()
+    {
+        ++$this->viewsCount;
 
         return $this;
     }

@@ -23,6 +23,7 @@ use Claroline\CursusBundle\Manager\CursusManager;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\RouterInterface;
@@ -75,14 +76,20 @@ class CursusRegistrationController extends Controller
      *     name="claro_cursus_tool_registration_index",
      *     options={"expose"=true}
      * )
-     * @EXT\ParamConverter("authenticatedUser", options={"authenticatedUser" = true})
+     * @EXT\ParamConverter("user", options={"authenticatedUser" = true})
      * @EXT\Template()
+     *
+     * @param User $user
+     *
+     * @return array
      */
-    public function cursusToolRegistrationIndexAction()
+    public function cursusToolRegistrationIndexAction(User $user)
     {
         $this->checkToolAccess();
+        $isAdmin = $this->authorization->isGranted('ROLE_ADMIN');
+        $organizations = $isAdmin ? [] : $user->getAdministratedOrganizations()->toArray();
 
-        return [];
+        return ['isAuthorized' => $isAdmin || count($organizations) > 0];
     }
 
     /**
@@ -427,6 +434,34 @@ class CursusRegistrationController extends Controller
         }
 
         return ['sessionEvents' => $sessionEvents, 'status' => $status];
+    }
+
+    /**
+     * @EXT\Route(
+     *     "cursus/course/session/{session}/self/unregister",
+     *     name="claro_cursus_course_session_self_unregister",
+     *     options = {"expose"=true}
+     * )
+     * @EXT\ParamConverter("user", options={"authenticatedUser" = true})
+     *
+     * @param CourseSession $session
+     */
+    public function courseSessionSefUnregisterAction(CourseSession $session, User $user)
+    {
+        if (!$session->getPublicUnregistration()) {
+            throw new AccessDeniedException();
+        }
+        $sessionUser = $this->cursusManager->getOneSessionUserBySessionAndUserAndTypes(
+            $session,
+            $user,
+            [CourseSessionUser::LEARNER, CourseSessionUser::PENDING_LEARNER]
+        );
+
+        if (!empty($sessionUser)) {
+            $this->cursusManager->unregisterUsersFromSession([$sessionUser]);
+        }
+
+        return new JsonResponse('success', 200);
     }
 
     private function checkToolAccess()

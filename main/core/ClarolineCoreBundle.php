@@ -12,15 +12,18 @@
 namespace Claroline\CoreBundle;
 
 use Bazinga\Bundle\JsTranslationBundle\BazingaJsTranslationBundle;
+use Claroline\CoreBundle\DependencyInjection\Compiler\ApiConfigPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\DoctrineEntityListenerPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\DynamicConfigPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\ImportersConfigPass;
+use Claroline\CoreBundle\DependencyInjection\Compiler\MailingConfigPass;
+use Claroline\CoreBundle\DependencyInjection\Compiler\PlatformConfigPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\RichTextFormatterConfigPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\RouterPass;
 use Claroline\CoreBundle\DependencyInjection\Compiler\RuleConstraintsConfigPass;
 use Claroline\CoreBundle\DependencyInjection\Factory\ApiFactory;
+use Claroline\CoreBundle\Library\DistributionPluginBundle;
 use Claroline\CoreBundle\Library\Installation\AdditionalInstaller;
-use Claroline\InstallationBundle\Bundle\InstallableBundle;
 use Claroline\KernelBundle\Bundle\AutoConfigurableInterface;
 use Claroline\KernelBundle\Bundle\ConfigurationBuilder;
 use Claroline\KernelBundle\Bundle\ConfigurationProviderInterface;
@@ -32,18 +35,21 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Zenstruck\Bundle\FormBundle\ZenstruckFormBundle;
 
-class ClarolineCoreBundle extends InstallableBundle implements AutoConfigurableInterface, ConfigurationProviderInterface
+class ClarolineCoreBundle extends DistributionPluginBundle implements AutoConfigurableInterface, ConfigurationProviderInterface
 {
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
 
+        $container->addCompilerPass(new PlatformConfigPass());
         $container->addCompilerPass(new DynamicConfigPass());
         $container->addCompilerPass(new ImportersConfigPass());
         $container->addCompilerPass(new RichTextFormatterConfigPass());
         $container->addCompilerPass(new DoctrineEntityListenerPass());
         $container->addCompilerPass(new RuleConstraintsConfigPass());
         $container->addCompilerPass(new RouterPass());
+        $container->addCompilerPass(new ApiConfigPass());
+        $container->addCompilerPass(new MailingConfigPass());
 
         $extension = $container->getExtension('security');
         $extension->addSecurityListenerFactory(new ApiFactory());
@@ -80,6 +86,7 @@ class ClarolineCoreBundle extends InstallableBundle implements AutoConfigurableI
             'Claroline\MigrationBundle\ClarolineMigrationBundle',
             'Claroline\Bundle\FrontEndBundle\FrontEndBundle',
             'JMS\SerializerBundle\JMSSerializerBundle',
+            'Cocur\Slugify\Bridge\Symfony\CocurSlugifyBundle', // required by ZenStruck grouped forms
         ];
         // simple container configuration, same for every environment
         $simpleConfigs = [
@@ -88,7 +95,6 @@ class ClarolineCoreBundle extends InstallableBundle implements AutoConfigurableI
             'JMS\DiExtraBundle\JMSDiExtraBundle' => 'jms_di_extra',
             'JMS\SecurityExtraBundle\JMSSecurityExtraBundle' => 'jms_security_extra',
             'Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle' => 'stof_doctrine_extensions',
-            'BeSimple\SsoAuthBundle\BeSimpleSsoAuthBundle' => 'sso',
             'Stfalcon\Bundle\TinymceBundle\StfalconTinymceBundle' => 'stfalcon_tinymce',
             'Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle' => 'sensio_framework_extra',
             'FOS\RestBundle\FOSRestBundle' => 'fos_rest',
@@ -156,6 +162,11 @@ class ClarolineCoreBundle extends InstallableBundle implements AutoConfigurableI
     public function getRequiredFixturesDirectory($environment)
     {
         return 'DataFixtures/Required';
+    }
+
+    public function getPostInstallFixturesDirectory($environment)
+    {
+        return 'DataFixtures/PostInstall';
     }
 
     public function getAdditionalInstaller()

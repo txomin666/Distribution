@@ -134,6 +134,17 @@
           )
         })
 
+        widgetElement.on('click', '.session-unregister-btn', function () {
+          const sessionId = $(this).data('session-id')
+          window.Claroline.Modal.confirmRequest(
+            Routing.generate('claro_cursus_course_session_self_unregister', {'session': sessionId}),
+            removeUnregistrationBtn,
+            sessionId,
+            Translator.trans('session_self_unregistration_message', {}, 'platform'),
+            Translator.trans('session_unregistration', {}, 'platform')
+          )
+        })
+
         widgetElement.on('click', '.course-queue-request-btn', function () {
           const courseId = $(this).data('course-id')
           window.Claroline.Modal.confirmRequest(
@@ -166,6 +177,15 @@
             Translator.trans('session_event_self_registration_message', {}, 'cursus'),
             Translator.trans('session_event_registration', {}, 'cursus')
           )
+        })
+
+        widgetElement.on('click', '.register-to-session-event-set-btn', function () {
+          const sessionEventSetId = $(this).data('session-event-set-id')
+          const url = Routing.generate(
+            'claro_courses_widget_session_event_set_registration',
+            {'widgetInstance': widgetInstanceId, sessionEventSet: sessionEventSetId}
+          )
+          window.Claroline.Modal.fromUrl(url)
         })
 
         widgetElement.on('click', '#calendar-view-button', function () {
@@ -208,6 +228,18 @@
         const removeRegistrationBtnCalendar = function (event, datas) {
           pendingSessions[datas['sessionId']] = true
           datas['context'].addClass('disabled')
+        }
+
+        const removeUnregistrationBtn = function (event, sessionId) {
+          $('#session-unregistration-btn-' + sessionId).empty()
+          const element = `<span class="label label-warning">${Translator.trans('request_done', {}, 'platform')}</span>`
+          $('#session-unregistration-btn-' + sessionId).html(element)
+        }
+
+        const removeUnregistrationBtnCalendar = function (event, datas) {
+          $('#session-unregistration-btn-' + datas['sessionId']).empty()
+          const element = `<span class="label label-warning">${Translator.trans('request_done', {}, 'platform')}</span>`
+          $('#session-unregistration-btn-' + datas['sessionId']).html(element)
         }
 
         const updateCourseQueueRequetBtn = function (event, courseId) {
@@ -351,16 +383,34 @@
                 `
               } else if (sessionEventUsersStatus[e['id']] === 1) {
                 eventsElement += `
-                  <span class="label label-info pull-right">${Translator.trans('pending', {}, 'platform')}</span>
+                  <span class="label label-warning pull-right">${Translator.trans('pending', {}, 'platform')}</span>
                 `
               } else if (e['registrationType'] === 2 && (event['publicRegistration'] || registeredSessions[event['id']])) {
-                eventsElement += `
-                  <span id="session-event-registration-btn-${event['id']}">
-                      <span class="btn btn-default btn-sm pull-right register-to-session-event-btn-${widgetInstanceId}" data-session-event-id="${e['id']}">
-                          ${Translator.trans('self_register_to_session_event', {}, 'cursus')}
+                if (!e.eventSet) {
+                  eventsElement += `
+                    <span id="session-event-registration-btn-${event['id']}">
+                      <span
+                        class="btn btn-default btn-sm pull-right register-to-session-event-btn-${widgetInstanceId}"
+                        data-session-event-id="${e.id}"
+                      >
+                        ${Translator.trans('self_register_to_session_event', {}, 'cursus')}
                       </span>
-                  </span>
-                `
+                    </span>
+                  `
+                } else {
+                  eventsElement += `
+                    <span
+                      class="btn btn-default btn-sm pull-right register-to-session-event-set-btn-calendar-${widgetInstanceId}"
+                      data-session-event-set-id="${e.eventSet.id}"
+                    >
+                      <span class="label label-info">
+                        ${e.eventSet.name}
+                      </span>
+                      &nbsp;
+                      ${Translator.trans('self_register_to_session_event_set', {}, 'cursus')}
+                    </span>
+                  `
+                }
               }
             }
             eventsElement += `
@@ -402,6 +452,18 @@
             `
           }
           const title = Translator.trans('session_details', {}, 'cursus')
+          const unregistrationBtn = `
+            <span  id="session-unregistration-btn-${event['id']}" class="pull-right">
+                <button class="btn btn-danger pointer-hand session-unregister-btn-${widgetInstanceId}"
+                      data-session-id="${event['id']}"
+                >
+                    <i class="fa fa-times"></i>
+                    ${Translator.trans('self_unregister', {}, 'cursus')}
+                </button>
+            </span>
+            <br/>
+            <br/>
+          `
           const body = `
             <div class="panel panel-default">
                 <div class="panel-heading" role="tab">
@@ -427,6 +489,7 @@
                 </div>
                 <div id="collapseSession" class="panel-collapse collapse in" role="tabpanel">
                     <div class="panel-body">
+                        ${event['publicUnregistration'] && registeredSessions[event['id']] ? unregistrationBtn : ''}
                         <div class="table-responsive">
                             <table class="table table-condensed table-bordered">
                                 ${event['description'] ? '<tr><td colspan="2">' + event['description'] + '</td></tr>' : ''}
@@ -460,6 +523,17 @@
           )
         })
 
+        $('body').on('click', `.session-unregister-btn-${widgetInstanceId}`, function () {
+          const sessionId = $(this).data('session-id')
+          window.Claroline.Modal.confirmRequest(
+            Routing.generate('claro_cursus_course_session_self_unregister', {'session': sessionId}),
+            removeUnregistrationBtnCalendar,
+            {sessionId: sessionId, context: $(this)},
+            Translator.trans('session_self_unregistration_message', {}, 'platform'),
+            Translator.trans('session_unregistration', {}, 'platform')
+          )
+        })
+
         $('body').on('click', `.register-to-session-event-btn-${widgetInstanceId}`, function () {
           const sessionEventId = $(this).data('session-event-id')
           window.Claroline.Modal.confirmRequest(
@@ -469,6 +543,15 @@
             Translator.trans('session_event_self_registration_message', {}, 'cursus'),
             Translator.trans('session_event_registration', {}, 'cursus')
           )
+        })
+
+        $('body').on('click', `.register-to-session-event-set-btn-calendar-${widgetInstanceId}`, function () {
+          const sessionEventSetId = $(this).data('session-event-set-id')
+          const url = Routing.generate(
+            'claro_courses_widget_session_event_set_registration',
+            {'widgetInstance': widgetInstanceId, sessionEventSet: sessionEventSetId}
+          )
+          window.Claroline.Modal.fromUrl(url)
         })
 
         initializeCalendar()

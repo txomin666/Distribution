@@ -6,16 +6,25 @@ plugin:
     - class: Innova\PathBundle\Entity\Path\Path
       name: innova_path
       is_exportable: true
-      icon: res_file.png
       actions:
-        - name: path_administrate
-          menu_name: administrate
-        - name: manageresults
-          menu_name: manageresults
+        - name:      manage_results
+          menu_name: manage_results
 
   widgets:
-     - name: innova_path_widget
-       is_configurable: true
-       is_displayable_in_desktop: true
+     - name:                        innova_path_widget
+       is_configurable:             true
+       is_displayable_in_desktop:   true
        is_displayable_in_workspace: true
-       is_exportable: false
+       is_exportable:               false
+
+     - name:                        innova_path_slideshow
+       is_configurable:             true
+       is_displayable_in_desktop:   true
+       is_displayable_in_workspace: true
+       is_exportable:               false
+
+     - name:                        innova_path_progression
+       is_configurable:             true
+       is_displayable_in_desktop:   true
+       is_displayable_in_workspace: true
+       is_exportable:               false

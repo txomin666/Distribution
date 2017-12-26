@@ -30,9 +30,9 @@
      */
     sidebar.initialize = function (side) {
         var sidebar = $('#' + side + '-bar');
-        if (sidebar.html().replace(/^\s+/g, '').replace(/\s+$/g, '') !== '') {
+        if (sidebar && sidebar.html() && sidebar.html().replace(/^\s+/g, '').replace(/\s+$/g, '') !== '') {
 
-            sidebar.parent().removeClass('hide');
+            sidebar.removeClass('hide');
 
             var hasIcon = false;
             $('.list-group-item.disabled', sidebar).children().each(function () {
@@ -150,6 +150,11 @@
     sidebar.initialize('left');
     sidebar.initialize('right');
 
+    $('.sidebar .accordion-toggle').on('click', function(){
+      clearTimeout(sidebar.resizeWindow);
+      sidebar.resizeWindow = setTimeout(sidebar.checkHeight, 500);
+    });
+
     $(window).on('resize', function () {
         clearTimeout(sidebar.resizeWindow);
         sidebar.resizeWindow = setTimeout(sidebar.checkHeight, 500);
@@ -185,4 +190,4 @@
         clearInterval(sidebar.scrollUp);
         clearInterval(sidebar.scrollDown);
     });
-}());
+})();

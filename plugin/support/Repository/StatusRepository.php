@@ -34,20 +34,6 @@ class StatusRepository extends EntityRepository
         return $query->getResult();
     }
 
-    public function findStatusByType($type, $orderedBy = 'order', $order = 'ASC')
-    {
-        $dql = "
-            SELECT s
-            FROM FormaLibre\SupportBundle\Entity\Status s
-            WHERE s.type = :type
-            ORDER BY s.{$orderedBy} {$order}
-        ";
-        $query = $this->_em->createQuery($dql);
-        $query->setParameter('type', $type);
-
-        return $query->getResult();
-    }
-
     public function findOrderOfLastStatus()
     {
         $dql = '
@@ -57,5 +43,18 @@ class StatusRepository extends EntityRepository
         $query = $this->_em->createQuery($dql);
 
         return $query->getSingleResult();
+    }
+
+    public function findStatusByCodeInsensitive($code)
+    {
+        $dql = '
+            SELECT s
+            FROM FormaLibre\SupportBundle\Entity\Status s
+            WHERE UPPER(s.code) = :code
+        ';
+        $query = $this->_em->createQuery($dql);
+        $query->setParameter('code', strtoupper($code));
+
+        return $query->getOneOrNullResult();
     }
 }

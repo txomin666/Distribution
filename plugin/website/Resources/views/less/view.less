@@ -8,7 +8,7 @@ div.row.content {
 .loading {
   position: fixed;
   background-color: rgba(0, 0, 0, 0.8);
-  background-image: url("../images/loading.gif");
+  background-image: url("/bundles/icapwebsite/images/loading.gif");
   color: #bababa;
   font-size: 30px;
   background-position: center 150px;
@@ -29,6 +29,23 @@ div.website-container {
   }
   .website-content{
     position: relative;
+    &.vertical-menu {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      #menu {
+        flex-grow: 0;
+      }
+      .website-page-content {
+        flex-grow: 1;
+      }
+    }
+
+    iframe{
+      overflow: auto;
+      width: 100%;
+      height: 100vh;
+    }
   }
 }
 

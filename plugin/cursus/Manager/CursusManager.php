@@ -13,13 +13,13 @@ namespace Claroline\CursusBundle\Manager;
 
 use Claroline\CoreBundle\Entity\AbstractRoleSubject;
 use Claroline\CoreBundle\Entity\Group;
-use Claroline\CoreBundle\Entity\Model\WorkspaceModel;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Widget\WidgetInstance;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Library\Configuration\PlatformConfigurationHandler;
 use Claroline\CoreBundle\Library\Security\Utilities;
 use Claroline\CoreBundle\Library\Utilities\ClaroUtilities;
+use Claroline\CoreBundle\Library\Utilities\FileUtilities;
 use Claroline\CoreBundle\Manager\ContentManager;
 use Claroline\CoreBundle\Manager\MailManager;
 use Claroline\CoreBundle\Manager\RoleManager;
@@ -42,6 +42,7 @@ use Claroline\CursusBundle\Entity\CursusUser;
 use Claroline\CursusBundle\Entity\DocumentModel;
 use Claroline\CursusBundle\Entity\SessionEvent;
 use Claroline\CursusBundle\Entity\SessionEventComment;
+use Claroline\CursusBundle\Entity\SessionEventSet;
 use Claroline\CursusBundle\Entity\SessionEventUser;
 use Claroline\CursusBundle\Event\Log\LogCourseCreateEvent;
 use Claroline\CursusBundle\Event\Log\LogCourseDeleteEvent;
@@ -124,12 +125,15 @@ class CursusManager
     private $cursusUserRepo;
     private $cursusWordRepo;
     private $documentModelRepo;
+    private $organizationRepo;
     private $reservationResourceRepo;
     private $sessionEventRepo;
+    private $sessionEventSetRepo;
     private $sessionEventUserRepo;
     private $sessionGroupRepo;
     private $sessionQueueRepo;
     private $sessionUserRepo;
+    private $fu;
 
 /**
  * @DI\InjectParams({
@@ -155,7 +159,8 @@ class CursusManager
  *     "ut"                    = @DI\Inject("claroline.utilities.misc"),
  *     "utils"                 = @DI\Inject("claroline.security.utilities"),
  *     "workspaceManager"      = @DI\Inject("claroline.manager.workspace_manager"),
- *     "pdfManager"            = @DI\Inject("claroline.manager.pdf_manager")
+ *     "pdfManager"            = @DI\Inject("claroline.manager.pdf_manager"),
+ *     "fu"                    = @DI\Inject("claroline.utilities.file")
  * })
  */
     // why no claroline dispatcher ?
@@ -182,6 +187,7 @@ class CursusManager
         Utilities $utils,
         WorkspaceManager $workspaceManager,
         PdfManager $pdfManager,
+        FileUtilities $fu,
         $clarolineDispatcher
     ) {
         $this->archiveDir = $container->getParameter('claroline.param.platform_generated_archive_path');
@@ -209,6 +215,7 @@ class CursusManager
         $this->workspaceManager = $workspaceManager;
         $this->clarolineDispatcher = $clarolineDispatcher;
         $this->pdfManager = $pdfManager;
+        $this->fu = $fu;
 
         $this->courseRepo = $om->getRepository('ClarolineCursusBundle:Course');
         $this->courseQueueRepo = $om->getRepository('ClarolineCursusBundle:CourseRegistrationQueue');
@@ -219,8 +226,11 @@ class CursusManager
         $this->cursusUserRepo = $om->getRepository('ClarolineCursusBundle:CursusUser');
         $this->cursusWordRepo = $om->getRepository('ClarolineCursusBundle:CursusDisplayedWord');
         $this->documentModelRepo = $om->getRepository('ClarolineCursusBundle:DocumentModel');
+        $this->organizationRepo = $om->getRepository('ClarolineCoreBundle:Organization\Organization');
         $this->reservationResourceRepo = $om->getRepository('FormaLibre\ReservationBundle\Entity\Resource');
+        $this->sessionEventCommentRepo = $om->getRepository('ClarolineCursusBundle:SessionEventComment');
         $this->sessionEventRepo = $om->getRepository('ClarolineCursusBundle:SessionEvent');
+        $this->sessionEventSetRepo = $om->getRepository('ClarolineCursusBundle:SessionEventSet');
         $this->sessionEventUserRepo = $om->getRepository('ClarolineCursusBundle:SessionEventUser');
         $this->sessionGroupRepo = $om->getRepository('ClarolineCursusBundle:CourseSessionGroup');
         $this->sessionQueueRepo = $om->getRepository('ClarolineCursusBundle:CourseSessionRegistrationQueue');
@@ -258,7 +268,8 @@ class CursusManager
         $blocking = false,
         $icon = null,
         $color = null,
-        Workspace $workspace = null
+        Workspace $workspace = null,
+        array $organizations = []
     ) {
         $cursus = new Cursus();
         $cursus->setTitle($title);
@@ -266,15 +277,21 @@ class CursusManager
         $cursus->setParent($parent);
         $cursus->setCourse($course);
         $cursus->setDescription($description);
-        $cursus->setBlocking((bool) $blocking);
-        $cursus->setIcon($icon);
+        $cursus->setBlocking($blocking);
         $cursus->setWorkspace($workspace);
         $cursus->setDetails(['color' => $color]);
-        $orderMax = is_null($parent) ?
-            $this->getLastRootCursusOrder() :
-            $this->getLastCursusOrderByParent($parent);
+        if ($icon) {
+            $icon = $this->saveIcon($icon, $cursus);
+            $cursus->setIcon($icon);
+        }
+        $orderMax = is_null($parent) ? $this->getLastRootCursusOrder() : $this->getLastCursusOrderByParent($parent);
         $order = is_null($orderMax) ? 1 : intval($orderMax) + 1;
         $cursus->setCursusOrder($order);
+        $cursusOrganizations = empty($parent) ? $organizations : $parent->getOrganizations();
+
+        foreach ($cursusOrganizations as $organization) {
+            $cursus->addOrganization($organization);
+        }
         $this->persistCursus($cursus);
         $event = new LogCursusCreateEvent($cursus);
         $this->eventDispatcher->dispatch('log', $event);
@@ -337,7 +354,7 @@ class CursusManager
         $registrationValidation = false,
         $tutorRoleName = null,
         $learnerRoleName = null,
-        WorkspaceModel $workspaceModel = null,
+        Workspace $workspaceModel = null,
         Workspace $workspace = null,
         $icon = null,
         $userValidation = false,
@@ -346,21 +363,27 @@ class CursusManager
         $defaultSessionDuration = 1,
         $withSessionEvent = true,
         array $validators = [],
-        $displayOrder = 500
+        $displayOrder = 500,
+        array $organizations = []
     ) {
         $course = new Course();
         $course->setTitle($title);
         $course->setCode($code);
-        $course->setPublicRegistration((bool) $publicRegistration);
-        $course->setPublicUnregistration((bool) $publicUnregistration);
-        $course->setRegistrationValidation((bool) $registrationValidation);
+        $course->setPublicRegistration($publicRegistration);
+        $course->setPublicUnregistration($publicUnregistration);
+        $course->setRegistrationValidation($registrationValidation);
         $course->setWorkspaceModel($workspaceModel);
         $course->setWorkspace($workspace);
-        $course->setIcon($icon);
-        $course->setUserValidation((bool) $userValidation);
-        $course->setOrganizationValidation((bool) $organizationValidation);
+
+        if ($icon) {
+            $icon = $this->saveIcon($icon, $course);
+            $course->setIcon($icon);
+        }
+
+        $course->setUserValidation($userValidation);
+        $course->setOrganizationValidation($organizationValidation);
         $course->setDefaultSessionDuration($defaultSessionDuration);
-        $course->setWithSessionEvent((bool) $withSessionEvent);
+        $course->setWithSessionEvent($withSessionEvent);
         $course->setDisplayOrder($displayOrder);
 
         if ($description) {
@@ -377,6 +400,9 @@ class CursusManager
         }
         foreach ($validators as $validator) {
             $course->addValidator($validator);
+        }
+        foreach ($organizations as $organization) {
+            $course->addOrganization($organization);
         }
         $this->persistCourse($course);
         $event = new LogCourseCreateEvent($course);
@@ -484,6 +510,11 @@ class CursusManager
             $newCursus->setBlocking(false);
             ++$lastOrder;
             $newCursus->setCursusOrder($lastOrder);
+            $organizations = $parent->getOrganizations();
+
+            foreach ($organizations as $organization) {
+                $newCursus->addOrganization($organization);
+            }
             $this->om->persist($newCursus);
             $createdCursus[] = $newCursus;
         }
@@ -498,22 +529,6 @@ class CursusManager
         $this->om->endFlushSuite();
 
         return $createdCursus;
-    }
-
-    public function removeCoursesFromCursus(Cursus $parent, array $courses)
-    {
-        if (count($courses) > 0) {
-            $toRemove = $this->cursusRepo->findCursusByParentAndCourses(
-                $parent,
-                $courses
-            );
-            $this->om->startFlushSuite();
-
-            foreach ($toRemove as $cursus) {
-                $this->om->remove($cursus);
-            }
-            $this->om->endFlushSuite();
-        }
     }
 
     public function registerUserToCursus(Cursus $cursus, User $user, $withWorkspace = true)
@@ -628,7 +643,6 @@ class CursusManager
     public function unregisterUsersFromCursus(Cursus $cursus, array $users)
     {
         $this->checkCursusToolRegistrationAccess();
-        $toDelete = [];
         $coursesToUnregister = [];
         $root = $cursus->getRoot();
         $cursusRoot = $this->getOneCursusById($root);
@@ -729,8 +743,6 @@ class CursusManager
     {
         $this->checkCursusToolRegistrationAccess();
         $users = $group->getUsers()->toArray();
-        $cursusGroupsToDelete = [];
-        $cursusUsersToDelete = [];
         $coursesToUnregister = [];
         $root = $cursus->getRoot();
         $cursusRoot = $this->getOneCursusById($root);
@@ -828,66 +840,6 @@ class CursusManager
             );
         }
         $this->om->endFlushSuite();
-    }
-
-    public function updateCursusParentAndOrder(Cursus $cursus, Cursus $parent = null, $cursusOrder = -1)
-    {
-        if ($cursus->getParent() !== $parent || $cursus->getCursusOrder() !== $cursusOrder) {
-            $cursusList = is_null($parent) ?
-                $this->getAllRootCursus('', 'cursusOrder', 'ASC') :
-                $this->getCursusByParent($parent);
-            $cursus->setParent($parent);
-            $i = 1;
-            $updated = false;
-
-            $this->om->startFlushSuite();
-
-            foreach ($cursusList as $oneCursus) {
-                if ($oneCursus->getId() === $cursus->getId()) {
-                    continue;
-                } else {
-                    $currentOrder = $oneCursus->getCursusOrder();
-
-                    if ($currentOrder === $cursusOrder) {
-                        $cursus->setCursusOrder($i);
-                        $this->om->persist($cursus);
-                        $updated = true;
-                        ++$i;
-                    }
-                    $oneCursus->setCursusOrder($i);
-                    $this->om->persist($oneCursus);
-                    ++$i;
-                }
-            }
-
-            if (!$updated) {
-                $cursus->setCursusOrder($i);
-                $this->om->persist($cursus);
-            }
-            $this->om->endFlushSuite();
-        }
-    }
-
-    public function updateCursusOrder(Cursus $cursus, $cursusOrder)
-    {
-        $this->updateCursusOrderByParent($cursusOrder, $cursus->getParent());
-        $cursus->setCursusOrder($cursusOrder);
-        $this->om->persist($cursus);
-        $this->om->flush();
-    }
-
-    public function updateCursusOrderByParent($cursusOrder, Cursus $parent = null, $executeQuery = true)
-    {
-        return is_null($parent) ?
-            $this->cursusRepo->updateCursusOrderWithoutParent(
-                $cursusOrder,
-                $executeQuery
-            ) :
-            $this->cursusRepo->updateCursusOrderByParent(
-                $parent,
-                $cursusOrder,
-                $executeQuery
-            );
     }
 
     private function getUnlockedDescendants(Cursus $cursus)
@@ -1050,18 +1002,18 @@ class CursusManager
                     $this->om->persist($sessionUser);
                     $sessionUsers[] = $sessionUser;
 
-                    if ($type === CourseSessionUser::LEARNER) {
+                    if (intval($type) === CourseSessionUser::LEARNER) {
                         $this->sendSessionRegistrationConfirmationMessage($user, $session, 'registered');
-                    } elseif ($type === CourseSessionUser::PENDING_LEARNER) {
+
+                        if ($cascadeEvent) {
+                            $this->registerPendingSessionEventUsers($user, $session);
+                        }
+                        $this->registerUserToAllAutomaticSessionEvent($user, $session);
+                    } elseif (intval($type) === CourseSessionUser::PENDING_LEARNER) {
                         $this->sendSessionRegistrationConfirmationMessage($user, $session, 'pending');
                     }
                     $event = new LogCourseSessionUserRegistrationEvent($session, $user);
                     $this->eventDispatcher->dispatch('log', $event);
-
-                    if ($cascadeEvent) {
-                        $this->registerPendingSessionEventUsers($user, $session);
-                    }
-                    $this->registerUserToAllAutomaticSessionEvent($user, $session);
                 }
             }
             $role = null;
@@ -1200,8 +1152,11 @@ class CursusManager
             $event = new LogCourseSessionUserUnregistrationEvent($sessionUser);
             $this->eventDispatcher->dispatch('log', $event);
             $this->om->remove($sessionUser);
-            $sessionEventUsers = $this->getSessionEventUsersByUserAndSession($user, $session);
-            $this->unregisterUsersFromSessionEvent($sessionEventUsers);
+
+            if ($userType === CourseSessionUser::LEARNER) {
+                $sessionEventUsers = $this->getSessionEventUsersByUserAndSession($user, $session);
+                $this->unregisterUsersFromSessionEvent($sessionEventUsers);
+            }
         }
         $this->om->endFlushSuite();
     }
@@ -1494,12 +1449,12 @@ class CursusManager
         }
         $session->setDescription($description);
         $session->setCreationDate($creationDate);
-        $session->setDefaultSession((bool) $defaultSession);
-        $session->setPublicRegistration((bool) $publicRegistration);
-        $session->setPublicUnregistration((bool) $publicUnregistration);
-        $session->setRegistrationValidation((bool) $registrationValidation);
-        $session->setUserValidation((bool) $userValidation);
-        $session->setOrganizationValidation((bool) $organizationValidation);
+        $session->setDefaultSession($defaultSession);
+        $session->setPublicRegistration($publicRegistration);
+        $session->setPublicUnregistration($publicUnregistration);
+        $session->setRegistrationValidation($registrationValidation);
+        $session->setUserValidation($userValidation);
+        $session->setOrganizationValidation($organizationValidation);
         $session->setMaxUsers($maxUsers);
         $session->setType($type);
         $session->setEventRegistrationType($eventRegistrationType);
@@ -1578,7 +1533,9 @@ class CursusManager
         Resource $reservationResource = null,
         array $tutors = [],
         $registrationType = CourseSession::REGISTRATION_AUTO,
-        $maxUsers = null
+        $maxUsers = null,
+        $type = SessionEvent::TYPE_NONE,
+        SessionEventSet $eventSet = null
     ) {
         $eventName = is_null($name) ? $session->getName() : $name;
         $eventStartDate = is_null($startDate) ? $session->getStartDate() : $startDate;
@@ -1595,6 +1552,8 @@ class CursusManager
         $sessionEvent->setLocationResource($reservationResource);
         $sessionEvent->setRegistrationType($registrationType);
         $sessionEvent->setMaxUsers($maxUsers);
+        $sessionEvent->setType($type);
+        $sessionEvent->setEventSet($eventSet);
 
         foreach ($tutors as $tutor) {
             $sessionEvent->addTutor($tutor);
@@ -1636,6 +1595,31 @@ class CursusManager
         $this->eventDispatcher->dispatch('log', $event);
     }
 
+    public function deleteSessionEvents(array $sessionEvents)
+    {
+        $this->om->startFlushSuite();
+
+        foreach ($sessionEvents as $sessionEvent) {
+            $session = $sessionEvent->getSession();
+            $course = $session->getCourse();
+            $details = [];
+            $details['id'] = $sessionEvent->getId();
+            $details['name'] = $sessionEvent->getName();
+            $details['startDate'] = $sessionEvent->getStartDate();
+            $details['endDate'] = $sessionEvent->getEndDate();
+            $details['sessionId'] = $session->getId();
+            $details['sessionName'] = $session->getName();
+            $details['courseId'] = $course->getId();
+            $details['courseTitle'] = $course->getTitle();
+            $details['courseCode'] = $course->getCode();
+            $this->om->remove($sessionEvent);
+            $this->om->flush();
+            $event = new LogSessionEventDeleteEvent($details);
+            $this->eventDispatcher->dispatch('log', $event);
+        }
+        $this->om->endFlushSuite();
+    }
+
     public function createSessionEventComment(User $user, SessionEvent $sessionEvent, $content)
     {
         $comment = new SessionEventComment();
@@ -1671,6 +1655,8 @@ class CursusManager
         $name = $sessionEvent->getName();
         $eventStartDate = $sessionEvent->getStartDate();
         $endDate = $sessionEvent->getEndDate();
+        $maxUsers = $sessionEvent->getMaxUsers();
+        $registrationType = $sessionEvent->getRegistrationType();
         $tutors = $sessionEvent->getTutors();
         $index = 1;
         $year = intval($eventStartDate->format('Y'));
@@ -1713,6 +1699,8 @@ class CursusManager
                     $newSessionEvent->setLocationResource($locationResource);
                     $newSessionEvent->setStartDate($newStartDate);
                     $newSessionEvent->setEndDate($newEndDate);
+                    $newSessionEvent->setMaxUsers($maxUsers);
+                    $newSessionEvent->setRegistrationType($registrationType);
                     $newSessionEvent->setName($name." [$index]");
 
                     foreach ($tutors as $tutor) {
@@ -1773,30 +1761,21 @@ class CursusManager
             $session->getName().
             ']';
         $code = $this->generateWorkspaceCode($course->getCode());
+        $workspace = new Workspace();
+        $workspace->setCreator($user);
+        $workspace->setName($name);
+        $workspace->setCode($code);
+        $workspace->setDisplayable($displayable);
+        $workspace->setSelfRegistration($selfRegistration);
+        $workspace->setSelfUnregistration($selfUnregistration);
+        $workspace->setRegistrationValidation($registrationValidation);
+        $workspace->setDescription($description);
 
         if (is_null($model)) {
             $template = new File($this->defaultTemplate);
-            $workspace = new Workspace();
-            $workspace->setCreator($user);
-            $workspace->setName($name);
-            $workspace->setCode($code);
-            $workspace->setDisplayable($displayable);
-            $workspace->setSelfRegistration($selfRegistration);
-            $workspace->setSelfUnregistration($selfUnregistration);
-            $workspace->setRegistrationValidation($registrationValidation);
-            $workspace->setDescription($description);
             $workspace = $this->workspaceManager->create($workspace, $template);
         } else {
-            $workspace = $this->workspaceManager->createWorkspaceFromModel(
-                $model,
-                $user,
-                $name,
-                $code,
-                $description,
-                $displayable,
-                $selfRegistration,
-                $selfUnregistration
-            );
+            $workspace = $this->workspaceManager->copy($model, $workspace);
         }
         $workspace->setWorkspaceType(0);
 
@@ -1894,15 +1873,16 @@ class CursusManager
         return $currentCode;
     }
 
-    public function saveIcon(UploadedFile $tmpFile)
+    public function saveIcon(UploadedFile $tmpFile, $object)
     {
-        $extension = $tmpFile->getClientOriginalExtension();
-        $hashName = $this->container->get('claroline.utilities.misc')->generateGuid().
-            '.'.
-            $extension;
-        $tmpFile->move($this->iconsDirectory, $hashName);
+        if (!method_exists($object, 'getUuid')) {
+            throw new \Exception('Object '.$object->__toString().' has no method getUuid');
+        }
 
-        return $hashName;
+        $publicFile = $this->fu->createFile($tmpFile, $tmpFile->getBasename());
+        $this->fu->createFileUse($publicFile, get_class($object), $object->getUuid());
+
+        return '../../'.$publicFile->getUrl();
     }
 
     public function changeIcon(Course $course, UploadedFile $tmpFile)
@@ -2236,7 +2216,7 @@ class CursusManager
     public function zipDatas(array $datas, $type)
     {
         $archive = new \ZipArchive();
-        $pathArch = $this->platformConfigHandler->getParamter('tmp_dir').DIRECTORY_SEPARATOR.$this->ut->generateGuid().'.zip';
+        $pathArch = $this->platformConfigHandler->getParameter('tmp_dir').DIRECTORY_SEPARATOR.$this->ut->generateGuid().'.zip';
         $archive->open($pathArch, \ZipArchive::CREATE);
 
         if ($type === 'cursus') {
@@ -2293,7 +2273,7 @@ class CursusManager
         $this->zipCourses($courses, $archive);
     }
 
-    public function importCourses(array $datas, $withIndex = true)
+    public function importCourses(array $datas, array $organizations, $withIndex = true)
     {
         $courses = [];
         $i = 0;
@@ -2313,6 +2293,11 @@ class CursusManager
             if (isset($data['icon'])) {
                 $course->setIcon($data['icon']);
             }
+
+            foreach ($organizations as $organization) {
+                $course->addOrganization($organization);
+            }
+
             $this->om->persist($course);
 
             if ($withIndex) {
@@ -2331,7 +2316,7 @@ class CursusManager
         return $courses;
     }
 
-    public function importCursus(array $datas, array $courses = [])
+    public function importCursus(array $datas, array $organizations, array $courses = [])
     {
         $roots = [];
         $cursusChildren = [];
@@ -2387,7 +2372,7 @@ class CursusManager
             }
         }
 
-        return $this->importRootCursus($roots, $cursusChildren, $courses);
+        return $this->importRootCursus($roots, $cursusChildren, $courses, $organizations);
     }
 
     private function getAllCoursesCodes()
@@ -2434,7 +2419,7 @@ class CursusManager
         return $result;
     }
 
-    private function importRootCursus(array $roots, array $children, array $courses)
+    private function importRootCursus(array $roots, array $children, array $courses, array $organizations)
     {
         $this->om->startFlushSuite();
         $codes = $this->getAllCursusCodes();
@@ -2459,6 +2444,9 @@ class CursusManager
                 $code = $this->generateValidCode($root['code'], $codes);
                 $cursus->setCode($code);
             }
+            foreach ($organizations as $organization) {
+                $cursus->addOrganization($organization);
+            }
             $this->om->persist($cursus);
             $createdCursus[$root['id']] = $cursus;
             ++$index;
@@ -2473,6 +2461,7 @@ class CursusManager
                     $children,
                     $courses,
                     $codes,
+                    $organizations,
                     $createdCursus,
                     $index
                 );
@@ -2489,6 +2478,7 @@ class CursusManager
         array $children,
         array $courses,
         array $codes,
+        array $organizations,
         array &$createdCursus,
         &$index
     ) {
@@ -2514,6 +2504,9 @@ class CursusManager
                     $code = $this->generateValidCode($child['code'], $codes);
                     $cursus->setCode($code);
                 }
+                foreach ($organizations as $organization) {
+                    $cursus->addOrganization($organization);
+                }
                 $this->om->persist($cursus);
                 $createdCursus[$child['id']] = $cursus;
                 ++$index;
@@ -2528,6 +2521,7 @@ class CursusManager
                         $children,
                         $courses,
                         $codes,
+                        $organizations,
                         $createdCursus,
                         $index
                     );
@@ -2871,6 +2865,7 @@ class CursusManager
                     'sessionId' => $session->getId(),
                     'sessionName' => $session->getName(),
                     'sessionStatus' => $session->getSessionStatus(),
+                    'sessionDefault' => $session->isDefaultSession(),
                 ];
             }
         }
@@ -3020,8 +3015,7 @@ class CursusManager
     public function getValidatorsRoles()
     {
         $roles = [];
-        $registrationTool = $this->toolManager
-            ->getAdminToolByName('claroline_cursus_tool_registration');
+        $registrationTool = $this->toolManager->getAdminToolByName('claroline_cursus_tool_registration');
 
         if (!is_null($registrationTool)) {
             $roles = $registrationTool->getRoles()->toArray();
@@ -3039,59 +3033,61 @@ class CursusManager
         $authenticatedUser = $this->tokenStorage->getToken()->getUser();
         $isAdmin = $this->authorization->isGranted('ROLE_ADMIN');
 
-        if ($isAdmin) {
-            $coursesQueues = empty($search) ?
-                $this->getAllUnvalidatedCourseQueues() :
-                $this->getAllSearchedUnvalidatedCourseQueues($search);
-            $sessionsQueues = empty($search) ?
-                $this->getAllUnvalidatedSessionQueues() :
-                $this->getAllSearchedUnvalidatedSessionQueues($search);
+        if ($authenticatedUser !== 'anon.') {
+            if ($isAdmin) {
+                $coursesQueues = empty($search) ?
+                    $this->getAllUnvalidatedCourseQueues() :
+                    $this->getAllSearchedUnvalidatedCourseQueues($search);
+                $sessionsQueues = empty($search) ?
+                    $this->getAllUnvalidatedSessionQueues() :
+                    $this->getAllSearchedUnvalidatedSessionQueues($search);
 
-            $datas['coursesQueues'] = $this->getCoursesQueuesDatasFromQueues($coursesQueues);
-            $datas['sessionsQueues'] = $this->getSessionsQueuesDatasFromQueues($sessionsQueues);
-        } else {
-            $validatorCoursesQueues = empty($search) ?
-                $this->getUnvalidatedCourseQueuesByValidator($authenticatedUser) :
-                $this->getUnvalidatedSearchedCourseQueuesByValidator($authenticatedUser, $search);
-            $orgaCoursesQueues = empty($search) ?
-                $this->getUnvalidatedCourseQueuesByOrganization($authenticatedUser) :
-                $this->getUnvalidatedSearchedCourseQueuesByOrganization($authenticatedUser, $search);
-            $simpleCoursesQueues = empty($search) ?
-                $this->getUnvalidatedCourseQueues() :
-                $this->getUnvalidatedSearchedCourseQueues($search);
+                $datas['coursesQueues'] = $this->getCoursesQueuesDatasFromQueues($coursesQueues);
+                $datas['sessionsQueues'] = $this->getSessionsQueuesDatasFromQueues($sessionsQueues);
+            } else {
+                $validatorCoursesQueues = empty($search) ?
+                    $this->getUnvalidatedCourseQueuesByValidator($authenticatedUser) :
+                    $this->getUnvalidatedSearchedCourseQueuesByValidator($authenticatedUser, $search);
+                $orgaCoursesQueues = empty($search) ?
+                    $this->getUnvalidatedCourseQueuesByOrganization($authenticatedUser) :
+                    $this->getUnvalidatedSearchedCourseQueuesByOrganization($authenticatedUser, $search);
+                $simpleCoursesQueues = empty($search) ?
+                    $this->getUnvalidatedCourseQueues($authenticatedUser) :
+                    $this->getUnvalidatedSearchedCourseQueues($authenticatedUser, $search);
 
-            $validatorSessionsQueues = empty($search) ?
-                $this->getUnvalidatedSessionQueuesByValidator($authenticatedUser) :
-                $this->getUnvalidatedSearchedSessionQueuesByValidator($authenticatedUser, $search);
-            $orgaSessionsQueues = empty($search) ?
-                $this->getUnvalidatedSessionQueuesByOrganization($authenticatedUser) :
-                $this->getUnvalidatedSearchedSessionQueuesByOrganization($authenticatedUser, $search);
-            $simpleSessionsQueues = empty($search) ?
-                $this->getUnvalidatedSessionQueues() :
-                $this->getUnvalidatedSearchedSessionQueues($search);
+                $validatorSessionsQueues = empty($search) ?
+                    $this->getUnvalidatedSessionQueuesByValidator($authenticatedUser) :
+                    $this->getUnvalidatedSearchedSessionQueuesByValidator($authenticatedUser, $search);
+                $orgaSessionsQueues = empty($search) ?
+                    $this->getUnvalidatedSessionQueuesByOrganization($authenticatedUser) :
+                    $this->getUnvalidatedSearchedSessionQueuesByOrganization($authenticatedUser, $search);
+                $simpleSessionsQueues = empty($search) ?
+                    $this->getUnvalidatedSessionQueues($authenticatedUser) :
+                    $this->getUnvalidatedSearchedSessionQueues($authenticatedUser, $search);
 
-            $coursesQueues = $this->mergeCourseQueues(
-                $validatorCoursesQueues,
-                $orgaCoursesQueues,
-                $simpleCoursesQueues
-            );
-            $sessionsQueues = $this->mergeSessionQueues(
-                $validatorSessionsQueues,
-                $orgaSessionsQueues,
-                $simpleSessionsQueues
-            );
-            $datas['coursesQueues'] = $this->computeCoursesQueuesDatas(
-                $validatorCoursesQueues,
-                $orgaCoursesQueues,
-                $simpleCoursesQueues
-            );
-            $datas['sessionsQueues'] = $this->computeSessionsQueuesDatas(
-                $validatorSessionsQueues,
-                $orgaSessionsQueues,
-                $simpleSessionsQueues
-            );
+                $coursesQueues = $this->mergeCourseQueues(
+                    $validatorCoursesQueues,
+                    $orgaCoursesQueues,
+                    $simpleCoursesQueues
+                );
+                $sessionsQueues = $this->mergeSessionQueues(
+                    $validatorSessionsQueues,
+                    $orgaSessionsQueues,
+                    $simpleSessionsQueues
+                );
+                $datas['coursesQueues'] = $this->computeCoursesQueuesDatas(
+                    $validatorCoursesQueues,
+                    $orgaCoursesQueues,
+                    $simpleCoursesQueues
+                );
+                $datas['sessionsQueues'] = $this->computeSessionsQueuesDatas(
+                    $validatorSessionsQueues,
+                    $orgaSessionsQueues,
+                    $simpleSessionsQueues
+                );
+            }
+            $datas['courses'] = $this->getCoursesDatasFromQueues($coursesQueues, $sessionsQueues);
         }
-        $datas['courses'] = $this->getCoursesDatasFromQueues($coursesQueues, $sessionsQueues);
 
         return $datas;
     }
@@ -3818,9 +3814,16 @@ class CursusManager
 
     public function getWorkspacesListForCurrentUser()
     {
+        $workspaces = [];
         $token = $this->tokenStorage->getToken();
         $roles = $this->utils->getRoles($token);
-        $workspaces = $this->workspaceManager->getOpenableWorkspacesByRoles($roles);
+        $openableWorkspaces = $this->workspaceManager->getOpenableWorkspacesByRoles($roles);
+
+        foreach ($openableWorkspaces as $workspace) {
+            if (!$workspace->isModel()) {
+                $workspaces[] = $workspace;
+            }
+        }
 
         return $workspaces;
     }
@@ -3957,8 +3960,10 @@ class CursusManager
         $sessionTrainersHtml = '';
         $locationHtml = '';
         $eventTrainersHtml = '';
+        $locationName = '';
 
         if (!is_null($location)) {
+            $locationName = $location->getName();
             $locationHtml = $location->getStreet().', '.$location->getStreetNumber();
             $locationHtml .= $location->getBoxNumber() ? ' / '.$location->getBoxNumber() : '';
             $locationHtml .= '<br>'.$location->getPc().' '.$location->getTown().'<br>'.$location->getCountry();
@@ -3998,6 +4003,8 @@ class CursusManager
             '%event_start%',
             '%event_end%',
             '%event_location%',
+            '%event_location_address%',
+            '%event_location_name%',
             '%event_location_extra%',
             '%event_trainers%',
         ];
@@ -4016,6 +4023,8 @@ class CursusManager
             $event->getStartDate()->format('d/m/Y H:i'),
             $event->getEndDate()->format('d/m/Y H:i'),
             $locationHtml,
+            $locationHtml,
+            $locationName,
             $event->getLocationExtra(),
             $eventTrainersHtml,
         ];
@@ -4086,6 +4095,9 @@ class CursusManager
     {
         $creator = $this->container->get('security.token_storage')->getToken()->getUser();
         $data = [];
+        $certificateEmail = $this->getCertificateEmail();
+        $emailObject = $certificateEmail->getName();
+        $emailContent = $certificateEmail->getContent();
 
         foreach ($users as $user) {
             $name = $session->getName().'-'.$user->getUsername();
@@ -4115,8 +4127,15 @@ class CursusManager
             }
             $replacedContent = str_replace('%events_list%', $eventsList, $replacedContent);
             $pdf = $this->pdfManager->create($replacedContent, $name, $creator, 'session_certificate');
-            $title = $this->translator->trans('new_certificate_email_title', [], 'cursus');
-            $link = $this->templating->render('ClarolineCursusBundle:Mail:certificate.html.twig', ['pdf' => $pdf, 'session' => $session]);
+
+            $pdfLink = $this->router->generate('claro_pdf_download', ['pdf' => $pdf->getGuid()], true);
+            $replacedEmailContent = str_replace('%pdf_link_start%', '<a href="'.$pdfLink.'">', $emailContent);
+            $replacedEmailContent = str_replace('%pdf_link_end%', '</a>', $replacedEmailContent);
+
+            $title = !empty($emailObject) ? $emailObject : $this->translator->trans('new_certificate_email_title', [], 'cursus');
+            $link = !empty($replacedEmailContent) ?
+                $replacedEmailContent :
+                $this->templating->render('ClarolineCursusBundle:Mail:certificate.html.twig', ['pdf' => $pdf, 'session' => $session]);
             $this->mailManager->send($title, $link, [$user]);
             $data[] = ['user' => $user, 'pdf' => $pdf];
         }
@@ -4130,14 +4149,26 @@ class CursusManager
     {
         $creator = $this->container->get('security.token_storage')->getToken()->getUser();
         $data = [];
+        $certificateEmail = $this->getCertificateEmail();
+        $emailObject = $certificateEmail->getName();
+        $emailContent = $certificateEmail->getContent();
 
         foreach ($users as $user) {
             $name = $event->getName().'-'.$user->getUsername();
             $replacedContent = str_replace('%first_name%', $user->getFirstName(), $content);
             $replacedContent = str_replace('%last_name%', $user->getLastName(), $replacedContent);
             $pdf = $this->pdfManager->create($replacedContent, $name, $creator, 'session_event_certificate');
-            $title = $this->translator->trans('new_event_certificate_email_title', [], 'cursus');
-            $link = $this->templating->render('ClarolineCursusBundle:Mail:event_certificate.html.twig', ['pdf' => $pdf, 'sessionEvent' => $event]);
+
+            $pdfLink = $this->router->generate('claro_pdf_download', ['pdf' => $pdf->getGuid()], true);
+            $replacedEmailContent = str_replace('%pdf_link_start%', '<a href="'.$pdfLink.'">', $emailContent);
+            $replacedEmailContent = str_replace('%pdf_link_end%', '</a>', $replacedEmailContent);
+
+            $title = !empty($emailObject) ?
+                $emailObject :
+                $this->translator->trans('new_event_certificate_email_title', [], 'cursus');
+            $link = !empty($replacedEmailContent) ?
+                $replacedEmailContent :
+                $this->templating->render('ClarolineCursusBundle:Mail:event_certificate.html.twig', ['pdf' => $pdf, 'sessionEvent' => $event]);
             $this->mailManager->send($title, $link, [$user]);
             $data[] = ['user' => $user, 'pdf' => $pdf];
         }
@@ -4327,24 +4358,48 @@ class CursusManager
                             $eventDatas = $this->registerUsersToSessionEvent($sessionEvent, [$user]);
 
                             if ($eventDatas['status'] === 'failed') {
-                                $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                                $eventUser = $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                                $results['sessionEventUsers'] = $this->serializer->serialize(
+                                    [$eventUser],
+                                    'json',
+                                    SerializationContext::create()->setGroups(['api_user_min'])
+                                );
+                            } else {
+                                $results['sessionEventUsers'] = $eventDatas['sessionEventUsers'];
                             }
                             $this->sendEventRegistrationConfirmationMessage($user, $sessionEvent, 'success', $eventDatas['status']);
                         } elseif ($sessionRegistrationStatus === 'pending') {
-                            $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                            $eventUser = $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
                             $this->sendEventRegistrationConfirmationMessage($user, $sessionEvent, 'pending', 'failed');
+                            $results['sessionEventUsers'] = $this->serializer->serialize(
+                                [$eventUser],
+                                'json',
+                                SerializationContext::create()->setGroups(['api_user_min'])
+                            );
                         }
                     }
                 } elseif (!is_null($sessionUser)) {
                     $eventDatas = $this->registerUsersToSessionEvent($sessionEvent, [$user]);
 
                     if ($eventDatas['status'] === 'failed') {
-                        $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                        $eventUser = $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                        $results['sessionEventUsers'] = $this->serializer->serialize(
+                            [$eventUser],
+                            'json',
+                            SerializationContext::create()->setGroups(['api_user_min'])
+                        );
+                    } else {
+                        $results['sessionEventUsers'] = $eventDatas['sessionEventUsers'];
                     }
                     $this->sendEventRegistrationConfirmationMessage($user, $sessionEvent, 'none', $eventDatas['status']);
                 } else {
-                    $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
+                    $eventUser = $this->createSessionEventUser($user, $sessionEvent, SessionEventUser::PENDING, null, new \DateTime());
                     $this->sendEventRegistrationConfirmationMessage($user, $sessionEvent, 'none', 'failed');
+                    $results['sessionEventUsers'] = $this->serializer->serialize(
+                        [$eventUser],
+                        'json',
+                        SerializationContext::create()->setGroups(['api_user_min'])
+                    );
                 }
             }
         }
@@ -4512,6 +4567,39 @@ class CursusManager
         }
 
         return $sessionEventUser;
+    }
+
+    public function acceptSessionEventUser(SessionEventUser $sessionEventUser)
+    {
+        $results = [];
+        $sessionEvent = $sessionEventUser->getSessionEvent();
+        $remainingPlaces = $this->getSessionEventRemainingPlaces($sessionEvent);
+
+        if (is_null($remainingPlaces) || $remainingPlaces > 0) {
+            $sessionEventUser->setRegistrationStatus(SessionEventUser::REGISTERED);
+            $sessionEventUser->setRegistrationDate(new \DateTime());
+            $this->om->persist($sessionEventUser);
+            $this->om->flush();
+            $this->sendEventRegistrationConfirmationMessage(
+                $sessionEventUser->getUser(),
+                $sessionEvent,
+                'none',
+                'pending_to_registered'
+            );
+            $results['status'] = 'success';
+            $results['data'] = $sessionEventUser;
+        } else {
+            $results['status'] = 'failed';
+            $results['data'] = $this->translator->trans('registration_failed', [], 'cursus').
+                '. '.
+                $this->translator->trans(
+                    'required_places_msg',
+                    ['%remainingPlaces%' => $remainingPlaces, '%requiredPlaces%' => 1],
+                    'cursus'
+                );
+        }
+
+        return $results;
     }
 
     public function sendSessionRegistrationConfirmationMessage(User $user, CourseSession $session, $sessionStatus)
@@ -4700,6 +4788,140 @@ class CursusManager
         $this->messageManager->send($message, true, false);
     }
 
+    public function getOrganizationsByCourse(Course $course)
+    {
+        $organizations = [];
+        $courseOrgas = $course->getOrganizations();
+        $courseCursus = $this->cursusRepo->findBy(['course' => $course]);
+
+        foreach ($courseOrgas as $orga) {
+            $organizations[$orga->getId()] = $orga;
+        }
+        foreach ($courseCursus as $cursus) {
+            $cursusOrgas = $cursus->getOrganizations();
+
+            foreach ($cursusOrgas as $orga) {
+                $organizations[$orga->getId()] = $orga;
+            }
+        }
+
+        return $organizations;
+    }
+
+    public function updateCursusOrganizations(Cursus $cursus, array $organizations)
+    {
+        if (empty($cursus->getParent())) {
+            $cursusOrgasIds = $this->extractOrganizationsIds($cursus->getOrganizations());
+            $orgasIds = $this->extractOrganizationsIds($organizations);
+            $nbCursusOrgas = count($cursusOrgasIds);
+            $nbOrgas = count($orgasIds);
+
+            if ($nbCursusOrgas !== $nbOrgas || count(array_intersect($cursusOrgasIds, $orgasIds)) !== $nbOrgas) {
+                $this->om->startFlushSuite();
+                $allCursusRoot = $this->cursusRepo->findByRoot($cursus->getRoot());
+
+                foreach ($allCursusRoot as $cursusRoot) {
+                    $cursusRoot->emptyOrganizations();
+
+                    foreach ($organizations as $organization) {
+                        $cursusRoot->addOrganization($organization);
+                    }
+                    $this->om->persist($cursusRoot);
+                }
+                $this->om->endFlushSuite();
+            }
+        }
+    }
+
+    public function searchSessionEventsPartialList(CourseSession $session, array $searches, $page, $limit)
+    {
+        $data = [];
+        // retrieves searchable text fields
+        $baseFieldsName = SessionEvent::getSearchableFields();
+
+        /** @var QueryBuilder $qb */
+        $qb = $this->om->createQueryBuilder();
+        $qb->select('se');
+        $qb->from('Claroline\CursusBundle\Entity\SessionEvent', 'se');
+        $qb->join('se.session', 's');
+        $qb->andWhere('s.id = :sessionId');
+        $qb->setParameter('sessionId', $session->getId());
+
+        if (!empty($searches['filters']) && is_array($searches['filters'])) {
+            foreach ($searches['filters'] as $filterName => $filterValue) {
+                if (in_array($filterName, $baseFieldsName)) {
+                    $qb->andWhere("UPPER(se.{$filterName}) LIKE :{$filterName}");
+                    $qb->setParameter($filterName, '%'.strtoupper($filterValue).'%');
+                } else {
+                    // catch boolean
+                    if ('true' === $filterValue || 'false' === $filterValue) {
+                        $filterValue = 'true' === $filterValue;
+                    }
+
+                    $qb->andWhere("se.{$filterName} = :{$filterName}");
+                    $qb->setParameter($filterName, $filterValue);
+                }
+            }
+        }
+
+        if (!empty($searches['sortBy'])) {
+            // reverse order starts by a -
+            if ('-' === substr($searches['sortBy'], 0, 1)) {
+                $qb->orderBy('se.'.substr($searches['sortBy'], 1), 'ASC');
+            } else {
+                $qb->orderBy('se.'.$searches['sortBy'], 'DESC');
+            }
+        }
+
+        $query = $qb->getQuery();
+        $data['count'] = count($query->getResult());
+
+        if (!is_null($page) && !is_null($limit)) {
+            //react table all is -1
+            if ($limit > -1) {
+                $query->setMaxResults($limit);
+            }
+            $query->setFirstResult($page * $limit);
+        }
+        $data['sessionEvents'] = $query->getResult();
+
+        return $data;
+    }
+
+    public function persistSessionEventSet(SessionEventSet $sessionEventSet)
+    {
+        $this->om->persist($sessionEventSet);
+        $this->om->flush();
+    }
+
+    public function createSessionEventSet(CourseSession $session, $name, $limit = 1)
+    {
+        $set = new SessionEventSet();
+        $set->setSession($session);
+        $set->setName($name);
+        $set->setLimit($limit);
+        $this->persistSessionEventSet($set);
+
+        return $set;
+    }
+
+    public function deleteSessionEventSet(SessionEventSet $sessionEventSet)
+    {
+        $this->om->remove($sessionEventSet);
+        $this->om->flush();
+    }
+
+    public function getSessionEventSet(CourseSession $session, $name)
+    {
+        $set = $this->getSessionEventSetsBySessionAndName($session, $name);
+
+        if (empty($set)) {
+            $set = $this->createSessionEventSet($session, $name);
+        }
+
+        return $set;
+    }
+
     /***************************************************
      * Access to CursusDisplayedWordRepository methods *
      ***************************************************/
@@ -4722,13 +4944,14 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
     }
 
-    public function getAllRootCursus($search = '', $orderedBy = 'id', $order = 'ASC', $withPager = false, $page = 1, $max = 50)
+    public function getAllRootCursus($orderedBy = 'cursusOrder', $order = 'ASC')
     {
-        $cursus = empty($search) ?
-            $this->cursusRepo->findAllRootCursus($orderedBy, $order) :
-            $this->cursusRepo->findSearchedRootCursus($search, $orderedBy, $order);
+        return $this->cursusRepo->findAllRootCursus($orderedBy, $order);
+    }
 
-        return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
+    public function getAllRootCursusByOrganizations(array $organizations, $orderedBy = 'id', $order = 'ASC')
+    {
+        return $this->cursusRepo->findAllRootCursusByOrganizations($organizations, $orderedBy, $order);
     }
 
     public function getLastRootCursusOrder($executeQuery = true)
@@ -4741,24 +4964,9 @@ class CursusManager
         return $this->cursusRepo->findLastCursusOrderByParent($cursus, $executeQuery);
     }
 
-    public function getHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
-    {
-        return $this->cursusRepo->findHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
-    }
-
     public function getRelatedHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
     {
         return $this->cursusRepo->findRelatedHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
-    }
-
-    public function getDescendantHierarchyByCursus(Cursus $cursus, $orderedBy = 'cursusOrder', $order = 'ASC', $executeQuery = true)
-    {
-        return $this->cursusRepo->findDescendantHierarchyByCursus($cursus, $orderedBy, $order, $executeQuery);
-    }
-
-    public function getCursusByParentAndCourses(Cursus $parent, array $courses, $executeQuery = true)
-    {
-        return $this->cursusRepo->findCursusByParentAndCourses($parent, $courses, $executeQuery);
     }
 
     public function getCursusByIds(array $ids, $executeQuery = true)
@@ -4766,30 +4974,14 @@ class CursusManager
         return count($ids) > 0 ? $this->cursusRepo->findCursusByIds($ids, $executeQuery) : [];
     }
 
-    public function getOneCursusById($cursusId, $executeQuery = true)
+    public function getOneCursusById($cursusId)
     {
-        return $this->cursusRepo->findOneCursusById($cursusId, $executeQuery);
+        return $this->cursusRepo->findOneById($cursusId);
     }
 
     public function getCursusByGroup(Group $group, $executeQuery = true)
     {
         return $this->cursusRepo->findCursusByGroup($group, $executeQuery);
-    }
-
-    public function getCursusByParent(
-        Cursus $parent,
-        $search = '',
-        $orderedBy = 'cursusOrder',
-        $order = 'ASC',
-        $withPager = false,
-        $page = 1,
-        $max = 50
-    ) {
-        $cursus = empty($search) ?
-            $this->cursusRepo->findCursusByParent($parent, $orderedBy, $order) :
-            $this->cursusRepo->findSearchedCursusByParent($parent, $search, $orderedBy, $order);
-
-        return $withPager ? $this->pagerFactory->createPagerFromArray($cursus, $page, $max) : $cursus;
     }
 
     public function getCursusByCodeWithoutId($code, $id)
@@ -4810,20 +5002,34 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($courses, $page, $max) : $courses;
     }
 
-    public function getUnmappedCoursesByCursus(
-        Cursus $cursus,
+    public function getAllCoursesByOrganizations(
+        array $organizations,
         $search = '',
         $orderedBy = 'title',
         $order = 'ASC',
-        $withPager = true,
+        $withPager = false,
         $page = 1,
         $max = 50
     ) {
         $courses = empty($search) ?
-            $this->courseRepo->findUnmappedCoursesByCursus($cursus, $orderedBy, $order) :
-            $this->courseRepo->findUnmappedSearchedCoursesByCursus($cursus, $search, $orderedBy, $order);
+            $this->courseRepo->findAllCoursesByOrganizations($organizations, $orderedBy, $order) :
+            $this->courseRepo->findSearchedCoursesByOrganizations($organizations, $search, $orderedBy, $order);
 
         return $withPager ? $this->pagerFactory->createPagerFromArray($courses, $page, $max) : $courses;
+    }
+
+    public function getUnmappedCoursesByCursus(Cursus $cursus, $orderedBy = 'title', $order = 'ASC')
+    {
+        return $this->courseRepo->findUnmappedCoursesByCursus($cursus, $orderedBy, $order);
+    }
+
+    public function getUnmappedCoursesByCursusAndOrganizations(
+        Cursus $cursus,
+        array $organizations,
+        $orderedBy = 'title',
+        $order = 'ASC'
+    ) {
+        return $this->courseRepo->findUnmappedCoursesByCursusAndOrganizations($cursus, $organizations, $orderedBy, $order);
     }
 
     public function getDescendantCoursesByCursus(
@@ -4899,11 +5105,6 @@ class CursusManager
         return $this->cursusUserRepo->findCursusUsersByCursus($cursus, $executeQuery);
     }
 
-    public function getOneCursusUserByCursusAndUser(Cursus $cursus, User $user, $executeQuery = true)
-    {
-        return $this->cursusUserRepo->findOneCursusUserByCursusAndUser($cursus, $user, $executeQuery);
-    }
-
     public function getCursusUsersFromCursusAndUsers(array $cursus, array $users)
     {
         if (count($cursus) > 0 && count($users) > 0) {
@@ -4911,11 +5112,6 @@ class CursusManager
         } else {
             return [];
         }
-    }
-
-    public function getCursusUsersOfCursusChildren(Cursus $cursus, User $user, $executeQuery = true)
-    {
-        return $this->cursusUserRepo->findCursusUsersOfCursusChildren($cursus, $user, $executeQuery);
     }
 
     public function getUnregisteredUsersByCursus(
@@ -4935,22 +5131,6 @@ class CursusManager
         return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
     }
 
-    public function getUsersByCursus(
-        Cursus $cursus,
-        $search = '',
-        $orderedBy = 'firstName',
-        $order = 'ASC',
-        $withPager = false,
-        $page = 1,
-        $max = 50
-    ) {
-        $users = empty($search) ?
-            $this->cursusUserRepo->findUsersByCursus($cursus, $orderedBy, $order) :
-            $this->cursusUserRepo->findSearchedUsersByCursus($cursus, $search, $orderedBy, $order);
-
-        return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
-    }
-
     /*******************************************
      * Access to CursusGroupRepository methods *
      *******************************************/
@@ -4958,11 +5138,6 @@ class CursusManager
     public function getCursusGroupsByCursus(Cursus $cursus, $executeQuery = true)
     {
         return $this->cursusGroupRepo->findCursusGroupsByCursus($cursus, $executeQuery);
-    }
-
-    public function getOneCursusGroupByCursusAndGroup(Cursus $cursus, Group $group, $executeQuery = true)
-    {
-        return $this->cursusGroupRepo->findOneCursusGroupByCursusAndGroup($cursus, $group, $executeQuery);
     }
 
     public function getCursusGroupsFromCursusAndGroups(array $cursus, array $groups)
@@ -4974,51 +5149,39 @@ class CursusManager
         }
     }
 
-    public function getCursusGroupsOfCursusChildren(Cursus $cursus, Group $group, $executeQuery = true)
+    public function getUnregisteredGroupsByCursus(Cursus $cursus, $search = '', $orderedBy = 'name', $order = 'ASC')
     {
-        return $this->cursusGroupRepo->findCursusGroupsOfCursusChildren($cursus, $group, $executeQuery);
-    }
-
-    public function getUnregisteredGroupsByCursus(
-        Cursus $cursus,
-        $search = '',
-        $orderedBy = 'name',
-        $order = 'ASC',
-        $withPager = true,
-        $page = 1,
-        $max = 50
-    ) {
         $this->checkCursusToolRegistrationAccess();
-        $groups = empty($search) ?
-            $this->cursusGroupRepo->findUnregisteredGroupsByCursus($cursus, $orderedBy, $order) :
-            $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursus($cursus, $search, $orderedBy, $order);
+        $groups = [];
+        $user = $this->tokenStorage->getToken()->getUser();
 
-        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
-    }
+        if ($user !== 'anon.') {
+            $this->checkCursusAccess($user, $cursus);
 
-    public function getGroupsByCursus(
-        Cursus $cursus,
-        $search = '',
-        $orderedBy = 'name',
-        $order = 'ASC',
-        $withPager = false,
-        $page = 1,
-        $max = 50
-    ) {
-        $groups = empty($search) ?
-            $this->cursusGroupRepo->findGroupsByCursus(
-                $cursus,
-                $orderedBy,
-                $order
-            ) :
-            $this->cursusGroupRepo->findSearchedGroupsByCursus(
-                $cursus,
-                $search,
-                $orderedBy,
-                $order
-            );
+            if ($this->authorization->isGranted('ROLE_ADMIN')) {
+                $groups = empty($search) ?
+                    $this->cursusGroupRepo->findUnregisteredGroupsByCursus($cursus, $orderedBy, $order) :
+                    $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursus($cursus, $search, $orderedBy, $order);
+            } else {
+                $organizations = $user->getAdministratedOrganizations()->toArray();
+                $groups = empty($search) ?
+                    $this->cursusGroupRepo->findUnregisteredGroupsByCursusAndOrganizations(
+                        $cursus,
+                        $organizations,
+                        $orderedBy,
+                        $order
+                    ) :
+                    $this->cursusGroupRepo->findSearchedUnregisteredGroupsByCursusAndOrganizations(
+                        $cursus,
+                        $organizations,
+                        $search,
+                        $orderedBy,
+                        $order
+                    );
+            }
+        }
 
-        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
+        return $groups;
     }
 
     public function getCursusGroupsByIds(array $ids, $executeQuery = true)
@@ -5035,14 +5198,9 @@ class CursusManager
         return $this->courseSessionRepo->findAllSessions($orderedBy, $order, $executeQuery);
     }
 
-    public function getUnclosedSessions()
+    public function getAllSessionsByOrganizations(array $organizations, $orderedBy = 'startDate', $order = 'ASC')
     {
-        return $this->courseSessionRepo->findUnclosedSessions();
-    }
-
-    public function getUnclosedSessionsByCourse(Course $course)
-    {
-        return $this->courseSessionRepo->findUnclosedSessionsByCourse($course);
+        return $this->courseSessionRepo->findAllSessionsByOrganizations($organizations, $orderedBy, $order);
     }
 
     public function getSessionsByCourse(Course $course, $orderedBy = 'creationDate', $order = 'ASC', $executeQuery = true)
@@ -5138,6 +5296,11 @@ class CursusManager
         return count($ids) > 0 ? $this->courseSessionRepo->findSessionsByIds($ids, $executeQuery) : [];
     }
 
+    public function getSessionsByWorkspace(Workspace $workspace)
+    {
+        return $this->courseSessionRepo->findBy(['workspace' => $workspace], ['name' => 'ASC']);
+    }
+
     /*********************************************
      * Access to SessionEventRepository methods *
      *********************************************/
@@ -5150,6 +5313,16 @@ class CursusManager
     public function getSessionEventsBySessionAndUserAndRegistrationStatus(CourseSession $session, User $user, $registrationStatus)
     {
         return $this->sessionEventRepo->findSessionEventsBySessionAndUserAndRegistrationStatus($session, $user, $registrationStatus);
+    }
+
+    public function getSessionEventsByWorkspace(Workspace $workspace)
+    {
+        return $this->sessionEventRepo->findSessionEventsByWorkspace($workspace);
+    }
+
+    public function getSessionEventsByUser(User $user)
+    {
+        return $this->sessionEventRepo->findSessionEventsByUser($user);
     }
 
     /*************************************************
@@ -5234,31 +5407,26 @@ class CursusManager
     }
 
     public function getUnregisteredUsersBySession(
+        User $user,
         CourseSession $session,
         $userType,
-        $search = '',
         $orderedBy = 'firstName',
-        $order = 'ASC',
-        $withPager = true,
-        $page = 1,
-        $max = 50
+        $order = 'ASC'
     ) {
-        $users = empty($search) ?
-            $this->sessionUserRepo->findUnregisteredUsersBySession(
+        if ($user->hasRole('ROLE_ADMIN')) {
+            $users = $this->sessionUserRepo->findUnregisteredUsersBySession($session, $userType, $orderedBy, $order);
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $users = $this->sessionUserRepo->findUnregisteredUsersBySessionAndOrganizations(
                 $session,
+                $organizations,
                 $userType,
-                $orderedBy,
-                $order
-            ) :
-            $this->sessionUserRepo->findSearchedUnregisteredUsersBySession(
-                $session,
-                $userType,
-                $search,
                 $orderedBy,
                 $order
             );
+        }
 
-        return $withPager ? $this->pagerFactory->createPagerFromArray($users, $page, $max) : $users;
+        return $users;
     }
 
     public function getSessionUsersByUserAndSessionStatus(User $user, $status, $currentDate = null, $search = '', $coursesList = null)
@@ -5293,31 +5461,26 @@ class CursusManager
     }
 
     public function getUnregisteredGroupsBySession(
+        User $user,
         CourseSession $session,
         $groupType,
-        $search = '',
         $orderedBy = 'name',
-        $order = 'ASC',
-        $withPager = true,
-        $page = 1,
-        $max = 50
+        $order = 'ASC'
     ) {
-        $groups = empty($search) ?
-            $this->sessionGroupRepo->findUnregisteredGroupsBySession(
+        if ($this->authorization->isGranted('ROLE_ADMIN')) {
+            $groups = $this->sessionGroupRepo->findUnregisteredGroupsBySession($session, $groupType, $orderedBy, $order);
+        } else {
+            $organizations = $user->getAdministratedOrganizations()->toArray();
+            $groups = $this->sessionGroupRepo->findUnregisteredGroupsBySessionAndOrganizations(
                 $session,
+                $organizations,
                 $groupType,
-                $orderedBy,
-                $order
-            ) :
-            $this->sessionGroupRepo->findSearchedUnregisteredGroupsBySession(
-                $session,
-                $groupType,
-                $search,
                 $orderedBy,
                 $order
             );
+        }
 
-        return $withPager ? $this->pagerFactory->createPagerFromArray($groups, $page, $max) : $groups;
+        return $groups;
     }
 
     /**************************************************************
@@ -5337,16 +5500,6 @@ class CursusManager
     public function getOneSessionQueueBySessionAndUser(CourseSession $session, User $user, $executeQuery = true)
     {
         return $this->sessionQueueRepo->findOneSessionQueueBySessionAndUser($session, $user, $executeQuery);
-    }
-
-    public function getSessionQueuesByCourse(Course $course, $executeQuery = true)
-    {
-        return $this->sessionQueueRepo->findSessionQueuesByCourse($course, $executeQuery);
-    }
-
-    public function getSessionQueuesByCourses(array $courses)
-    {
-        return count($courses) > 0 ? $this->sessionQueueRepo->findSessionQueuesByCourses($courses) : [];
     }
 
     public function getAllUnvalidatedSessionQueues()
@@ -5379,24 +5532,19 @@ class CursusManager
         return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueuesByOrganization($user, $search);
     }
 
-    public function getUnvalidatedSessionQueues()
+    public function getUnvalidatedSessionQueues(User $user)
     {
-        return $this->sessionQueueRepo->findUnvalidatedSessionQueues();
+        return $this->sessionQueueRepo->findUnvalidatedSessionQueues($user);
     }
 
-    public function getUnvalidatedSearchedSessionQueues($search)
+    public function getUnvalidatedSearchedSessionQueues(User $user, $search)
     {
-        return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueues($search);
+        return $this->sessionQueueRepo->findUnvalidatedSearchedSessionQueues($user, $search);
     }
 
     /*******************************************************
      * Access to CourseRegistrationQueueRepository methods *
      *******************************************************/
-
-    public function getCourseQueuesByCourse(Course $course, $executeQuery = true)
-    {
-        return $this->courseQueueRepo->findCourseQueuesByCourse($course, $executeQuery);
-    }
 
     public function getCourseQueuesByUser(User $user, $executeQuery = true)
     {
@@ -5438,14 +5586,14 @@ class CursusManager
         return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueuesByOrganization($user, $search);
     }
 
-    public function getUnvalidatedCourseQueues()
+    public function getUnvalidatedCourseQueues(User $user)
     {
-        return $this->courseQueueRepo->findUnvalidatedCourseQueues();
+        return $this->courseQueueRepo->findUnvalidatedCourseQueues($user);
     }
 
-    public function getUnvalidatedSearchedCourseQueues($search)
+    public function getUnvalidatedSearchedCourseQueues(User $user, $search)
     {
-        return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueues($search);
+        return $this->courseQueueRepo->findUnvalidatedSearchedCourseQueues($user, $search);
     }
 
     /*********************************************
@@ -5465,6 +5613,24 @@ class CursusManager
     public function getDocumentModelById($id)
     {
         return $this->documentModelRepo->findOneById($id);
+    }
+
+    public function getCertificateEmail()
+    {
+        $document = null;
+        $documents = $this->documentModelRepo->findBy(['documentType' => DocumentModel::MAIL_CERTIFICATE]);
+
+        if (count($documents) > 0) {
+            $document = $documents[0];
+        } else {
+            $document = $this->createDocumentModel(
+                '',
+                '',
+                DocumentModel::MAIL_CERTIFICATE
+            );
+        }
+
+        return $document;
     }
 
     /***************************************************
@@ -5487,7 +5653,7 @@ class CursusManager
 
     public function getSessionEventUsersBySessionEvent(SessionEvent $sessionEvent)
     {
-        return $this->sessionEventUserRepo->findBy(['sessionEvent' => $sessionEvent], ['registrationStatus' => 'DESC']);
+        return $this->sessionEventUserRepo->findSessionEventUsersBySessionEvent($sessionEvent);
     }
 
     public function getSessionEventUsersByUser(User $user)
@@ -5523,6 +5689,34 @@ class CursusManager
     public function getSessionEventUsersFromListBySessionEventAndStatus(SessionEvent $sessionEvent, array $users, $status)
     {
         return $this->sessionEventUserRepo->findSessionEventUsersFromListBySessionEventAndStatus($sessionEvent, $users, $status);
+    }
+
+    public function getSessionEventUsersByUserAndEventSet(User $user, SessionEventSet $eventSet)
+    {
+        return $this->sessionEventUserRepo->findSessionEventUsersByUserAndEventSet($user, $eventSet);
+    }
+
+    /***************************************************
+     * Access to SessionEventCommentRepository methods *
+     ***************************************************/
+
+    public function getSessionEventCommentsBySessionEvent(SessionEvent $sessionEvent)
+    {
+        return $this->sessionEventCommentRepo->findBy(['sessionEvent' => $sessionEvent]);
+    }
+
+    /***********************************************
+     * Access to SessionEventSetRepository methods *
+     ***********************************************/
+
+    public function getSessionEventSetsBySession(CourseSession $session)
+    {
+        return $this->sessionEventSetRepo->findSessionEventSetsBySession($session);
+    }
+
+    public function getSessionEventSetsBySessionAndName(CourseSession $session, $name)
+    {
+        return $this->sessionEventSetRepo->findSessionEventSetsBySessionAndName($session, $name);
     }
 
     /******************
@@ -5573,9 +5767,34 @@ class CursusManager
         return $sessions;
     }
 
+    /*************************
+     * Organizations methods *
+     *************************/
+
+    public function getAllOrganizations()
+    {
+        return $this->organizationRepo->findAll();
+    }
+
+    public function getOrganizationsByIds(array $ids)
+    {
+        return $this->om->findList('Claroline\CoreBundle\Entity\Organization\Organization', 'id', $ids);
+    }
+
     /*******************
      * Rights checking *
      *******************/
+
+    public function extractOrganizationsIds(array $organizations)
+    {
+        $ids = [];
+
+        foreach ($organizations as $organization) {
+            $ids[] = $organization->getId();
+        }
+
+        return $ids;
+    }
 
     private function checkCursusToolRegistrationAccess()
     {
@@ -5591,5 +5810,32 @@ class CursusManager
         $cursusTool = $this->toolManager->getAdminToolByName('claroline_cursus_tool_registration');
 
         return $this->authorization->isGranted('OPEN', $cursusTool);
+    }
+
+    public function checkAccess(User $user)
+    {
+        if (!$this->authorization->isGranted('ROLE_ADMIN') && count($user->getAdministratedOrganizations()->toArray()) === 0) {
+            throw new AccessDeniedException();
+        }
+    }
+
+    public function checkCursusAccess(User $user, Cursus $cursus)
+    {
+        $userOrgas = $this->extractOrganizationsIds($user->getAdministratedOrganizations()->toArray());
+        $cursusOrgas = $this->extractOrganizationsIds($cursus->getOrganizations());
+
+        if (!$this->authorization->isGranted('ROLE_ADMIN') && count(array_intersect($userOrgas, $cursusOrgas)) === 0) {
+            throw new AccessDeniedException();
+        }
+    }
+
+    public function checkCourseAccess(User $user, Course $course)
+    {
+        $userOrgas = $this->extractOrganizationsIds($user->getAdministratedOrganizations()->toArray());
+        $courseOrgas = $this->extractOrganizationsIds($this->getOrganizationsByCourse($course));
+
+        if (!$this->authorization->isGranted('ROLE_ADMIN') && count(array_intersect($userOrgas, $courseOrgas)) === 0) {
+            throw new AccessDeniedException();
+        }
     }
 }

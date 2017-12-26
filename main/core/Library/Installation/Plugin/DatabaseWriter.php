@@ -11,6 +11,7 @@
 
 namespace Claroline\CoreBundle\Library\Installation\Plugin;
 
+use Claroline\BundleRecorder\Log\LoggableTrait;
 use Claroline\CoreBundle\Entity\Action\AdditionalAction;
 use Claroline\CoreBundle\Entity\Activity\ActivityRuleAction;
 use Claroline\CoreBundle\Entity\Plugin;
@@ -26,11 +27,14 @@ use Claroline\CoreBundle\Entity\Tool\ToolMaskDecoder;
 use Claroline\CoreBundle\Entity\Widget\Widget;
 use Claroline\CoreBundle\Library\PluginBundle;
 use Claroline\CoreBundle\Manager\IconManager;
+use Claroline\CoreBundle\Manager\IconSetManager;
 use Claroline\CoreBundle\Manager\MaskManager;
 use Claroline\CoreBundle\Manager\ToolManager;
 use Claroline\CoreBundle\Manager\ToolMaskDecoderManager;
 use Claroline\CoreBundle\Persistence\ObjectManager;
 use JMS\DiExtraBundle\Annotation as DI;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -42,6 +46,8 @@ use Symfony\Component\HttpKernel\KernelInterface;
  */
 class DatabaseWriter
 {
+    use LoggableTrait;
+
     private $em;
     private $im;
     private $mm;
@@ -50,6 +56,7 @@ class DatabaseWriter
     private $modifyTemplate = false;
     private $toolManager;
     private $toolMaskManager;
+    private $iconSetManager;
 
     /**
      * Constructor.
@@ -61,7 +68,8 @@ class DatabaseWriter
      *     "fileSystem"      = @DI\Inject("filesystem"),
      *     "kernel"          = @DI\Inject("kernel"),
      *     "toolManager"     = @DI\Inject("claroline.manager.tool_manager"),
-     *     "toolMaskManager" = @DI\Inject("claroline.manager.tool_mask_decoder_manager")
+     *     "toolMaskManager" = @DI\Inject("claroline.manager.tool_mask_decoder_manager"),
+     *     "iconSetManager"  = @DI\Inject("claroline.manager.icon_set_manager")
      * })
      */
     public function __construct(
@@ -71,7 +79,8 @@ class DatabaseWriter
         KernelInterface $kernel,
         MaskManager $mm,
         ToolManager $toolManager,
-        ToolMaskDecoderManager $toolMaskManager
+        ToolMaskDecoderManager $toolMaskManager,
+        IconSetManager $iconSetManager
     ) {
         $this->em = $em;
         $this->im = $im;
@@ -81,6 +90,7 @@ class DatabaseWriter
         $this->modifyTemplate = $kernel->getEnvironment() !== 'test';
         $this->toolManager = $toolManager;
         $this->toolMaskManager = $toolMaskManager;
+        $this->iconSetManager = $iconSetManager;
     }
 
     /**
@@ -120,11 +130,14 @@ class DatabaseWriter
         );
 
         if (null === $plugin) {
-            throw new \Exception('Unable to retrieve plugin for updating its configuration.');
+            $this->log('Unable to retrieve plugin for updating its configuration.', LogLevel::ERROR);
+
+            return;
         }
 
         $plugin->setHasOptions($pluginConfiguration['has_options']);
         $this->em->persist($plugin);
+        $this->log('Configuration was retrieved: updating...');
         $this->updateConfiguration($pluginConfiguration, $plugin, $pluginBundle);
         $this->em->flush();
 
@@ -147,6 +160,8 @@ class DatabaseWriter
 
         foreach ($resourceTypes as $resourceType) {
             $this->deleteActivityRules($resourceType);
+            // delete all icons for this resource type in icon sets
+            $this->iconSetManager->deleteAllResourceIconItemsForMimeType('custom/'.$resourceType->getName());
         }
 
         // deletion of other plugin db dependencies is made via a cascade mechanism
@@ -219,7 +234,7 @@ class DatabaseWriter
         }
 
         foreach ($processedConfiguration['additional_action'] as $action) {
-            $this->createAdditionalAction($action, $plugin);
+            $this->updateAdditionalAction($action, $plugin);
         }
     }
 
@@ -253,8 +268,28 @@ class DatabaseWriter
             $this->updateTheme($themeConfiguration, $plugin);
         }
 
-        foreach ($processedConfiguration['admin_tools'] as $adminTool) {
+        $installedAdminTools = $this->em->getRepository('ClarolineCoreBundle:Tool\AdminTool')
+          ->findBy(['plugin' => $plugin]);
+        $adminTools = $processedConfiguration['admin_tools'];
+        $adminToolNames = array_map(function ($adminTool) {
+            return $adminTool['name'];
+        }, $adminTools);
+
+        $toRemove = array_filter($installedAdminTools, function ($adminTool) use ($adminToolNames) {
+            return !in_array($adminTool->getName(), $adminToolNames);
+        });
+
+        foreach ($toRemove as $tool) {
+            $this->log('Removing tool '.$tool->getName());
+            $this->em->remove($tool);
+        }
+
+        foreach ($adminTools as $adminTool) {
             $this->updateAdminTool($adminTool, $plugin);
+        }
+
+        foreach ($processedConfiguration['additional_action'] as $action) {
+            $this->updateAdditionalAction($action, $plugin);
         }
     }
 
@@ -267,15 +302,14 @@ class DatabaseWriter
      */
     private function updateResourceTypes($resourceConfiguration, Plugin $plugin, PluginBundle $pluginBundle)
     {
+        $this->log('Update resource type '.$resourceConfiguration['name']);
         $resourceType = $this->em->getRepository('ClarolineCoreBundle:Resource\ResourceType')
             ->findOneByName($resourceConfiguration['name']);
-        $isExistResourceType = true;
 
         if (null === $resourceType) {
             $resourceType = new ResourceType();
             $resourceType->setName($resourceConfiguration['name']);
             $resourceType->setPlugin($plugin);
-            $isExistResourceType = false;
         }
 
         $resourceType->setExportable($resourceConfiguration['is_exportable']);
@@ -336,14 +370,23 @@ class DatabaseWriter
         $this->persistWidget($widgetConfiguration, $plugin, $pluginBundle, $widget, $withDisplay);
     }
 
-    private function createAdditionalAction(array $action, PluginBundle $pluginBundle)
+    private function updateAdditionalAction(array $action, Plugin $plugin)
     {
-        $aa = new AdditionalAction();
+        $this->log("Adding action  {$action['type']}:{$action['displayed_name']}");
+        $aa = $this->em->getRepository('ClarolineCoreBundle:Action\AdditionalAction')->findOneBy([
+            'action' => $action['action'],
+            'type' => $action['type'],
+        ]);
+
+        if (!$aa) {
+            $aa = new AdditionalAction();
+        }
+
         $aa->setClass($action['class']);
         $aa->setAction($action['action']);
         $aa->setDisplayedName($action['displayed_name']);
         $aa->setType($action['type']);
-
+        $this->em->persist($aa);
         $this->em->flush();
     }
 
@@ -378,9 +421,12 @@ class DatabaseWriter
             $resourceIcon->setRelativeUrl($defaultIcon->getRelativeUrl());
         }
 
+        $resourceIcon->setUuid(uniqid('', true));
         $resourceIcon->setShortcut(false);
         $this->em->persist($resourceIcon);
         $this->im->createShortcutIcon($resourceIcon);
+        // Also add the new resource type icon to default resource icon set
+        $this->iconSetManager->addOrUpdateIconItemToDefaultResourceIconSet($resourceIcon);
     }
 
     /**
@@ -393,24 +439,34 @@ class DatabaseWriter
         $resourceIcon = $this->em
             ->getRepository('ClarolineCoreBundle:Resource\ResourceIcon')
             ->findOneByMimeType('custom/'.$resourceType->getName());
-
+        $isNew = false;
         if (null === $resourceIcon) {
             $resourceIcon = new ResourceIcon();
+            $resourceIcon->setUuid(uniqid('', true));
             $resourceIcon->setMimeType('custom/'.$resourceType->getName());
+            $isNew = true;
         }
 
         if (isset($resource['icon'])) {
-            $resourceIcon->setRelativeUrl("bundles/{$pluginBundle->getAssetsFolder()}/images/icons/{$resource['icon']}");
+            $newRelativeUrl = "bundles/{$pluginBundle->getAssetsFolder()}/images/icons/{$resource['icon']}";
         } else {
             $defaultIcon = $this->em
                 ->getRepository('ClarolineCoreBundle:Resource\ResourceIcon')
                 ->findOneByMimeType('custom/default');
-            $resourceIcon->setRelativeUrl($defaultIcon->getRelativeUrl());
+            $newRelativeUrl = $defaultIcon->getRelativeUrl();
         }
-
-        $resourceIcon->setShortcut(false);
-        $this->em->persist($resourceIcon);
-        $this->im->createShortcutIcon($resourceIcon);
+        // If icon is new, create it and persist it to db
+        if ($isNew) {
+            $resourceIcon->setRelativeUrl($newRelativeUrl);
+            $resourceIcon->setShortcut(false);
+            $this->em->persist($resourceIcon);
+            $this->im->createShortcutIcon($resourceIcon);
+        }
+        // Also add/update the resource type icon to default resource icon set
+        $this->iconSetManager->addOrUpdateIconItemToDefaultResourceIconSet(
+            $resourceIcon,
+            $newRelativeUrl
+        );
     }
 
     /**
@@ -418,16 +474,49 @@ class DatabaseWriter
      */
     public function persistResourceAction(array $action)
     {
-        $resourceAction = new MenuAction();
+        //also remove duplicatas if some are found
+        $resourceType = $this->em->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName($action['resource_type']);
+        $resourceActions = $this->em->getRepository('ClarolineCoreBundle:Resource\MenuAction')
+          ->findBy(['name' => $action['name'], 'resourceType' => $resourceType]);
+
+        if (count($resourceActions) > 1) {
+            //keep the first one, remove the rest and then flush
+            $this->log('Removing superfluous masks...', LogLevel::ERROR);
+
+            for ($i = 1; $i < count($resourceActions); ++$i) {
+                $this->em->remove($resourceActions[$i]);
+            }
+
+            $this->em->forceFlush();
+        }
+
+        $this->log('Updating resource action '.$action['name']);
+
+        $maskType = ($action['resource_type']) ?
+            $this->em->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName($action['resource_type']) :
+            //this is some kind of hack for the current implementation. Each mask has a resourcetype so we can't pick null
+            //and directory has all the default perms. Any other resource type would have done the trick anyway
+            $this->em->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('directory');
+
+        $value = $this->mm->encodeMask([$action['value'] => true], $maskType);
+
+        $resourceAction = $this->em->getRepository('ClarolineCoreBundle:Resource\MenuAction')
+            ->findOneBy(['name' => $action['name'], 'resourceType' => $resourceType]);
+
+        if (!$resourceAction) {
+            $resourceAction = new MenuAction();
+        }
 
         $resourceAction->setName($action['name']);
-        $resourceAction->setAsync(1);
+        $resourceAction->setAsync($action['is_async']);
         $resourceAction->setIsForm($action['is_form']);
-        $resourceAction->setIsCustom(1);
-        $resourceAction->setValue(1);
+        $resourceAction->setIsCustom($action['is_custom']);
+        $resourceAction->setValue($value);
+        $resourceAction->setGroup($action['group']);
+        $resourceAction->setIcon($action['class']);
+        $resourceAction->setResourceType($resourceType);
 
         $this->em->persist($resourceAction);
-
         $this->em->flush();
     }
 
@@ -436,14 +525,7 @@ class DatabaseWriter
      */
     public function updateResourceAction(array $action)
     {
-        $resourceAction = $this->em->getRepository('ClarolineCoreBundle:Resource\MenuAction')
-            ->findOneBy(['name' => $action['name'], 'resourceType' => null, 'isCustom' => true]);
-
-        if ($resourceAction === null) {
-            $this->persistResourceAction($action);
-        } else {
-            $resourceAction->setIsForm($action['is_form']);
-        }
+        $this->persistResourceAction($action);
     }
 
     /**
@@ -546,6 +628,7 @@ class DatabaseWriter
      */
     private function persistResourceTypes($resourceConfiguration, Plugin $plugin, PluginBundle $pluginBundle)
     {
+        $this->log('Adding resource type '.$resourceConfiguration['name']);
         $resourceType = new ResourceType();
         $resourceType->setName($resourceConfiguration['name']);
         $resourceType->setExportable($resourceConfiguration['is_exportable']);
@@ -589,6 +672,7 @@ class DatabaseWriter
     private function createWidget($widgetConfiguration, Plugin $plugin, PluginBundle $pluginBundle, array $roles = [])
     {
         $widget = new Widget();
+        $widget->setPlugin($plugin);
 
         foreach ($roles as $role) {
             $widget->addRole($role);
@@ -607,7 +691,6 @@ class DatabaseWriter
         $widget->setName($widgetConfiguration['name']);
         $widget->setConfigurable($widgetConfiguration['is_configurable']);
         $widget->setExportable($widgetConfiguration['is_exportable']);
-        $widget->setPlugin($plugin);
         $widget->setDefaultWidth($widgetConfiguration['default_width']);
         $widget->setDefaultHeight($widgetConfiguration['default_height']);
 
@@ -642,6 +725,7 @@ class DatabaseWriter
      */
     private function persistTool($toolConfiguration, Plugin $plugin, Tool $tool)
     {
+        $this->log('Update tool '.$toolConfiguration['name']);
         $tool->setName($toolConfiguration['name']);
         $tool->setDisplayableInDesktop($toolConfiguration['is_displayable_in_desktop']);
         $tool->setDisplayableInWorkspace($toolConfiguration['is_displayable_in_workspace']);
@@ -651,6 +735,8 @@ class DatabaseWriter
         $tool->setExportable($toolConfiguration['is_exportable']);
         $tool->setIsConfigurableInWorkspace($toolConfiguration['is_configurable_in_workspace']);
         $tool->setIsConfigurableInDesktop($toolConfiguration['is_configurable_in_desktop']);
+        $tool->setIsDesktopRequired($toolConfiguration['is_desktop_required']);
+        $tool->setIsWorkspaceRequired($toolConfiguration['is_workspace_required']);
         $tool->setIsLockedForAdmin($toolConfiguration['is_locked_for_admin']);
         $tool->setIsAnonymousExcluded($toolConfiguration['is_anonymous_excluded']);
 
@@ -719,6 +805,7 @@ class DatabaseWriter
      */
     private function persistAdminTool($adminToolConfiguration, Plugin $plugin, AdminTool $adminTool)
     {
+        $this->log('Update admin tool '.$adminToolConfiguration['name']);
         $adminTool->setName($adminToolConfiguration['name']);
         $adminTool->setClass($adminToolConfiguration['class']);
         $adminTool->setPlugin($plugin);
@@ -839,5 +926,15 @@ class DatabaseWriter
             $this->em->remove($decoder);
         }
         $this->em->flush();
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function getLogger()
+    {
+        return $this->logger;
     }
 }

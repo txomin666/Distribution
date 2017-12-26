@@ -80,9 +80,9 @@ class UserController extends Controller
 
     /**
      * @EXT\Route(
-     *     "user/picker/name/{pickerName}/title/{pickerTitle}/mode/{mode}/show/all/{showAllUsers}/filters/{showFilters}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}",
+     *     "user/picker/name/{pickerName}/title/{pickerTitle}/mode/{mode}/show/all/{showAllUsers}/filters/{showFilters}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}/{filterAdminOrgas}",
      *     name="claro_user_picker",
-     *     defaults={"mode"="single","showAllUsers"=0,"showFilters"=1,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1},
+     *     defaults={"mode"="single","showAllUsers"=0,"showFilters"=1,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1,"filterAdminOrgas"=0},
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("authenticatedUser", options={"authenticatedUser" = true})
@@ -144,45 +144,38 @@ class UserController extends Controller
         $showCode = 0,
         $showGroups = 0,
         $showPlatformRoles = 0,
-        $attachName = 1
+        $attachName = 1,
+        $filterAdminOrgas = 0
     ) {
-        $adminRole = $this->roleManager->getRoleByUserAndRoleName(
-            $authenticatedUser,
-            'ROLE_ADMIN'
-        );
+        $adminRole = $this->roleManager->getRoleByUserAndRoleName($authenticatedUser, 'ROLE_ADMIN');
         $isAdmin = !is_null($adminRole);
-        $excludedIds = array();
-        $forcedUsersIds = array();
-        $forcedGroupsIds = array();
-        $forcedRolesIds = array();
-        $forcedWorkspacesIds = array();
-        $shownWorkspacesIds = array();
+        $excludedIds = [];
+        $forcedUsersIds = [];
+        $forcedGroupsIds = [];
+        $forcedRolesIds = [];
+        $forcedWorkspacesIds = [];
+        $shownWorkspacesIds = [];
 
         foreach ($excludedUsers as $excludedUser) {
             $excludedIds[] = $excludedUser->getId();
         }
-
         foreach ($forcedUsers as $forcedUser) {
             $forcedUsersIds[] = $forcedUser->getId();
         }
-
         foreach ($forcedGroups as $forcedGroup) {
             $forcedGroupsIds[] = $forcedGroup->getId();
         }
-
         foreach ($forcedRoles as $forcedRole) {
             $forcedRolesIds[] = $forcedRole->getId();
         }
-
         foreach ($forcedWorkspaces as $forcedWorkspace) {
             $forcedWorkspacesIds[] = $forcedWorkspace->getId();
         }
-
         foreach ($shownWorkspaces as $shownWorkspace) {
             $shownWorkspacesIds[] = $shownWorkspace->getId();
         }
 
-        return array(
+        return [
             'pickerName' => $pickerName,
             'pickerTitle' => $pickerTitle,
             'mode' => $mode,
@@ -204,20 +197,21 @@ class UserController extends Controller
             'forcedWorkspacesIds' => $forcedWorkspacesIds,
             'shownWorkspacesIds' => $shownWorkspacesIds,
             'isAdmin' => $isAdmin,
-        );
+            'filterAdminOrgas' => $filterAdminOrgas,
+        ];
     }
 
     /**
      * @EXT\Route(
-     *     "users/list/for/user/picker/mode/{mode}/page/{page}/max/{max}/ordered/by/{orderedBy}/order/{order}/show/all/{showAllUsers}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}",
+     *     "users/list/for/user/picker/mode/{mode}/page/{page}/max/{max}/ordered/by/{orderedBy}/order/{order}/show/all/{showAllUsers}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}/{filterAdminOrgas}",
      *     name="claro_users_list_for_user_picker",
-     *     defaults={"page"=1, "max"=50, "orderedBy"="lastName","order"="ASC","search"="","mode"="single","showAllUsers"=0,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1},
+     *     defaults={"page"=1, "max"=50, "orderedBy"="lastName","order"="ASC","search"="","mode"="single","showAllUsers"=0,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1,"filterAdminOrgas"=0},
      *     options = {"expose"=true}
      * )
      * @EXT\Route(
-     *     "users/list/for/user/picker/mode/{mode}/page/{page}/max/{max}/ordered/by/{orderedBy}/order/{order}/search/{search}/show/all/{showAllUsers}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}",
+     *     "users/list/for/user/picker/mode/{mode}/page/{page}/max/{max}/ordered/by/{orderedBy}/order/{order}/search/{search}/show/all/{showAllUsers}/{showId}/{showPicture}/{showUsername}/{showMail}/{showCode}/{showGroups}/{showPlatformRoles}/{attachName}/{filterAdminOrgas}",
      *     name="claro_searched_users_list_for_user_picker",
-     *     defaults={"page"=1, "max"=50, "orderedBy"="lastName","order"="ASC","search"="","mode"="single","showAllUsers"=0,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1},
+     *     defaults={"page"=1, "max"=50, "orderedBy"="lastName","order"="ASC","search"="","mode"="single","showAllUsers"=0,"showId"=0,"showPicture"=0,"showUsername"=1,"showMail"=0,"showCode"=0,"showGroups"=0,"showPlatformRoles"=0,"attachName"=1,"filterAdminOrgas"=0},
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("authenticatedUser", options={"authenticatedUser" = true})
@@ -293,14 +287,16 @@ class UserController extends Controller
         $showCode = 0,
         $showGroups = 0,
         $showPlatformRoles = 0,
-        $attachName = 1
+        $attachName = 1,
+        $filterAdminOrgas = 0
     ) {
         $withAllUsers = intval($showAllUsers) === 1;
         $withUsername = intval($showUsername) === 1;
         $withMail = intval($showMail) === 1;
         $withCode = intval($showCode) === 1;
+        $withAdminOrgas = intval($filterAdminOrgas) === 1;
         $profilePreferences = $this->facetManager->getVisiblePublicPreference();
-        $shownWorkspaceIds = array();
+        $shownWorkspaceIds = [];
 
         $users = $this->userManager->getUsersForUserPicker(
             $authenticatedUser,
@@ -320,14 +316,15 @@ class UserController extends Controller
             $forcedUsers,
             $forcedGroups,
             $forcedRoles,
-            $forcedWorkspaces
+            $forcedWorkspaces,
+            $withAdminOrgas
         );
 
         foreach ($shownWorkspaces as $ws) {
             $shownWorkspaceIds[] = $ws->getId();
         }
 
-        return array(
+        return [
             'users' => $users,
             'search' => $search,
             'page' => $page,
@@ -346,7 +343,8 @@ class UserController extends Controller
             'attachName' => $attachName,
             'profilePreferences' => $profilePreferences,
             'shownWorkspaceIds' => $shownWorkspaceIds,
-        );
+            'filterAdminOrgas' => $filterAdminOrgas,
+        ];
     }
 
     /**
@@ -361,7 +359,7 @@ class UserController extends Controller
         User $authenticatedUser,
         $filterType
     ) {
-        $datas = array();
+        $datas = [];
         $adminRole = $this->roleManager->getRoleByUserAndRoleName(
             $authenticatedUser,
             'ROLE_ADMIN'
@@ -380,30 +378,30 @@ class UserController extends Controller
                 foreach ($groups as $group) {
                     $id = $group->getId();
                     $name = $group->getName();
-                    $datas[] = array('id' => $id, 'name' => $name);
+                    $datas[] = ['id' => $id, 'name' => $name];
                 }
                 break;
 
-            case 'role' :
+            case 'role':
 
                 if ($isAdmin) {
                     $roles = $this->roleManager->getAllPlatformRoles();
                 } else {
-                    $roles = array();
+                    $roles = [];
                 }
 
                 foreach ($roles as $role) {
                     $id = $role->getId();
                     $name = $this->translator->trans(
                         $role->getTranslationKey(),
-                        array(),
+                        [],
                         'platform'
                     );
-                    $datas[] = array('id' => $id, 'name' => $name);
+                    $datas[] = ['id' => $id, 'name' => $name];
                 }
                 break;
 
-            case 'workspace' :
+            case 'workspace':
 
                 if ($isAdmin) {
                     $workspaces = $this->workspaceManager->getAllNonPersonalWorkspaces();
@@ -415,11 +413,11 @@ class UserController extends Controller
                 foreach ($workspaces as $workspace) {
                     $id = $workspace->getId();
                     $name = $workspace->getName().' ['.$workspace->getCode().']';
-                    $datas[] = array('id' => $id, 'name' => $name);
+                    $datas[] = ['id' => $id, 'name' => $name];
                 }
                 break;
 
-            default :
+            default:
                 break;
         }
 
@@ -436,18 +434,18 @@ class UserController extends Controller
      */
     public function workspaceRolesListForUserPickerAction(Workspace $workspace)
     {
-        $datas = array();
+        $datas = [];
         $wsRoles = $this->roleManager->getWorkspaceRoles($workspace);
 
         foreach ($wsRoles as $role) {
-            $datas[] = array(
+            $datas[] = [
                 'id' => $role->getId(),
                 'name' => $this->translator->trans(
                     $role->getTranslationKey(),
-                    array(),
+                    [],
                     'platform'
                 ),
-            );
+            ];
         }
 
         return new JsonResponse($datas, 200);
@@ -462,7 +460,7 @@ class UserController extends Controller
      */
     public function userInfosRequestAction(User $user)
     {
-        $datas = array(
+        $datas = [
             'id' => $user->getId(),
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
@@ -470,7 +468,7 @@ class UserController extends Controller
             'mail' => $user->getMail(),
             'phone' => $user->getPhone(),
             'picture' => $user->getPicture(),
-        );
+        ];
 
         return new JsonResponse($datas, 200);
     }
@@ -486,15 +484,19 @@ class UserController extends Controller
      *      class="ClarolineCoreBundle:User",
      *      options={"multipleIds" = true, "name" = "userIds"}
      * )
+     *
+     * @param User[] $users
+     *
+     * @return JsonResponse
      */
     public function usersInfosRequestAction(array $users)
     {
-        $datas = array();
+        $data = [];
 
         foreach ($users as $user) {
-            $userRole = $this->roleManager->getUserRoleByUser($user);
+            $userRole = $this->roleManager->getUserRole($user->getUsername());
 
-            $datas[] = array(
+            $data[] = [
                 'id' => $user->getId(),
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
@@ -503,15 +505,15 @@ class UserController extends Controller
                 'phone' => $user->getPhone(),
                 'picture' => $user->getPicture(),
                 'administrative_code' => $user->getAdministrativeCode(),
-                'guid' => $user->getGuid(),
+                'guid' => $user->getUuid(),
                 'personal_workspace_id' => is_null($user->getPersonalWorkspace()) ?
                     null :
                     $user->getPersonalWorkspace()->getId(),
                 'user_role_id' => is_null($userRole) ? null : $userRole->getId(),
 
-            );
+            ];
         }
 
-        return new JsonResponse($datas, 200);
+        return new JsonResponse($data, 200);
     }
 }

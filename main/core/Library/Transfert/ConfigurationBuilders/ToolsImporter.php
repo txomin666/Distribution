@@ -133,7 +133,7 @@ class ToolsImporter extends Importer implements ConfigurationInterface
         $processor = new Processor();
         $processor->processConfiguration($this, $data);
 
-        foreach ($data['tools'] as $tool) {
+        foreach ($data['tools'] as &$tool) {
             $importer = $this->getImporterByName($tool['tool']['type']);
 
             if (!$importer && isset($tool['tool']['data'])) {
@@ -142,13 +142,16 @@ class ToolsImporter extends Importer implements ConfigurationInterface
 
             if (isset($tool['tool']['data'])) {
                 $array['data'] = $tool['tool']['data'];
-                $importer->validate($array);
+                $tool['tool']['data'] = $importer->validate($array);
             }
         }
+
+        return $data;
     }
 
     public function import(array $tools, Workspace $workspace, array $entityRoles, Directory $root)
     {
+        $importerResult = [];
         $position = 1;
 
         foreach ($tools as $tool) {
@@ -188,9 +191,11 @@ class ToolsImporter extends Importer implements ConfigurationInterface
 
             if (isset($tool['tool']['data'])) {
                 $data['data'] = $tool['tool']['data'];
-                $importer->import($data, $workspace, $entityRoles, $root);
+                $importerResult[$tool['tool']['type']] = $importer->import($data, $workspace, $entityRoles, $root);
             }
         }
+
+        return $importerResult;
     }
 
     public function getName()
@@ -198,7 +203,7 @@ class ToolsImporter extends Importer implements ConfigurationInterface
         return 'tools';
     }
 
-    public function export(Workspace $workspace, array &$files, $object)
+    public function export($workspace, array &$files, $object)
     {
         $data = [];
         $workspaceTools = $workspace->getOrderedTools();

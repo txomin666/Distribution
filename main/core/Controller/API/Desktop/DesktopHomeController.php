@@ -681,28 +681,28 @@ class DesktopHomeController extends Controller
         return $this->apiManager->handleFormView(
             'ClarolineCoreBundle:API:Widget\widgetInstanceEditForm.html.twig',
             $form,
-            ['extra_infos' => $widget->isConfigurable()]
+            ['extra_infos' => $widget->isConfigurable(), 'form_view' => ['instance' => $widgetInstance]]
         );
     }
 
     /**
      * @EXT\Route(
-     *     "/api/home/tab/widget/{widgetInstance}/content/configure/form",
+     *     "/api/home/tab/widget/{widgetInstance}/content/configure/form/{admin}",
      *     name="api_get_widget_instance_content_configuration_form",
+     *     defaults={"admin"=""},
      *     options = {"expose"=true}
      * )
      * @EXT\ParamConverter("user", options={"authenticatedUser" = true})
      *
      * Returns the widget instance content configuration form
      */
-    public function getWidgetInstanceContentConfigurationFormAction(WidgetInstance $widgetInstance)
+    public function getWidgetInstanceContentConfigurationFormAction(WidgetInstance $widgetInstance, $admin = '')
     {
         $widget = $widgetInstance->getWidget();
-
         if ($widget->isConfigurable()) {
             $event = $this->eventDispatcher->dispatch(
                 "widget_{$widgetInstance->getWidget()->getName()}_configuration",
-                new ConfigureWidgetEvent($widgetInstance)
+                new ConfigureWidgetEvent($widgetInstance, !empty($admin))
             );
             $content = $event->getContent();
         } else {
@@ -842,6 +842,7 @@ class DesktopHomeController extends Controller
                 'extra_parameters' => null,
                 'serializer_group' => 'api_widget',
                 'extra_infos' => $widget->isConfigurable(),
+                'form_view' => ['instance' => $widgetInstance],
             ];
 
             return $this->apiManager->handleFormView(

@@ -10,6 +10,8 @@ var translator = window.Translator
 var routing = window.Routing
 
 tinymce.DOM.loadCSS(home.asset + 'packages/claroline-tinymce-mention/css/autocomplete.css')
+//tinymce.DOM.loadCSS(home.asset + 'packages/font-awesome/css/font-awesome.min.css')
+
 var codemirrorPath = home.asset + 'packages/tinymce-codemirror/plugins/codemirror/codemirror-4.8'
 
 /**
@@ -19,18 +21,20 @@ tinymce.claroline = {
   'disableBeforeUnload': false,
   'domChange': null,
   'buttons': {},
-  'plugins': {}
+  'plugins': {},
+  'css': []
 }
 
 tinymce.claroline.init = tinymce.claroline.init || {}
 tinymce.claroline.plugins = tinymce.claroline.plugins || {}
+tinymce.claroline.css = tinymce.claroline.css || []
+tinymce.claroline.addCss = css => tinymce.claroline.css.push(css)
 
 /**
  * This method fix the height of TinyMCE after modify it,
  * this is usefull when change manually something in the editor.
  *
  * @param editor A TinyMCE editor object.
- *
  */
 tinymce.claroline.editorChange = function (editor) {
   setTimeout(function () {
@@ -206,7 +210,7 @@ tinymce.claroline.mentionsItem = function (item) {
  * @todo documentation
  */
 tinymce.claroline.mentionsInsert = function (item) {
-  var publicProfileUrl = routing.generate('claro_public_profile_view') + '/'
+  var publicProfileUrl = routing.generate('claro_user_profile') + '/'
 
   return '<user id="' + item.id + '"><a href="' + publicProfileUrl + item.id + '">' + item.name + '</a></user>'
 }
@@ -222,6 +226,7 @@ var themeCSS = homeTheme.innerText || homeTheme.textContent
 tinymce.claroline.configuration = {
   'paste_data_images': true,
   'relative_urls': false,
+  'remove_script_host': false,
   'theme': 'modern',
   'language': home.locale.trim(),
   'browser_spellcheck': true,
@@ -229,11 +234,12 @@ tinymce.claroline.configuration = {
   'autoresize_max_height': 500,
   'content_css': [
     themeCSS,
-    home.asset + 'bundles/clarolinecore/css/common/tinymce.css'
+    //home.asset + 'bundles/clarolinecore/css/common/tinymce.css',
+    home.asset + 'packages/font-awesome/css/font-awesome.min.css'
   ],
   'toolbar2': 'styleselect | undo redo | forecolor backcolor | bullist numlist | outdent indent | ' +
     'media link charmap | print preview code',
-  'extended_valid_elements': 'user[id], a[data-toggle|data-parent]',
+  'extended_valid_elements': 'user[id], a[data-toggle|data-parent], span[*]',
   'paste_preprocess': tinymce.claroline.paste,
   'setup': tinymce.claroline.setup,
   'mentions': {
@@ -280,6 +286,7 @@ tinymce.claroline.initialization = function () {
       }
     })
 
+    tinymce.claroline.configuration.content_css = tinymce.claroline.configuration.content_css.concat(tinymce.claroline.css)
     tinymce.claroline.configuration.plugins = plugins
     tinymce.claroline.configuration.toolbar1 = toolbar1
 

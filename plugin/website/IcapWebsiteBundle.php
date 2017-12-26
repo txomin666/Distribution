@@ -2,12 +2,13 @@
 
 namespace Icap\WebsiteBundle;
 
-use Claroline\CoreBundle\Library\PluginBundle;
+use Claroline\CoreBundle\Library\DistributionPluginBundle;
 use Claroline\KernelBundle\Bundle\ConfigurationBuilder;
 use Claroline\KernelBundle\Bundle\ConfigurationProviderInterface;
+use Icap\WebsiteBundle\Installation\AdditionalInstaller;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class IcapWebsiteBundle extends PluginBundle implements ConfigurationProviderInterface
+class IcapWebsiteBundle extends DistributionPluginBundle implements ConfigurationProviderInterface
 {
     public function getConfiguration($environment)
     {
@@ -20,13 +21,18 @@ class IcapWebsiteBundle extends PluginBundle implements ConfigurationProviderInt
     {
         $bundleClass = get_class($bundle);
         $config = new ConfigurationBuilder();
-        $emptyConfigs = array(
+        $emptyConfigs = [
             'Innova\AngularJSBundle\InnovaAngularJSBundle',
-        );
+        ];
         if (in_array($bundleClass, $emptyConfigs)) {
             return $config;
         }
 
         return false;
+    }
+
+    public function getAdditionalInstaller()
+    {
+        return new AdditionalInstaller();
     }
 }

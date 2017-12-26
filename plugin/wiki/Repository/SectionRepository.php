@@ -20,7 +20,7 @@ class SectionRepository extends NestedTreeRepository
     {
         $queryBuilder = $this->createQueryBuilder('section')
             ->join('section.activeContribution', 'contribution')
-            ->select('section, contribution')
+            ->select('section, contribution, IDENTITY(section.parent) as parent')
             ->andWhere('section.root = :rootId')
             ->orderBy('section.root, section.left', 'ASC')
             ->setParameter('rootId', $wiki->getRoot()->getId());
@@ -30,7 +30,7 @@ class SectionRepository extends NestedTreeRepository
                 $queryBuilder->expr()->isNull('section.deleted')
             )
         )->setParameter('deleted', false);
-        if ($isAdmin === false) {
+        if ($isAdmin === false && $user !== null) {
             $queryBuilder
                 ->andWhere(
                     $queryBuilder->expr()->orX(
@@ -38,6 +38,11 @@ class SectionRepository extends NestedTreeRepository
                         'section.author = :userId'
                     )
                 )->setParameter('visible', true)->setParameter('userId', $user->getId());
+        }
+        if ($isAdmin === false && $user === null) {
+            $queryBuilder
+                ->andWhere('section.visible = :visible')
+                ->setParameter('visible', true);
         }
         $options = ['decorate' => false];
         $tree = $this->buildTree($queryBuilder->getQuery()->getArrayResult(), $options);
@@ -219,5 +224,20 @@ class SectionRepository extends NestedTreeRepository
     public function findDeletedSections(Wiki $wiki)
     {
         return $this->findDeletedSectionsQuery($wiki)->getArrayResult();
+    }
+
+    public function buildTree(array $nodes, array $options = [])
+    {
+        $nodeIds = [];
+        $newNodes = [];
+        foreach ($nodes as $item) {
+            if (empty($item['parent']) || in_array($item['parent'], $nodeIds)) {
+                $node = $item[0];
+                $nodeIds[] = $node['id'];
+                $newNodes[] = $node;
+            }
+        }
+
+        return parent::buildTree($newNodes, $options);
     }
 }

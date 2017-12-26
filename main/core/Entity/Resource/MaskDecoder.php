@@ -12,18 +12,28 @@
 namespace Claroline\CoreBundle\Entity\Resource;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\Index;
 
 /**
- * @ORM\Entity
- * @ORM\Table(name="claro_resource_mask_decoder")
+ * @ORM\Entity(repositoryClass="Claroline\CoreBundle\Repository\ResourceMaskDecoderRepository")
+ * @ORM\Table(
+ *     name="claro_resource_mask_decoder",
+ *     indexes={
+ *         @Index(name="value", columns={"value"}),
+ *         @Index(name="name", columns={"name"})
+ *     }
+ * )
  */
 class MaskDecoder
 {
+    //this must be coherent with the MaskManager default array
+    //@todo: unify this with the MaskManager
     const OPEN = 1;
     const COPY = 2;
     const EXPORT = 4;
-    const EDIT = 8;
-    const DELETE = 16;
+    const DELETE = 8;
+    const EDIT = 16;
+    const ADMINISTRATE = 32;
 
     /**
      * @ORM\Id

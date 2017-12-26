@@ -11,8 +11,8 @@
 
 namespace Claroline\ForumBundle\Transfert;
 
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Library\Transfert\Importer;
+use Claroline\CoreBundle\Library\Transfert\RichTextInterface;
 use Claroline\ForumBundle\Entity\Category;
 use Claroline\ForumBundle\Entity\Forum;
 use Claroline\ForumBundle\Entity\Message;
@@ -26,7 +26,7 @@ use Symfony\Component\Config\Definition\Processor;
  * @DI\Service("claroline.importer.forum_importer")
  * @DI\Tag("claroline.importer")
  */
-class ForumImporter extends Importer implements ConfigurationInterface
+class ForumImporter extends Importer implements ConfigurationInterface, RichTextInterface
 {
     private $container;
     private $om;
@@ -72,6 +72,9 @@ class ForumImporter extends Importer implements ConfigurationInterface
                                             ->children()
                                                 ->scalarNode('name')->end()
                                                 ->scalarNode('creator')->end()
+                                                ->scalarNode('author')->end()
+                                                ->scalarNode('creation_date')->end()
+                                                ->booleanNode('sticked')->defaultFalse()->end()
                                                 ->arrayNode('messages')
                                                     ->prototype('array')
                                                         ->children()
@@ -126,8 +129,20 @@ class ForumImporter extends Importer implements ConfigurationInterface
                         $creator = $repo->findOneByUsername($subject['subject']['creator']);
                     }
 
+                    if (isset($subject['subject']['sticked'])) {
+                        $subjectEntity->setIsSticked($subject['subject']['sticked']);
+                    }
+
+                    if (isset($subject['subject']['creation_date'])) {
+                        $subjectEntity->setCreationDate(new \DateTime($subject['subject']['creation_date']));
+                    }
+
                     if ($creator === null) {
                         $creator = $this->container->get('security.context')->getToken()->getUser();
+                    }
+
+                    if (isset($subject['subject']['author'])) {
+                        $subjectEntity->setAuthor($subject['subject']['author']);
                     }
 
                     $subjectEntity->setCreator($creator);
@@ -151,6 +166,14 @@ class ForumImporter extends Importer implements ConfigurationInterface
                             $creator = $this->container->get('security.context')->getToken()->getUser();
                         }
 
+                        if (isset($message['message']['creation_date'])) {
+                            $messageEntity->setCreationDate(new \DateTime($message['message']['creation_date']));
+                        }
+
+                        if (isset($message['message']['modification_date'])) {
+                            $messageEntity->setModificationDate(new \DateTime($message['message']['modification_date']));
+                        }
+
                         $messageEntity->setCreator($creator);
                         $messageEntity->setSubject($subjectEntity);
                         $messageEntity->setAuthor($message['message']['author']);
@@ -170,20 +193,79 @@ class ForumImporter extends Importer implements ConfigurationInterface
         return $forum;
     }
 
-    public function export(Workspace $workspace, array &$files, $object)
+    public function export($workspace, array &$files, $object)
     {
         $categories = $object->getCategories();
         $data = [];
 
         foreach ($categories as $category) {
+            $subjects = $category->getSubjects();
+            $subjectsData = [];
+            foreach ($subjects as $subject) {
+                $subjectData['subject']['name'] = $subject->getTitle();
+                $subjectData['subject']['author'] = $subject->getCreator()->getUsername();
+                $subjectData['subject']['creator'] = $subject->getCreator()->getMail();
+                $subjectData['subject']['sticked'] = $subject->isSticked();
+                $subjectData['subject']['creation_date'] = $subject->getCreationDate();
+
+                $messages = $subject->getMessages();
+                $messagesData = [];
+
+                foreach ($messages as $message) {
+                    $messageData['message']['author'] = $message->getCreator()->getUsername();
+                    $messageData['message']['creator'] = $message->getCreator()->getMail();
+                    $messageData['message']['creation_date'] = $message->getCreationDate();
+                    $messageData['message']['modification_date'] = $message->getModificationDate();
+
+                    $hash = uniqid('msg').'.txt';
+                    $tmpPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.$hash;
+                    file_put_contents($tmpPath, $message->getContent());
+                    $files[$hash] = $tmpPath;
+                    $messageData['message']['path'] = $hash;
+
+                    $messagesData[] = $messageData;
+                }
+
+                $subjectData['subject']['messages'] = $messagesData;
+
+                $subjectsData[] = $subjectData;
+            }
+
             $data[] = [
                 'category' => [
                     'name' => $category->getName(),
-                    'subjects' => [],
+                    'subjects' => $subjectsData,
                 ],
             ];
         }
 
         return $data;
+    }
+
+    public function format($data)
+    {
+        if (isset($data)) {
+            foreach ($data as $elem) {
+                foreach ($elem['category']['subjects'] as $subjects) {
+                    foreach ($subjects as $subject) {
+                        foreach ($subject['messages'] as $message) {
+                            //look for the text with the exact same content (it's really bad I know but at least it works
+                            $text = file_get_contents($this->getRootPath().DIRECTORY_SEPARATOR.$message['message']['path']);
+                            $messages = $this->om->getRepository('Claroline\ForumBundle\Entity\Message')->findByContent($text);
+
+                            foreach ($messages as $entity) {
+                                //avoid circulary dependency
+                                $text = $this->container->get('claroline.importer.rich_text_formatter')->format($text);
+                                $entity->setContent($text);
+                                $this->om->persist($entity);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //this could be bad, but the corebundle can use a transaction and force flush itself anyway
+        $this->om->flush();
     }
 }

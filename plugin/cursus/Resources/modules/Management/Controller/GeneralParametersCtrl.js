@@ -8,7 +8,7 @@
  */
 
 export default class GeneralParametersCtrl {
-  constructor ($state, CourseService) {
+  constructor($state, CourseService) {
     this.$state = $state
     this.CourseService = CourseService
     this.configs = {
@@ -17,12 +17,13 @@ export default class GeneralParametersCtrl {
       disableSessionEventRegistration: false,
       enableCoursesProfileTab: false,
       enableWsInCoursesProfileTab: false,
-      sessionDefaultTotal: null
+      sessionDefaultTotal: null,
+      displayUserEventsInDesktopAgenda: false
     }
     this.initialize()
   }
 
-  initialize () {
+  initialize() {
     this.CourseService.getGeneralParameters().then(d => {
       this.configs['disableInvitations'] = d['disableInvitations']
       this.configs['disableCertificates'] = d['disableCertificates']
@@ -30,10 +31,12 @@ export default class GeneralParametersCtrl {
       this.configs['enableCoursesProfileTab'] = d['enableCoursesProfileTab']
       this.configs['enableWsInCoursesProfileTab'] = d['enableWsInCoursesProfileTab']
       this.configs['sessionDefaultTotal'] = parseInt(d['sessionDefaultTotal'])
+      this.configs['sessionDefaultDuration'] = parseInt(d['sessionDefaultDuration'])
+      this.configs['displayUserEventsInDesktopAgenda'] = d['displayUserEventsInDesktopAgenda']
     })
   }
 
-  validate () {
+  validate() {
     this.CourseService.setGeneralParameters(this.configs).then(d => {
       if (d === 'success') {
         this.$state.go('configuration')

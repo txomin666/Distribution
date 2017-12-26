@@ -12,7 +12,10 @@
 namespace Claroline\CoreBundle\Library\Utilities;
 
 use JMS\DiExtraBundle\Annotation as DI;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
+use SVG\Nodes\Embedded\SVGImageElement;
+use SVG\SVGImage;
+use Symfony\Component\Filesystem\Exception\FileNotFoundException;
+use Symfony\Component\HttpFoundation\File\File;
 
 /**
  * @DI\Service("claroline.utilities.thumbnail_creator")
@@ -24,12 +27,14 @@ class ThumbnailCreator
     private $isGdLoaded;
     private $isFfmpegLoaded;
     private $ut;
+    private $fs;
+    private $fileUtilities;
 
     /**
      * @DI\InjectParams({
-     *     "kernelRootDir" = @DI\Inject("%kernel.root_dir%"),
+     *     "kernelRootDir"      = @DI\Inject("%kernel.root_dir%"),
      *     "thumbnailDirectory" = @DI\Inject("%claroline.param.thumbnails_directory%"),
-     *     "ut"       = @DI\Inject("claroline.utilities.misc")
+     *     "ut"                 = @DI\Inject("claroline.utilities.misc")
      * })
      */
     public function __construct($kernelRootDir, $thumbnailDirectory, ClaroUtilities $ut)
@@ -40,6 +45,7 @@ class ThumbnailCreator
         $this->isGdLoaded = extension_loaded('gd');
         $this->isFfmpegLoaded = extension_loaded('ffmpeg');
         $this->ut = $ut;
+        $this->fs = new FileSystem();
     }
 
     /**
@@ -99,18 +105,17 @@ class ThumbnailCreator
         }
 
         if (file_exists($originalPath)) {
-            /*
-            This function is deprecated.
-            I had to do this for the DnD upload (.jpg files have png mime for some reasons).
-            It would be nice to know why it works this way.
-            */
-            $mime = mime_content_type($originalPath);
-            $eMime = explode('/', $mime);
-            $extension = $eMime[1];
+            $extension = $this->getImageExtensionFromUrl($originalPath);
         } else {
             throw new \Exception("The file {$originalPath} doesn't exists.");
         }
+        // Replace png with new extension
+        $destinationPath = preg_replace('/.png$/', ".{$extension}", trim($destinationPath));
+        if ($extension === 'svg') {
+            $this->fs->copy($originalPath, $destinationPath);
 
+            return $destinationPath;
+        }
         if (function_exists($funcname = "imagecreatefrom{$extension}")) {
             $srcImg = $funcname($originalPath);
         } else {
@@ -161,36 +166,136 @@ class ThumbnailCreator
         imagedestroy($dstImg);
     }
 
-    public function shortcutThumbnail($srcImg, Workspace $workspace = null)
+    //TODO REMOVE thumbnail directory
+    public function shortcutThumbnail(
+        $srcImg,
+        $stampImg = null,
+        $targetDirPath = null,
+        $filename = null // Just the filename, no extension
+)
     {
         if (!$this->isGdLoaded) {
             throw new UnloadedExtensionException('The GD extension is missing \n');
         }
 
         $ds = DIRECTORY_SEPARATOR;
-        $stampPath = "{$this->webDir}{$ds}bundles{$ds}"
-            ."clarolinecore{$ds}images{$ds}resources{$ds}icons{$ds}shortcut-black.png";
-        $extension = (pathinfo($srcImg, PATHINFO_EXTENSION) == 'jpg') ? 'jpeg' : pathinfo($srcImg, PATHINFO_EXTENSION);
-        if (function_exists($funcname = "imagecreatefrom{$extension}")) {
-            $im = $funcname($srcImg);
-        } else {
-            $exception = new ExtensionNotSupportedException();
-            $exception->setExtension($extension);
-            throw $exception;
+        if (is_null($stampImg) || !$this->fs->exists($stampImg)) {
+            $stampImg = "{$this->webDir}{$ds}".$this->getDefaultStampRelativeUrl();
         }
-        $stamp = imagecreatefrompng($stampPath);
-        imagesavealpha($im, true);
-        imagecopy($im, $stamp, 0, imagesy($im) - imagesy($stamp), 0, 0, imagesx($stamp), imagesy($stamp));
-        $name = "{$this->ut->generateGuid()}.{$extension}";
+        // Get image and its extension
+        list($im, $extension) = $this->getImageAndExtensionFromUrl($srcImg);
+        // Get stamp and its extension
+        list($stamp, $stampExtension) = $this->getImageAndExtensionFromUrl($stampImg);
 
-        if (!is_null($workspace)) {
-            $dir = $this->thumbnailDir.$ds.$workspace->getCode().$ds.$name;
+        if (is_null($filename)) {
+            $filename = "{$this->ut->generateGuid()}.{$extension}";
         } else {
-            $dir = $this->thumbnailDir.$ds.$name;
+            $filename .= ".{$extension}";
         }
-        imagepng($im, $dir);
-        imagedestroy($im);
+
+        if (!empty($targetDirPath)) {
+            $dir = $targetDirPath.$ds.$filename;
+        } else {
+            $dir = $this->thumbnailDir.$ds.$filename;
+        }
+
+        if ($extension === 'svg') {
+            if ($stampExtension === 'svg') {
+                // Add all elements of $stamp to $im
+                $stampDocument = $stamp->getDocument();
+                $imDocument = $im->getDocument();
+                $stampDocument->setHeight($imDocument->getHeight());
+                $stampDocument->setWidth($imDocument->getWidth());
+                $shortcut = new SVGImage($imDocument->getWidth(), $imDocument->getHeight());
+                $shortcut->getDocument()->addChild($imDocument);
+                $shortcut->getDocument()->addChild($stampDocument);
+                $im = $shortcut;
+            } else {
+                $im->getDocument()->addChild(new SVGImageElement(
+                    'data:'.mime_content_type($stampImg).';base64,'.base64_encode(file_get_contents($stampImg)),
+                    0,
+                    $im->getDocument()->getHeight() - imagesy($stamp),
+                    imagesx($stamp),
+                    imagesy($stamp)
+                ));
+            }
+            $this->fs->dumpFile($dir, $im);
+        } else {
+            if ($stampExtension === 'svg') {
+                $stamp = $stamp->toRasterImage(imagesx($im), imagesy($im));
+            }
+            imagecopy($im, $stamp, 0, imagesy($im) - imagesy($stamp), 0, 0, imagesx($stamp), imagesy($stamp));
+            $funcname = "image{$extension}";
+            $funcname($im, $dir);
+            imagedestroy($im);
+            imagedestroy($stamp);
+        }
 
         return $dir;
+    }
+
+    public function getDefaultStampRelativeUrl()
+    {
+        $ds = DIRECTORY_SEPARATOR;
+
+        return "bundles{$ds}clarolinecore{$ds}images{$ds}resources{$ds}icons{$ds}shortcut-black.png";
+    }
+
+    private function getImageAndExtensionFromUrl($url)
+    {
+        if (!file_exists($url)) {
+            throw new FileNotFoundException("File not found: '${url}'");
+        }
+        $extension = $this->getImageExtensionFromUrl($url);
+        if ($extension === 'svg') {
+            $image = SVGImage::fromFile($url);
+
+            return [$image, $extension];
+        }
+
+        if (!function_exists("image{$extension}")) {
+            $exception = new ExtensionNotSupportedException();
+            $exception->setExtension($extension);
+
+            throw $exception;
+        }
+
+        try {
+            $imageContent = file_get_contents($url);
+            $image = imagecreatefromstring($imageContent);
+        } catch (\Exception $e) {
+            $exception = new ExtensionNotSupportedException($e->getMessage());
+            $exception->setExtension($extension);
+
+            throw $exception;
+        }
+
+        return [$image, $extension];
+    }
+
+    private function getImageExtensionFromUrl($url)
+    {
+        $mimeType = mime_content_type($url);
+        $fileExtension = pathinfo($url, PATHINFO_EXTENSION);
+        // If mimetype is svg or fileExtension is svg then return svg
+        if ($mimeType === 'image/svg+xml' || $fileExtension === 'svg') {
+            return 'svg';
+        }
+        // Try to guess image type
+        try {
+            $imageType = exif_imagetype($url);
+        } catch (\Exception $e) {
+            throw new ExtensionNotSupportedException();
+        }
+        // If imageType is false throw exception
+        if (!$imageType) {
+            $exception = new ExtensionNotSupportedException();
+            $exception->setExtension($fileExtension);
+        }
+
+        // Let php find about extension as sometimes files has no extension or have a fake extension
+        $extension = str_replace('.', '', image_type_to_extension($imageType));
+
+        return $extension;
     }
 }

@@ -276,6 +276,16 @@ class PluginManager
     /**
      * @param mixed $plugin Plugin Entity, ShortName (ClarolineCoreBundle) Fqcn (Claroline\CoreBundle\ClarolineCoreBundle)
      */
+    public function isActivatedByDefault($plugin)
+    {
+        $bundle = $this->getBundle($plugin);
+
+        return $bundle->isActiveByDefault();
+    }
+
+    /**
+     * @param mixed $plugin Plugin Entity, ShortName (ClarolineCoreBundle) Fqcn (Claroline\CoreBundle\ClarolineCoreBundle)
+     */
     public function getRequiredBy($plugin)
     {
         $requiredBy = [];
@@ -370,7 +380,7 @@ class PluginManager
         return $errors;
     }
 
-    private function getPluginShortName($plugin)
+    public function getPluginShortName($plugin)
     {
         $name = $plugin instanceof Plugin ?
             $plugin->getVendorName().$plugin->getBundleName() :

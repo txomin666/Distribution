@@ -15,33 +15,37 @@ use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 
 class LogResourceCreateEvent extends LogGenericEvent implements NotifiableInterface
 {
+    use ResourceNotifiableTrait;
+
     const ACTION = 'resource-create';
 
     /**
      * Constructor.
      */
-    public function __construct(ResourceNode $node, array $usersToNotify = array())
+    public function __construct(ResourceNode $node, array $usersToNotify = [])
     {
         $this->usersToNotify = $usersToNotify;
         $this->node = $node;
 
         parent::__construct(
             self::ACTION,
-            array(
-                'resource' => array(
+            [
+                'resource' => [
                     'name' => $node->getName(),
                     'path' => $node->getPathForCreationLog(),
                     'guid' => $node->getGuid(),
                     'resourceType' => $node->getResourceType()->getName(),
-                ),
-                'workspace' => array(
+                ],
+                'workspace' => [
+                    'id' => $node->getWorkspace() ? $node->getWorkspace()->getId() : null,
+                    'guid' => $node->getWorkspace() ? $node->getWorkspace()->getGuid() : null,
                     'name' => $node->getWorkspace() ? $node->getWorkspace()->getName() : ' - ',
-                ),
-                'owner' => array(
+                ],
+                'owner' => [
                     'lastName' => $node->getCreator()->getLastName(),
                     'firstName' => $node->getCreator()->getFirstName(),
-                ),
-            ),
+                ],
+            ],
             null,
             null,
             $node,
@@ -81,7 +85,7 @@ class LogResourceCreateEvent extends LogGenericEvent implements NotifiableInterf
      */
     public function getIncludeUserIds()
     {
-        $ids = array();
+        $ids = [];
 
         foreach ($this->usersToNotify as $user) {
             $ids[] = $user->getId();
@@ -97,7 +101,7 @@ class LogResourceCreateEvent extends LogGenericEvent implements NotifiableInterf
      */
     public function getExcludeUserIds()
     {
-        return array($this->node->getCreator()->getId());
+        return [$this->node->getCreator()->getId()];
     }
 
     /**
@@ -128,18 +132,8 @@ class LogResourceCreateEvent extends LogGenericEvent implements NotifiableInterf
      */
     public function getNotificationDetails()
     {
-        $notificationDetails = array_merge($this->details, array());
+        $notificationDetails = array_merge($this->details, []);
 
         return $notificationDetails;
-    }
-
-    /**
-     * Get if event is allowed to create notification or not.
-     *
-     * @return bool
-     */
-    public function isAllowedToNotify()
-    {
-        return true;
     }
 }

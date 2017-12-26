@@ -38,6 +38,7 @@
         var pickerName = 'formResourcePicker';
         var field = $('#' + id);
         var element = field.next('.input-group');
+        var customParameters = processCustomParameters(field.data());
 
         $('input.form-control', element)
             .on('focus', function () {
@@ -69,11 +70,10 @@
                 });
             });
 
-        var customParameters = processCustomParameters(field.data());
-
         var name = field.data('name');
 
         if (name) {
+            console.log(name, element)
             $('input', element).val(name);
         }
 
@@ -92,6 +92,7 @@
             'restrictForOwner',
             'isPickerMultiSelectAllowed',
             'isDirectorySelectionAllowed',
+            'allowRootSelection'
         ];
         var arrayParameterList = [
             'typeBlackList',
@@ -159,4 +160,4 @@
             $('.resource-view', activePicker).attr('href', '').addClass('disabled');
         }
     };
-}());
+})();

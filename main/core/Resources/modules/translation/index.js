@@ -1,11 +1,89 @@
-export function trans(...args) {
-  return window.Translator.trans(...args)
+
+const DEFAULT_DOMAIN    = 'message'
+const PLATFORM_DOMAIN   = 'platform'
+const VALIDATION_DOMAIN = 'validators'
+
+import {Translator as BaseTranslator} from './translator'
+
+/**
+ * Get the current application translator.
+ *
+ * @returns {Translator}
+ */
+function getTranslator() {
+  // we reuse the instance from browser, because it already contains messages loaded from <script>
+  return window.Translator || BaseTranslator
 }
 
-export function t(message) {
-  return trans(message, {}, 'platform')
+/**
+ * Exposes standard Translator `trans` function.
+ *
+ * @param {string} key
+ * @param {object} placeholders
+ * @param {string} domain
+ *
+ * @returns {string}
+ */
+export function trans(key, placeholders = {}, domain = DEFAULT_DOMAIN) {
+  return getTranslator().trans(key, placeholders, domain)
 }
 
-export function tex(message, domain = 'message') {
-  return trans(message, {}, domain)
+/**
+ * Exposes standard Translator `transChoice` function.
+ *
+ * @param {string} key
+ * @param {number} count
+ * @param {object} placeholders
+ * @param {string} domain
+ *
+ * @returns {string}
+ */
+
+export function transChoice(key, count, placeholders = {}, domain = DEFAULT_DOMAIN) {
+  return getTranslator().transChoice(key, count, placeholders, domain)
+}
+
+/**
+ * Shortcut to access `platform` messages.
+ *
+ * @param {string} message
+ * @param {object} placeholders
+ *
+ * @returns {string}
+ */
+export function t(message, placeholders = {}) {
+  return trans(message, placeholders, PLATFORM_DOMAIN)
+}
+
+/**
+ * Shortcut to access `validators` messages.
+ *
+ * @param {string} message
+ * @param {object} placeholders
+ *
+ * @returns {string}
+ */
+export function tval(message, placeholders = {}) {
+  return trans(message, placeholders, VALIDATION_DOMAIN)
+}
+
+/**
+ * Shortcut to access simple translation without placeholders.
+ *
+ * @todo : to remove and put in quiz plugin
+ *
+ * @param {string} message
+ * @param {object} placeholders
+ * @param {string} domain
+ *
+ * @returns {string}
+ */
+export function tex(message, placeholders = {}, domain = 'ujm_exo') {
+  return trans(message, placeholders, domain)
+}
+
+// reexport translator object
+const Translator = getTranslator()
+export {
+   Translator
 }

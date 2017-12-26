@@ -12,9 +12,8 @@
 namespace Claroline\TagBundle\Listener;
 
 use Claroline\CoreBundle\Event\CustomActionResourceEvent;
-use Claroline\CoreBundle\Event\GenericDatasEvent;
+use Claroline\CoreBundle\Event\GenericDataEvent;
 use Claroline\CoreBundle\Menu\GroupAdditionalActionEvent;
-use Claroline\CoreBundle\Menu\UserAdditionalActionEvent;
 use Claroline\CoreBundle\Menu\WorkspaceAdditionalActionEvent;
 use Claroline\TagBundle\Manager\TagManager;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -60,16 +59,34 @@ class TagListener
     /**
      * @DI\Observe("claroline_tag_object")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onObjectTag(GenericDatasEvent $event)
+    public function onObjectTag(GenericDataEvent $event)
     {
         $taggedObject = null;
-        $datas = $event->getDatas();
+        $data = $event->getData();
 
-        if (is_array($datas) && isset($datas['tag']) && isset($datas['object'])) {
-            $user = isset($datas['user']) ? $datas['user'] : null;
-            $taggedObject = $this->tagManager->tagObject($datas['tag'], $datas['object'], $user);
+        if (is_array($data) && isset($data['tag']) && isset($data['object'])) {
+            $user = isset($data['user']) ? $data['user'] : null;
+            $taggedObject = $this->tagManager->tagObject($data['tag'], $data['object'], $user);
+        }
+        $event->setResponse($taggedObject);
+    }
+
+    /**
+     * @DI\Observe("claroline_tag_multiple_data")
+     *
+     * @param GenericDataEvent $event
+     */
+    public function onDataTag(GenericDataEvent $event)
+    {
+        $taggedObject = null;
+        $data = $event->getData();
+
+        if (is_array($data) && isset($data['tags']) && isset($data['data'])) {
+            $user = isset($data['user']) ? $data['user'] : null;
+            $replace = isset($data['replace']) && $data['replace'];
+            $taggedObject = $this->tagManager->tagData($data['tags'], $data['data'], $user, $replace);
         }
         $event->setResponse($taggedObject);
     }
@@ -77,50 +94,57 @@ class TagListener
     /**
      * @DI\Observe("claroline_retrieve_tagged_objects")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onRetrieveObjectsByTag(GenericDatasEvent $event)
+    public function onRetrieveObjectsByTag(GenericDataEvent $event)
     {
-        $taggedObjects = array();
-        $datas = $event->getDatas();
+        $taggedObjects = [];
+        $data = $event->getData();
 
-        if (is_array($datas) && isset($datas['tag']) && !empty($datas['tag'])) {
-            $search = $datas['tag'];
-            $user = isset($datas['user']) ? $datas['user'] : null;
-            $withPlatform = isset($datas['with_platform']) && $datas['with_platform'];
-            $strictSearch = isset($datas['strict']) ? $datas['strict'] : false;
-            $class = isset($datas['class']) ? $datas['class'] : null;
-            $objectResponse = isset($datas['object_response']) && $datas['object_response'];
-            $orderedBy = isset($datas['ordered_by']) ? $datas['ordered_by'] : 'id';
-            $order = isset($datas['order']) ? $datas['order'] : 'ASC';
+        if (is_array($data) && isset($data['tag']) && !empty($data['tag'])) {
+            $search = $data['tag'];
+            $user = isset($data['user']) ? $data['user'] : null;
+            $withPlatform = isset($data['with_platform']) && $data['with_platform'];
+            $strictSearch = isset($data['strict']) ? $data['strict'] : false;
+            $class = isset($data['class']) ? $data['class'] : null;
+            $objectResponse = isset($data['object_response']) && $data['object_response'];
+            $orderedBy = isset($data['ordered_by']) ? $data['ordered_by'] : 'id';
+            $order = isset($data['order']) ? $data['order'] : 'ASC';
+            $ids = isset($data['ids']) ? $data['ids'] : [];
 
             $objects = $this->tagManager->getTaggedObjects(
                 $user,
                 $withPlatform,
                 $class,
                 $search,
-                $strictSearch
+                $strictSearch,
+                'name',
+                'ASC',
+                false,
+                1,
+                50,
+                $ids
             );
 
             if (!is_null($class) && $objectResponse) {
-                $ids = array();
+                $objectsIds = [];
 
                 foreach ($objects as $object) {
-                    $ids[] = $object->getObjectId();
+                    $objectsIds[] = $object->getObjectId();
                 }
                 $taggedObjects = $this->tagManager->getObjectsByClassAndIds(
                     $class,
-                    $ids,
+                    $objectsIds,
                     $orderedBy,
                     $order
                 );
             } else {
                 foreach ($objects as $object) {
-                    $datas = array();
-                    $datas['class'] = $object->getObjectClass();
-                    $datas['id'] = $object->getObjectId();
-                    $datas['name'] = $object->getObjectName();
-                    $taggedObjects[] = $datas;
+                    $data = [];
+                    $data['class'] = $object->getObjectClass();
+                    $data['id'] = $object->getObjectId();
+                    $data['name'] = $object->getObjectName();
+                    $taggedObjects[] = $data;
                 }
             }
         }
@@ -130,24 +154,23 @@ class TagListener
     /**
      * @DI\Observe("claroline_retrieve_tags")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onRetrieveTags(GenericDatasEvent $event)
+    public function onRetrieveTags(GenericDataEvent $event)
     {
-        $tags = array();
-        $tagsName = array();
-        $datas = $event->getDatas();
+        $tagsName = [];
+        $data = $event->getData();
 
-        if (is_array($datas)) {
-            $user = isset($datas['user']) ? $datas['user'] : null;
-            $search = isset($datas['search']) ? $datas['search'] : '';
-            $withPlatform = isset($datas['with_platform']) && $datas['with_platform'];
-            $orderedBy = isset($datas['ordered_by']) ? $datas['ordered_by'] : 'name';
-            $order = isset($datas['order']) ? $datas['order'] : 'ASC';
-            $withPager = isset($datas['with_pager']) && $datas['with_pager'];
-            $page = isset($datas['page']) ? $datas['page'] : 1;
-            $max = isset($datas['max']) ? $datas['max'] : 50;
-            $strictSearch = isset($datas['strict']) ? $datas['strict'] : false;
+        if (is_array($data)) {
+            $user = isset($data['user']) ? $data['user'] : null;
+            $search = isset($data['search']) ? $data['search'] : '';
+            $withPlatform = isset($data['with_platform']) && $data['with_platform'];
+            $orderedBy = isset($data['ordered_by']) ? $data['ordered_by'] : 'name';
+            $order = isset($data['order']) ? $data['order'] : 'ASC';
+            $withPager = isset($data['with_pager']) && $data['with_pager'];
+            $page = isset($data['page']) ? $data['page'] : 1;
+            $max = isset($data['max']) ? $data['max'] : 50;
+            $strictSearch = isset($data['strict']) ? $data['strict'] : false;
 
             $tags = $this->tagManager->getTags(
                 $user,
@@ -175,10 +198,10 @@ class TagListener
      */
     public function onResourceTagAction(CustomActionResourceEvent $event)
     {
-        $params = array();
+        $params = [];
         $params['_controller'] = 'ClarolineTagBundle:Tag:resourceTagForm';
         $params['resourceNode'] = $event->getResource()->getResourceNode()->getId();
-        $subRequest = $this->request->duplicate(array(), null, $params);
+        $subRequest = $this->request->duplicate([], null, $params);
         $response = $this->httpKernel
             ->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
         $event->setResponse($response);
@@ -195,13 +218,13 @@ class TagListener
         $group = $event->getGroup();
         $url = $this->router->generate(
             'claro_tag_group_tag_form',
-            array('group' => $group->getId())
+            ['group' => $group->getId()]
         );
 
         $menu = $event->getMenu();
         $menu->addChild(
-            $this->translator->trans('tag_action', array(), 'tag'),
-            array('uri' => $url)
+            $this->translator->trans('tag_action', [], 'tag'),
+            ['uri' => $url]
         )->setExtra('icon', 'fa fa-tags')
         ->setExtra('display', 'modal_form');
 
@@ -218,13 +241,13 @@ class TagListener
         $user = $event->getUser();
         $url = $this->router->generate(
             'claro_tag_user_tag_form',
-            array('user' => $user->getId())
+            ['user' => $user->getId()]
         );
 
         $menu = $event->getMenu();
         $menu->addChild(
-            $this->translator->trans('tag_action', array(), 'tag'),
-            array('uri' => $url)
+            $this->translator->trans('tag_action', [], 'tag'),
+            ['uri' => $url]
         )->setExtra('icon', 'fa fa-tags')
         ->setExtra('display', 'modal_form');
 
@@ -241,13 +264,13 @@ class TagListener
         $workspace = $event->getWorkspace();
         $url = $this->router->generate(
             'claro_tag_workspace_tag_form',
-            array('workspace' => $workspace->getId())
+            ['workspace' => $workspace->getId()]
         );
 
         $menu = $event->getMenu();
         $menu->addChild(
-            $this->translator->trans('tag_action', array(), 'tag'),
-            array('uri' => $url)
+            $this->translator->trans('tag_action', [], 'tag'),
+            ['uri' => $url]
         )->setExtra('icon', 'fa fa-tags')
         ->setExtra('display', 'modal_form');
 
@@ -257,18 +280,18 @@ class TagListener
     /**
      * @DI\Observe("claroline_retrieve_user_workspaces_by_tag")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onRetrieveUserWorkspacesByTag(GenericDatasEvent $event)
+    public function onRetrieveUserWorkspacesByTag(GenericDataEvent $event)
     {
-        $workspaces = array();
-        $datas = $event->getDatas();
+        $workspaces = [];
+        $data = $event->getData();
 
-        if (is_array($datas) && isset($datas['user']) && isset($datas['tag'])) {
-            $user = $datas['user'];
-            $tag = $datas['tag'];
-            $orderedBy = isset($datas['ordered_by']) ? $datas['ordered_by'] : 'id';
-            $order = isset($datas['order']) ? $datas['order'] : 'ASC';
+        if (is_array($data) && isset($data['user']) && isset($data['tag'])) {
+            $user = $data['user'];
+            $tag = $data['tag'];
+            $orderedBy = isset($data['ordered_by']) ? $data['ordered_by'] : 'id';
+            $order = isset($data['order']) ? $data['order'] : 'ASC';
             $workspaces = $this->tagManager->getTaggedWorkspacesByRoles(
                 $user,
                 $tag,
@@ -282,12 +305,12 @@ class TagListener
     /**
      * @DI\Observe("claroline_users_delete")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onUsersDelete(GenericDatasEvent $event)
+    public function onUsersDelete(GenericDataEvent $event)
     {
-        $users = $event->getDatas();
-        $ids = array();
+        $users = $event->getData();
+        $ids = [];
 
         foreach ($users as $user) {
             $ids[] = $user->getId();
@@ -301,12 +324,12 @@ class TagListener
     /**
      * @DI\Observe("claroline_groups_delete")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onGroupsDelete(GenericDatasEvent $event)
+    public function onGroupsDelete(GenericDataEvent $event)
     {
-        $groups = $event->getDatas();
-        $ids = array();
+        $groups = $event->getData();
+        $ids = [];
 
         foreach ($groups as $group) {
             $ids[] = $group->getId();
@@ -320,12 +343,12 @@ class TagListener
     /**
      * @DI\Observe("claroline_workspaces_delete")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onWorkspacesDelete(GenericDatasEvent $event)
+    public function onWorkspacesDelete(GenericDataEvent $event)
     {
-        $workspaces = $event->getDatas();
-        $ids = array();
+        $workspaces = $event->getData();
+        $ids = [];
 
         foreach ($workspaces as $workspace) {
             $ids[] = $workspace->getId();
@@ -339,12 +362,12 @@ class TagListener
     /**
      * @DI\Observe("claroline_resources_delete")
      *
-     * @param GenericDatasEvent $event
+     * @param GenericDataEvent $event
      */
-    public function onResourcesDelete(GenericDatasEvent $event)
+    public function onResourcesDelete(GenericDataEvent $event)
     {
-        $resources = $event->getDatas();
-        $ids = array();
+        $resources = $event->getData();
+        $ids = [];
 
         foreach ($resources as $resource) {
             $ids[] = $resource->getId();
@@ -353,5 +376,37 @@ class TagListener
             'Claroline\CoreBundle\Entity\Resource\ResourceNode',
             $ids
         );
+    }
+
+    /**
+     * @DI\Observe("claroline_retrieve_used_tags_by_class_and_ids")
+     *
+     * @param GenericDataEvent $event
+     */
+    public function onRetrieveUsedTagsByClassAndIds(GenericDataEvent $event)
+    {
+        $tags = [];
+        $data = $event->getData();
+
+        if (is_array($data) && isset($data['class']) && !empty($data['ids'])) {
+            $taggedObjects = $this->tagManager->getTaggedObjects(
+                null,
+                false,
+                $data['class'],
+                '',
+                false,
+                'name',
+                'ASC',
+                false,
+                1,
+                50,
+                $data['ids']
+            );
+            foreach ($taggedObjects as $taggedObject) {
+                $tag = $taggedObject->getTag();
+                $tags[$tag->getId()] = $tag->getName();
+            }
+        }
+        $event->setResponse(array_values($tags));
     }
 }

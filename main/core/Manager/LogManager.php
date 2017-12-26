@@ -11,6 +11,7 @@
 
 namespace Claroline\CoreBundle\Manager;
 
+use Claroline\CoreBundle\Entity\Log\Log;
 use Claroline\CoreBundle\Entity\Log\LogWidgetConfig;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Widget\WidgetInstance;
@@ -256,7 +257,7 @@ class LogManager
         );
     }
 
-    public function getWorkspaceList($workspace, $page, $maxResult = -1)
+    public function getWorkspaceList($workspace, $page = null, $maxResult = -1)
     {
         if ($workspace === null) {
             $workspaceIds = $this->getAdminOrCollaboratorWorkspaceIds();
@@ -273,12 +274,14 @@ class LogManager
             null,
             null
         );
-        $params['workspace'] = $workspace;
+        if ($page !== null) {
+            $params['workspace'] = $workspace;
+        }
 
         return $params;
     }
 
-    public function getResourceList($resource, $page, $maxResult = -1)
+    public function getResourceList($resource, $page = null, $maxResult = -1)
     {
         $resourceNodeIds = [$resource->getResourceNode()->getId()];
 
@@ -291,7 +294,9 @@ class LogManager
             $resourceNodeIds,
             get_class($resource)
         );
-        $params['_resource'] = $resource;
+        if ($page !== null) {
+            $params['_resource'] = $resource;
+        }
 
         return $params;
     }
@@ -333,41 +338,55 @@ class LogManager
             $workspaceIds,
             $maxResult,
             $resourceType,
-            $resourceNodeIds
+            $resourceNodeIds,
+            $data['group']
         );
 
-        $adapter = new DoctrineORMAdapter($query);
-        $pager = new PagerFanta($adapter);
-        $pager->setMaxPerPage(self::LOG_PER_PAGE);
+        if ($page === null) {
+            // Return all results for export
+            return [
+                'results' => $query->getResult(),
+                'listItemViews' => $this->renderLogs($query->getResult()),
+            ];
+        } else {
+            // Return paged results
 
-        try {
-            $pager->setCurrentPage($page);
-        } catch (NotValidCurrentPageException $e) {
-            throw new NotFoundHttpException();
+            // Return paged object for on-screen display
+            $adapter = new DoctrineORMAdapter($query);
+            $pager = new PagerFanta($adapter);
+            $pager->setMaxPerPage(self::LOG_PER_PAGE);
+
+            try {
+                $pager->setCurrentPage($page);
+            } catch (NotValidCurrentPageException $e) {
+                throw new NotFoundHttpException();
+            }
+
+            $chartData = $this->logRepository->countByDayFilteredLogs(
+                $actionString,
+                $range,
+                $data['user'],
+                $actionsRestriction,
+                $workspaceIds,
+                false,
+                $resourceType,
+                $resourceNodeIds,
+                $data['group']
+            );
+
+            //List item delegation
+            $views = $this->renderLogs($pager->getCurrentPageResults());
+
+            return [
+                'pager' => $pager,
+                'listItemViews' => $views,
+                'filter' => $filter,
+                'filterForCSV' => $data,
+                'filterForm' => $filterForm->createView(),
+                'chartData' => $chartData,
+                'actionName' => $actionString,
+            ];
         }
-
-        $chartData = $this->logRepository->countByDayFilteredLogs(
-            $actionString,
-            $range,
-            $data['user'],
-            $actionsRestriction,
-            $workspaceIds,
-            false,
-            $resourceType,
-            $resourceNodeIds
-        );
-
-        //List item delegation
-        $views = $this->renderLogs($pager->getCurrentPageResults());
-
-        return [
-            'pager' => $pager,
-            'listItemViews' => $views,
-            'filter' => $filter,
-            'filterForm' => $filterForm->createView(),
-            'chartData' => $chartData,
-            'actionName' => $actionString,
-        ];
     }
 
     public function countByUserListForCSV(
@@ -659,6 +678,7 @@ class LogManager
                     $orderBy = $decodeFilter['orderBy'];
                     $order = $decodeFilter['order'];
                 }
+                $groupSearch = $decodeFilter['group'];
             }
         } else {
             $dataClass['resourceClass'] = $resourceClass ? $resourceClass : null;
@@ -671,6 +691,8 @@ class LogManager
             }
             $range = isset($formData['range']) ? $formData['range'] : null;
             $userSearch = isset($formData['user']) ? $formData['user'] : null;
+            $groupSearch = isset($formData['group']) ? $formData['group'] : null;
+
             if (!empty($data['orderBy'])) {
                 $orderBy = $data['orderBy'];
                 $order = $data['order'];
@@ -689,6 +711,7 @@ class LogManager
         $data['action'] = $action;
         $data['range'] = $range;
         $data['user'] = $userSearch;
+        $data['group'] = $groupSearch;
 
         if (isset($orderBy) && isset($order)) {
             $data['orderBy'] = $orderBy;
@@ -789,5 +812,29 @@ class LogManager
         }
 
         return ['ids' => $topUsersIdList, 'userData' => $topUsersFormatedArray];
+    }
+
+    public function getDetails(Log $log)
+    {
+        $details = $log->getDetails();
+        $translator = $this->container->get('translator');
+        $receiverUser = isset($details['receiverUser']) ? $details['receiverUser']['firstName'].' '.$details['receiverUser']['lastName'] : null;
+        $receiverGroup = isset($details['receiverGroup']) ? $details['receiverGroup']['name'] : null;
+        $role = isset($details['role']) ? $details['role']['name'] : null;
+        $workspace = isset($details['workspace']) ? $details['workspace']['name'] : null;
+        $resource = $log->getResourceNode() ? $details['resource']['path'] : null;
+
+        return $translator->trans(
+          'log_'.$log->getAction().'_sentence',
+          [
+            '%resource%' => $resource,
+            '%receiver_user%' => $receiverUser,
+            '%receiver_group%' => $receiverGroup,
+            '%role%' => $role,
+            '%workspace%' => $workspace,
+            '%tool%' => $translator->trans($log->getToolName(), [], 'tool'),
+          ],
+          'log'
+        );
     }
 }

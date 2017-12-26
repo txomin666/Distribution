@@ -59,7 +59,7 @@ class LocaleManager
      */
     public function retrieveAvailableLocales($path = '/../Resources/translations/')
     {
-        $locales = array();
+        $locales = [];
         $data = $this->configHandler->getParameter('locales');
 
         foreach ($data as $locale) {
@@ -67,6 +67,19 @@ class LocaleManager
         }
 
         return $locales;
+    }
+
+    public function getLocales()
+    {
+        $available = $this->getAvailableLocales();
+        $implemented = array_keys($this->getImplementedLocales());
+
+        return array_map(function ($locale) use ($available) {
+            return [
+                'name' => $locale,
+                'enabled' => array_key_exists($locale, $available),
+            ];
+        }, $implemented);
     }
 
     /**
@@ -78,11 +91,11 @@ class LocaleManager
      */
     public function getImplementedLocales($path = '/../Resources/translations/')
     {
-        $locales = array();
-        $finder = $this->finder->files()->in(__DIR__.$path)->name('/platform\.[^.]*\.yml/');
+        $locales = [];
+        $finder = $this->finder->files()->in(__DIR__.$path)->name('/platform\.[^.]*\.json/');
 
         foreach ($finder as $file) {
-            $locale = str_replace(array('platform.', '.yml'), '', $file->getRelativePathname());
+            $locale = str_replace(['platform.', '.json'], '', $file->getRelativePathname());
             $locales[$locale] = $locale;
         }
 
@@ -106,11 +119,10 @@ class LocaleManager
     /**
      * Set locale setting for current user if this locale is present in the platform.
      *
-     * @param string $locale The locale string as en, fr, es, etc.
+     * @param string $locale The locale string as en, fr, es, etc
      */
     public function setUserLocale($locale)
     {
-        $locales = $this->getAvailableLocales();
         $this->userManager->setLocale($this->getCurrentUser(), $locale);
     }
 
@@ -120,7 +132,7 @@ class LocaleManager
      *
      * @param \Symfony\Component\HttpFoundation\Request $request
      *
-     * @return string The locale string as en, fr, es, etc.
+     * @return string The locale string as en, fr, es, etc
      */
     public function getUserLocale(Request $request)
     {
@@ -146,6 +158,11 @@ class LocaleManager
         return $locale;
     }
 
+    /**
+     * @deprecated
+     *
+     * @return array
+     */
     public function getLocaleListForSelect()
     {
         $locales = $this->retrieveAvailableLocales();
@@ -162,6 +179,11 @@ class LocaleManager
         return $data;
     }
 
+    /**
+     * @deprecated
+     *
+     * @return array
+     */
     public function getLocalesLabels()
     {
         return [
@@ -169,6 +191,8 @@ class LocaleManager
             'en' => 'English',
             'nl' => 'Nederlands',
             'es' => 'Español',
+            'it' => 'Italiano',
+            'de' => 'Deutsch',
         ];
     }
 

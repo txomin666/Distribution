@@ -14,14 +14,18 @@ namespace Claroline\CoreBundle\Controller;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Resource\ResourceShortcut;
 use Claroline\CoreBundle\Entity\User;
+use Claroline\CoreBundle\Event\GenericDataEvent;
 use Claroline\CoreBundle\Event\StrictDispatcher;
+use Claroline\CoreBundle\Exception\ResourceAccessException;
 use Claroline\CoreBundle\Form\ImportResourcesType;
+use Claroline\CoreBundle\Form\Resource\UnlockType;
 use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
 use Claroline\CoreBundle\Manager\Exception\ResourceMoveException;
 use Claroline\CoreBundle\Manager\Exception\ResourceNotFoundExcetion;
 use Claroline\CoreBundle\Manager\FileManager;
 use Claroline\CoreBundle\Manager\LogManager;
 use Claroline\CoreBundle\Manager\MaskManager;
+use Claroline\CoreBundle\Manager\Resource\ResourceNodeManager;
 use Claroline\CoreBundle\Manager\ResourceManager;
 use Claroline\CoreBundle\Manager\RightsManager;
 use Claroline\CoreBundle\Manager\RoleManager;
@@ -30,9 +34,12 @@ use Claroline\CoreBundle\Manager\UserManager;
 use Exception;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Bundle\TwigBundle\TwigEngine;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -42,11 +49,12 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Translation\TranslatorInterface;
 
-class ResourceController
+class ResourceController extends Controller
 {
     private $tokenStorage;
     private $authorization;
     private $resourceManager;
+    private $resourceNodeManager;
     private $rightsManager;
     private $roleManager;
     private $translator;
@@ -59,24 +67,27 @@ class ResourceController
     private $transferManager;
     private $formFactory;
     private $userManager;
+    private $eventDispatcher;
 
     /**
      * @DI\InjectParams({
-     *     "authorization"   = @DI\Inject("security.authorization_checker"),
-     *     "tokenStorage"    = @DI\Inject("security.token_storage"),
-     *     "resourceManager" = @DI\Inject("claroline.manager.resource_manager"),
-     *     "maskManager"     = @DI\Inject("claroline.manager.mask_manager"),
-     *     "rightsManager"   = @DI\Inject("claroline.manager.rights_manager"),
-     *     "roleManager"     = @DI\Inject("claroline.manager.role_manager"),
-     *     "translator"      = @DI\Inject("translator"),
-     *     "request"         = @DI\Inject("request"),
-     *     "dispatcher"      = @DI\Inject("claroline.event.event_dispatcher"),
-     *     "templating"      = @DI\Inject("templating"),
-     *     "logManager"      = @DI\Inject("claroline.log.manager"),
-     *     "fileManager"     = @DI\Inject("claroline.manager.file_manager"),
-     *     "transferManager" = @DI\Inject("claroline.manager.transfer_manager"),
-     *     "formFactory"     = @DI\Inject("form.factory"),
-     *     "userManager"     = @DI\Inject("claroline.manager.user_manager"),
+     *     "authorization"       = @DI\Inject("security.authorization_checker"),
+     *     "tokenStorage"        = @DI\Inject("security.token_storage"),
+     *     "resourceManager"     = @DI\Inject("claroline.manager.resource_manager"),
+     *     "maskManager"         = @DI\Inject("claroline.manager.mask_manager"),
+     *     "rightsManager"       = @DI\Inject("claroline.manager.rights_manager"),
+     *     "roleManager"         = @DI\Inject("claroline.manager.role_manager"),
+     *     "translator"          = @DI\Inject("translator"),
+     *     "request"             = @DI\Inject("request"),
+     *     "dispatcher"          = @DI\Inject("claroline.event.event_dispatcher"),
+     *     "templating"          = @DI\Inject("templating"),
+     *     "logManager"          = @DI\Inject("claroline.log.manager"),
+     *     "fileManager"         = @DI\Inject("claroline.manager.file_manager"),
+     *     "transferManager"     = @DI\Inject("claroline.manager.transfer_manager"),
+     *     "formFactory"         = @DI\Inject("form.factory"),
+     *     "userManager"         = @DI\Inject("claroline.manager.user_manager"),
+     *     "eventDispatcher"     = @DI\Inject("event_dispatcher"),
+     *     "resourceNodeManager" = @DI\Inject("claroline.manager.resource_node")
      * })
      */
     public function __construct(
@@ -94,7 +105,9 @@ class ResourceController
         FileManager $fileManager,
         TransferManager $transferManager,
         FormFactory $formFactory,
-        UserManager $userManager
+        UserManager $userManager,
+        EventDispatcherInterface $eventDispatcher,
+        ResourceNodeManager $resourceNodeManager
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->authorization = $authorization;
@@ -111,6 +124,8 @@ class ResourceController
         $this->transferManager = $transferManager;
         $this->formFactory = $formFactory;
         $this->userManager = $userManager;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->resourceNodeManager = $resourceNodeManager;
     }
 
     /**
@@ -206,11 +221,13 @@ class ResourceController
                     );
 
                     $nodesArray[] = $this->resourceManager->toArray(
-                        $createdResource->getResourceNode(), $this->tokenStorage->getToken()
+                        $createdResource->getResourceNode(),
+                        $this->tokenStorage->getToken()
                     );
                 } else {
                     $nodesArray[] = $this->resourceManager->toArray(
-                        $resource->getResourceNode(), $this->tokenStorage->getToken()
+                        $resource->getResourceNode(),
+                        $this->tokenStorage->getToken()
                     );
                 }
             }
@@ -222,6 +239,8 @@ class ResourceController
     }
 
     /**
+     * Opens a resource.
+     *
      * @EXT\Route(
      *     "/open/{resourceType}/{node}",
      *     name="claro_resource_open",
@@ -236,8 +255,6 @@ class ResourceController
      *     options={"expose"=true}
      * )
      *
-     * Opens a resource.
-     *
      * @param ResourceNode $node         the node
      * @param string       $resourceType the resource type
      *
@@ -250,6 +267,17 @@ class ResourceController
     {
         //in order to remember for later. To keep links breadcrumb working we'll need to do something like this
         //if we don't want to change to much code
+
+        // Fetch workspace details, otherwise it won't store them in session.
+        // I know it's not pretty but it's the only way
+        // I could think of to load them before the node gets stored is session
+        if ($node->getWorkspace()) {
+            $options = $node->getWorkspace()->getOptions();
+
+            if ($options) {
+                $options->getDetails();
+            }
+        }
         $this->request->getSession()->set('current_resource_node', $node);
         $isIframe = (bool) $this->request->query->get('iframe');
         //double check... first the resource, then the target
@@ -317,6 +345,8 @@ class ResourceController
      * Publishes many nodes from a workspace.
      * Takes an array of ids as parameters (query string: "ids[]=1&ids[]=2" ...).
      *
+     * @todo to be merge with ResourceNodeController::publishAction (works with UUIDs)
+     *
      * @param array $nodes
      *
      * @return Response
@@ -344,6 +374,8 @@ class ResourceController
      *
      * Unpublishes many nodes from a workspace.
      * Takes an array of ids as parameters (query string: "ids[]=1&ids[]=2" ...).
+     *
+     * @todo to be merge with ResourceNodeController::unpublishAction (works with UUIDs)
      *
      * @param array $nodes
      *
@@ -498,6 +530,67 @@ class ResourceController
         $logs = $this->logManager->getResourceList($resource, $page);
 
         return $logs;
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/log/{node}/csv",
+     *     name="claro_resource_logs_csv",
+     *     requirements={"node" = "\d+"}
+     * )
+     *
+     * @param ResourceNode $node the resource
+     *
+     * @return Response
+     */
+    public function logCSVAction(ResourceNode $node)
+    {
+        $resource = $this->resourceManager->getResourceFromNode($node);
+        $collection = new ResourceCollection([$node]);
+        $this->checkAccess('ADMINISTRATE', $collection);
+
+        $response = new StreamedResponse(function () use ($resource) {
+            $resourceList = $this->logManager->getResourceList($resource);
+            $results = $resourceList['results'];
+            $date_format = $this->translator->trans('date_format', [], 'platform');
+            $handle = fopen('php://output', 'w+');
+            fputcsv($handle, [
+                $this->translator->trans('date', [], 'platform'),
+                $this->translator->trans('action', [], 'platform'),
+                $this->translator->trans('user', [], 'platform'),
+                $this->translator->trans('action', [], 'platform'),
+            ]);
+            foreach ($results as $result) {
+                fputcsv($handle, [
+                    $result->getDateLog()->format($date_format).' '.$result->getDateLog()->format('H:i'),
+                    $this->translator->trans('log_'.$result->getAction().'_shortname', [], 'log'),
+                    $this->str_to_csv($this->renderView('ClarolineCoreBundle:Log:view_list_item_doer.html.twig', ['log' => $result])),
+                    $this->str_to_csv($this->renderView('ClarolineCoreBundle:Log:view_list_item_sentence.html.twig', [
+                        'log' => $result,
+                        'listItemView' => array_key_exists($result->getId(), $resourceList['listItemViews']) ? $resourceList['listItemViews'][$result->getId()] : null,
+                    ])),
+                ]);
+            }
+
+            fclose($handle);
+        });
+        $dateStr = date('YmdHis');
+        $response->headers->set('Content-Type', 'application/force-download');
+        $response->headers->set('Content-Disposition', 'attachment; filename="actions_'.$dateStr.'.csv"');
+
+        return $response;
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string
+     *
+     * Sanitize a string by removing html tags, multiple spaces and new lines
+     */
+    private function str_to_csv($string)
+    {
+        return trim(preg_replace('/\s+/', ' ', strip_tags($string)));
     }
 
     /**
@@ -687,19 +780,22 @@ class ResourceController
         } else {
             $isRoot = false;
             $workspaceId = $node->getWorkspace()->getId();
-            $isPws = $node->getWorkspace()->isPersonal();
             $node = $this->getRealTarget($node);
             $collection = new ResourceCollection([$node]);
             $this->checkAccess('OPEN', $collection);
+            $canAdministrate = $this->authorization->isGranted('ADMINISTRATE', $node);
 
             if ($user !== 'anon.') {
-                if ($user === $node->getCreator() || $this->authorization->isGranted('ROLE_ADMIN')) {
+                if ($user === $node->getCreator() || $this->authorization->isGranted('ROLE_ADMIN')
+                    || $canAdministrate
+                ) {
                     $canChangePosition = true;
                 }
             }
 
             $path = $this->resourceManager->getAncestors($node);
-            $nodes = $this->resourceManager->getChildren($node, $currentRoles, $user, true);
+            // Disable lastOpenDate for now, until a better logging system is implemented
+            $nodes = $this->resourceManager->getChildren($node, $currentRoles, $user, false, $canAdministrate);
 
             //set "admin" mask if someone is the creator of a resource or the resource workspace owner.
             //if someone needs admin rights, the resource type list will go in this array
@@ -716,10 +812,6 @@ class ResourceController
             }
 
             $enableRightsEdition = true;
-
-            if ($isPws && !$this->rightsManager->canEditPwsPerm($this->tokenStorage->getToken())) {
-                $enableRightsEdition = false;
-            }
 
             //get the file list in that directory to know their size.
             $files = $this->fileManager->getDirectoryChildren($node);
@@ -896,11 +988,37 @@ class ResourceController
     {
         $criteria = $this->resourceManager->buildSearchArray($this->request->query->all());
         $criteria['roots'] = $node ? [$node->getPath()] : [];
+        // Display only active resources (omit soft deleted)
+        $criteria['active'] = true;
         $path = $node ? $this->resourceManager->getAncestors($node) : [];
         $userRoles = $this->roleManager->getStringRolesFromToken($this->tokenStorage->getToken());
 
         //by criteria recursive => infinite loop
         $resources = $this->resourceManager->getByCriteria($criteria, $userRoles);
+
+        //if a search option has been provided, tagged resources are also fetched
+        if (isset($criteria['name'])) {
+            $search = $criteria['name'];
+            //retrieve all resources that respect the criteria except the search to generate a whitelist
+            unset($criteria['name']);
+            $unsearchedResources = $this->resourceManager->getByCriteria($criteria, $userRoles);
+            $ids = [];
+
+            foreach ($unsearchedResources as $resource) {
+                $ids[] = $resource['id'];
+            }
+            $options = [
+                'tag' => $search,
+                'strict' => false,
+                'class' => 'Claroline\CoreBundle\Entity\Resource\ResourceNode',
+                'object_response' => true,
+                'ordered_by' => 'name',
+                'ids' => $ids,
+            ];
+            $event = $this->eventDispatcher->dispatch('claroline_retrieve_tagged_objects', new GenericDataEvent($options));
+            $taggedResources = $event->getResponse();
+            $resources = $this->mergeSearchedResources($resources, $taggedResources);
+        }
 
         return new JsonResponse(
             [
@@ -985,13 +1103,15 @@ class ResourceController
      * @param User         $user
      * @param int          $index
      *
-     * @throws \Symfony\Component\Security\Core\Exception\AccessDeniedException
+     * @throws AccessDeniedException
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function insertAt(ResourceNode $node, User $user, $index)
     {
-        if ($user !== $node->getParent()->getCreator() && !$this->authorization->isGranted('ROLE_ADMIN')) {
+        if ($user !== $node->getParent()->getCreator() && !$this->authorization->isGranted('ROLE_ADMIN')
+            && !$this->authorization->isGranted('ADMINISTRATE', $node->getParent())
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -1033,7 +1153,7 @@ class ResourceController
     public function checkAccess($permission, ResourceCollection $collection)
     {
         if (!$this->authorization->isGranted($permission, $collection)) {
-            throw new AccessDeniedException($collection->getErrorsForDisplay());
+            throw new ResourceAccessException($collection->getErrorsForDisplay(), $collection->getResources());
         }
     }
 
@@ -1050,7 +1170,10 @@ class ResourceController
         if ($this->authorization->isGranted('ROLE_USER')) {
             $json = $this->templating->render(
                 'ClarolineCoreBundle:Resource:managerParameters.json.twig',
-                ['resourceTypes' => $this->resourceManager->getAllResourceTypes()]
+                [
+                    'resourceTypes' => $this->resourceManager->getAllResourceTypes(),
+                    'defaultResourceActionsMask' => $this->maskManager->getDefaultResourceActionsMask(),
+                ]
             );
             $response
                 ->setContent($json)
@@ -1213,6 +1336,39 @@ class ResourceController
         return new Response(200);
     }
 
+    //this method is not routed and called from the Resource/layout.html.twig file
+    /**
+     * @EXT\Template("ClarolineCoreBundle:Resource:unlockCodeForm.html.twig")
+     */
+    public function unlockCodeFormAction(ResourceNode $node)
+    {
+        $form = $this->formFactory->create(new UnlockType());
+
+        return ['form' => $form->createView(), 'node' => $node];
+    }
+
+    /**
+     * @EXT\Route(
+     *     "/resource/{node}/unlock",
+     *     name="claro_resource_form_unlock",
+     *     options={"expose"=true}
+     * )
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function unlockCodeAction(ResourceNode $node)
+    {
+        $form = $this->formFactory->create(new UnlockType());
+        $form->handleRequest($this->request);
+
+        if ($form->isValid()) {
+            $code = $form->get('code')->getData();
+            $this->resourceNodeManager->unlock($node, $code);
+        }
+
+        return new RedirectResponse($this->container->get('router')->generate('claro_resource_open_short', ['node' => $node->getId()]));
+    }
+
     private function isUsurpatingWorkspaceRole(TokenInterface $token)
     {
         foreach ($token->getRoles() as $role) {
@@ -1222,5 +1378,37 @@ class ResourceController
         }
 
         return false;
+    }
+
+    private function mergeSearchedResources(array $resources, array $taggedResourceNodes)
+    {
+        $resourcesIds = array_column($resources, 'id');
+
+        foreach ($taggedResourceNodes as $node) {
+            if (!in_array($node->getId(), $resourcesIds)) {
+                $taggedResource = [
+                    'id' => $node->getId(),
+                    'name' => $node->getName(),
+                    'path' => $node->getPath(),
+                    'creator_username' => $node->getCreator()->getUsername(),
+                    'creator_id' => $node->getCreator()->getId(),
+                    'type' => $node->getResourceType()->getName(),
+                    'mime_type' => $node->getMimeType(),
+                    'index_dir' => $node->getIndex(),
+                    'creation_date' => $node->getCreationDate(),
+                    'modification_date' => $node->getModificationDate(),
+                    'published' => $node->isPublished(),
+                    'accessible_from' => $node->getAccessibleFrom(),
+                    'accessible_until' => $node->getAccessibleUntil(),
+                ];
+                $parent = $node->getParent();
+                $icon = $node->getIcon();
+                $taggedResource['parent_id'] = empty($parent) ? null : $parent->getId();
+                $taggedResource['large_icon'] = empty($icon) ? null : $icon->getRelativeUrl();
+                $resources[] = $taggedResource;
+            }
+        }
+
+        return $resources;
     }
 }

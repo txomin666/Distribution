@@ -31,7 +31,7 @@ export default class PathShowCtrl extends PathBaseCtrl {
     if (angular.isObject(this.userProgression)) {
       this.userProgressionService.set(this.userProgression)
     }
-    
+
     this.AuthorizationCheckerService.setEditEnabled(this.editEnabled)
     this.userProgressionService.setTotalProgression(this.totalProgression)
   }
@@ -49,5 +49,11 @@ export default class PathShowCtrl extends PathBaseCtrl {
     }
 
     this.window.location.href = url
+  }
+
+  getTotalProgression() {
+    const total = Math.round((this.userProgressionService.getTotalProgression() * 100) / this.pathService.getTotalSteps())
+
+    return total || 0
   }
 }

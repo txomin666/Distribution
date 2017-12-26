@@ -53,6 +53,13 @@ class Entry
     protected $status;
 
     /**
+     * @ORM\Column(name="locked", type="boolean", options={"default" = 0})
+     * @Groups({"api_claco_form", "api_facet_admin", "api_user_min"})
+     * @SerializedName("locked")
+     */
+    protected $locked = false;
+
+    /**
      * @ORM\ManyToOne(
      *     targetEntity="Claroline\ClacoFormBundle\Entity\ClacoForm",
      *     inversedBy="categories"
@@ -108,6 +115,7 @@ class Entry
      *     targetEntity="Claroline\ClacoFormBundle\Entity\Comment",
      *     mappedBy="entry"
      * )
+     * @ORM\OrderBy({"creationDate" = "DESC"})
      * @Groups({"api_claco_form", "api_user_min"})
      * @SerializedName("comments")
      */
@@ -129,12 +137,21 @@ class Entry
      */
     protected $keywords;
 
+    /**
+     * @ORM\OneToMany(
+     *     targetEntity="Claroline\ClacoFormBundle\Entity\EntryUser",
+     *     mappedBy="entry"
+     * )
+     */
+    protected $entryUsers;
+
     public function __construct()
     {
         $this->categories = new ArrayCollection();
         $this->comments = new ArrayCollection();
         $this->fieldValues = new ArrayCollection();
         $this->keywords = new ArrayCollection();
+        $this->entryUsers = new ArrayCollection();
     }
 
     public function getId()
@@ -165,6 +182,16 @@ class Entry
     public function setStatus($status)
     {
         $this->status = $status;
+    }
+
+    public function isLocked()
+    {
+        return $this->locked;
+    }
+
+    public function setLocked($locked)
+    {
+        $this->locked = $locked;
     }
 
     public function getClacoForm()
@@ -327,5 +354,10 @@ class Entry
     public function emptyKeywords()
     {
         $this->keywords->clear();
+    }
+
+    public function getEntryUsers()
+    {
+        return $this->entryUsers->toArray();
     }
 }

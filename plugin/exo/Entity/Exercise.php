@@ -2,11 +2,16 @@
 
 namespace UJM\ExoBundle\Entity;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use UJM\ExoBundle\Entity\Item\Item;
 use UJM\ExoBundle\Library\Mode\CorrectionMode;
 use UJM\ExoBundle\Library\Mode\MarkMode;
+use UJM\ExoBundle\Library\Model\AttemptParametersTrait;
+use UJM\ExoBundle\Library\Options\ExerciseNumbering;
+use UJM\ExoBundle\Library\Options\ExerciseType;
 
 /**
  * @ORM\Entity(repositoryClass="UJM\ExoBundle\Repository\ExerciseRepository")
@@ -14,64 +19,16 @@ use UJM\ExoBundle\Library\Mode\MarkMode;
  */
 class Exercise extends AbstractResource
 {
-    const TYPE_SUMMATIVE = '1';
-    const TYPE_EVALUATIVE = '2';
-    const TYPE_FORMATIVE = '3';
+    use UuidTrait;
+
+    use AttemptParametersTrait;
 
     /**
+     * @var string
+     *
      * @ORM\Column(name="description", type="text", nullable=true)
      */
     private $description = '';
-
-    /**
-     * Are the Steps shuffled ?
-     *
-     * @ORM\Column(name="shuffle", type="boolean", nullable=true)
-     */
-    private $shuffle = false;
-
-    /**
-     * Number of Steps to use when we play the Exercise
-     * If 0, all the steps are used in the Player.
-     *
-     * @var int
-     *
-     * @ORM\Column(name="nb_question", type="integer")
-     */
-    private $pickSteps = 0;
-
-    /**
-     * Do we need to always give a same User the same Steps in the same order ?
-     * Works with `shuffle` and `pickSteps`.
-     *
-     * @var bool
-     *
-     * @ORM\Column(name="keepSameQuestion", type="boolean", nullable=true)
-     */
-    private $keepSteps = false;
-
-    /**
-     * Maximum time allowed to do the Exercise.
-     *
-     * @var int
-     *
-     * @ORM\Column(name="duration", type="integer")
-     */
-    private $duration = 0;
-
-    /**
-     * @ORM\Column(name="doprint", type="boolean", nullable=true)
-     */
-    private $doprint = false;
-
-    /**
-     * Number of attempts allowed for the Exercise.
-     *
-     * @var int
-     *
-     * @ORM\Column(name="max_attempts", type="integer")
-     */
-    private $maxAttempts = 0;
 
     /**
      * When corrections are available to the Users ?
@@ -105,9 +62,36 @@ class Exercise extends AbstractResource
      *
      * @var bool
      *
-     * @ORM\Column(name="disp_button_interrupt", type="boolean", nullable=true)
+     * @ORM\Column(type="boolean")
      */
-    private $dispButtonInterrupt = false;
+    private $interruptible = false;
+
+    /**
+     * Show overview to users or directly start the quiz.
+     *
+     * @ORM\Column(name="show_overview", type="boolean")
+     *
+     * @var bool
+     */
+    private $showOverview = true;
+
+    /**
+     * Show an end page when the user has finished the quiz.
+     *
+     * @ORM\Column(name="show_end_page", type="boolean")
+     *
+     * @var bool
+     */
+    private $showEndPage = false;
+
+    /**
+     * A message to display at the end of the quiz.
+     *
+     * @ORM\Column(name="end_message", type="text", nullable=true)
+     *
+     * @var string
+     */
+    private $endMessage = '';
 
     /**
      * Show the Exercise meta in the overview of the Exercise.
@@ -126,11 +110,6 @@ class Exercise extends AbstractResource
      * @ORM\Column(type="boolean")
      */
     private $statistics = false;
-
-    /**
-     * @ORM\Column(name="lock_attempt", type="boolean", nullable=true)
-     */
-    private $lockAttempt = false;
 
     /**
      * Flag indicating that we do not show the entire correction for the exercise
@@ -152,46 +131,115 @@ class Exercise extends AbstractResource
     private $wasPublishedOnce = false;
 
     /**
-     * Are anonymous allowed to play the Exercise ?
+     * If true, the users who pass the exercise are anonymized in papers.
      *
      * @var bool
      *
      * @ORM\Column(name="anonymous", type="boolean", nullable=true)
      */
-    private $anonymous = false;
+    private $anonymizeAttempts = false;
 
     /**
      * Type of the Exercise.
      *
      * @var string
      *
-     * @ORM\Column(name="type", type="string", length=255)
-     * sommatif, formatif, certificatif
+     * @ORM\Column(type="string")
      */
-    private $type = self::TYPE_SUMMATIVE;
+    private $type = ExerciseType::SUMMATIVE;
 
     /**
-     * @var ArrayCollection
-     *
-     * @ORM\OneToMany(targetEntity="Step", mappedBy="exercise", cascade={"all"})
+     * @ORM\OneToMany(targetEntity="Step", mappedBy="exercise", cascade={"all"}, orphanRemoval=true)
      * @ORM\OrderBy({"order" = "ASC"})
+     *
+     * @var ArrayCollection|Step[]
      */
     private $steps;
 
+    /**
+     * Show feedback flag.
+     *
+     * @var string
+     *
+     * @ORM\Column(name="show_feedback", type="boolean")
+     */
+    private $showFeedback = false;
+
+    /**
+     * Score on which we wish to render a paper.
+     * If 0, the score will be computed based on question maxs score.
+     * Else score will be computed based on this value.
+     *
+     * @ORM\Column(type="float")
+     *
+     * @var float
+     */
+    private $totalScoreOn = 0;
+
+    /**
+     * Score to obtain to pass the exercise.
+     *
+     * @ORM\Column(name="success_score", type="float", nullable=true)
+     *
+     * @var float
+     */
+    private $successScore;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     */
+    private $numbering = ExerciseNumbering::NONE;
+
+    /**
+     * Number of papers allowed.
+     * If 0, infinite amount of papers.
+     *
+     * @ORM\Column(name="max_papers", type="integer")
+     *
+     * @var int
+     */
+    private $maxPapers = 0;
+
+    /**
+     * Use all papers to compute stats.
+     *
+     * @var bool
+     *
+     * @ORM\Column(name="all_papers_stats", type="boolean", options={"default" = 1})
+     */
+    private $allPapersStatistics = true;
+
+    /**
+     * Sets the mandatory question flag.
+     *
+     * @var string
+     *
+     * @ORM\Column(name="mandatory_questions", type="boolean")
+     */
+    private $mandatoryQuestions = false;
+
+    /**
+     * Exercise constructor.
+     */
     public function __construct()
     {
+        $this->refreshUuid();
         $this->dateCorrection = new \DateTime();
         $this->steps = new ArrayCollection();
     }
 
-    /**
-     * Get id.
-     *
-     * @return int
-     */
-    public function getId()
+    public function getTitle()
     {
-        return $this->id;
+        return !empty($this->resourceNode) ? $this->resourceNode->getName() : null;
+    }
+
+    public function setTitle($title)
+    {
+        if (!empty($this->resourceNode)) {
+            $this->resourceNode->setName($title);
+        }
     }
 
     /**
@@ -212,122 +260,6 @@ class Exercise extends AbstractResource
     public function getDescription()
     {
         return $this->description;
-    }
-
-    /**
-     * Set shuffle.
-     *
-     * @param bool $shuffle
-     */
-    public function setShuffle($shuffle)
-    {
-        $this->shuffle = $shuffle;
-    }
-
-    /**
-     * Get shuffle.
-     */
-    public function getShuffle()
-    {
-        return $this->shuffle;
-    }
-
-    /**
-     * Set pickSteps.
-     *
-     * @param int $pickSteps
-     */
-    public function setPickSteps($pickSteps)
-    {
-        $this->pickSteps = $pickSteps;
-    }
-
-    /**
-     * Get pickSteps.
-     *
-     * @return int
-     */
-    public function getPickSteps()
-    {
-        return $this->pickSteps;
-    }
-
-    /**
-     * Set keepSteps.
-     *
-     * @param bool $keepSteps
-     */
-    public function setKeepSteps($keepSteps)
-    {
-        $this->keepSteps = $keepSteps;
-    }
-
-    /**
-     * Get keepSteps.
-     *
-     * @return bool
-     */
-    public function getKeepSteps()
-    {
-        return $this->keepSteps;
-    }
-
-    /**
-     * Set duration.
-     *
-     * @param int $duration
-     */
-    public function setDuration($duration)
-    {
-        $this->duration = $duration;
-    }
-
-    /**
-     * Get duration.
-     *
-     * @return int
-     */
-    public function getDuration()
-    {
-        return $this->duration;
-    }
-
-    /**
-     * Set doprint.
-     *
-     * @param bool $doprint
-     */
-    public function setDoprint($doprint)
-    {
-        $this->doprint = $doprint;
-    }
-
-    /**
-     * Get doprint.
-     */
-    public function getDoprint()
-    {
-        return $this->doprint;
-    }
-
-    /**
-     * Set maxAttempts.
-     *
-     * @param int $maxAttempts
-     */
-    public function setMaxAttempts($maxAttempts)
-    {
-        $this->maxAttempts = $maxAttempts;
-    }
-
-    /**
-     * Get maxAttempts.
-     *
-     * @return int
-     */
-    public function getMaxAttempts()
-    {
-        return $this->maxAttempts;
     }
 
     /**
@@ -391,21 +323,73 @@ class Exercise extends AbstractResource
     }
 
     /**
-     * Set dispButtonInterrupt.
+     * Set interruptible.
      *
-     * @param bool $dispButtonInterrupt
+     * @param bool $interruptible
      */
-    public function setDispButtonInterrupt($dispButtonInterrupt)
+    public function setInterruptible($interruptible)
     {
-        $this->dispButtonInterrupt = $dispButtonInterrupt;
+        $this->interruptible = $interruptible;
     }
 
     /**
-     * Get dispButtonInterrupt.
+     * Is interruptible?
+     *
+     * @return bool
      */
-    public function getDispButtonInterrupt()
+    public function isInterruptible()
     {
-        return $this->dispButtonInterrupt;
+        return $this->interruptible;
+    }
+
+    /**
+     * Set show end page.
+     *
+     * @param bool $showEndPage
+     */
+    public function setShowEndPage($showEndPage)
+    {
+        $this->showEndPage = $showEndPage;
+    }
+
+    /**
+     * Is end page shown ?
+     *
+     * @return bool
+     */
+    public function getShowEndPage()
+    {
+        return $this->showEndPage;
+    }
+
+    public function setEndMessage($endMessage)
+    {
+        $this->endMessage = $endMessage;
+    }
+
+    public function getEndMessage()
+    {
+        return $this->endMessage;
+    }
+
+    /**
+     * Set show overview.
+     *
+     * @param bool $showOverview
+     */
+    public function setShowOverview($showOverview)
+    {
+        $this->showOverview = $showOverview;
+    }
+
+    /**
+     * Is overview shown ?
+     *
+     * @return bool
+     */
+    public function getShowOverview()
+    {
+        return $this->showOverview;
     }
 
     /**
@@ -449,31 +433,13 @@ class Exercise extends AbstractResource
     }
 
     /**
-     * Set lockAttempt.
+     * Set minimal correction.
      *
-     * @param bool $lockAttempt
-     */
-    public function setLockAttempt($lockAttempt)
-    {
-        $this->lockAttempt = $lockAttempt;
-    }
-
-    /**
-     * Get lockAttempt.
-     */
-    public function getLockAttempt()
-    {
-        return $this->lockAttempt;
-    }
-
-    /**
-     * Do we have to show the minimal correction view ?
+     * @param bool $minimalCorrection
      */
     public function setMinimalCorrection($minimalCorrection)
     {
         $this->minimalCorrection = $minimalCorrection;
-
-        return $this;
     }
 
     /**
@@ -484,11 +450,6 @@ class Exercise extends AbstractResource
     public function isMinimalCorrection()
     {
         return $this->minimalCorrection;
-    }
-
-    public function archiveExercise()
-    {
-        $this->resourceNode = null;
     }
 
     /**
@@ -508,21 +469,23 @@ class Exercise extends AbstractResource
     }
 
     /**
-     * Set anonymous.
+     * Set anonymize attempts.
      *
-     * @param bool $anonymous
+     * @param bool $anonymizeAttempts
      */
-    public function setAnonymous($anonymous)
+    public function setAnonymizeAttempts($anonymizeAttempts)
     {
-        $this->anonymous = $anonymous;
+        $this->anonymizeAttempts = $anonymizeAttempts;
     }
 
     /**
-     * Get anonymous.
+     * Get anonymize attempts.
+     *
+     * @return bool
      */
-    public function getAnonymous()
+    public function getAnonymizeAttempts()
     {
-        return $this->anonymous;
+        return $this->anonymizeAttempts;
     }
 
     /**
@@ -550,7 +513,46 @@ class Exercise extends AbstractResource
     }
 
     /**
-     * Add a step to the Exercise.
+     * Gets a step by its UUID.
+     *
+     * @param string $uuid
+     *
+     * @return Step|null
+     */
+    public function getStep($uuid)
+    {
+        foreach ($this->steps as $step) {
+            if ($step->getUuid() === $uuid) {
+                return $step;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets a question by its UUID.
+     *
+     * @param string $uuid
+     *
+     * @return Item|null
+     */
+    public function getQuestion($uuid)
+    {
+        foreach ($this->steps as $step) {
+            $questions = $step->getQuestions();
+            foreach ($questions as $question) {
+                if ($question->getUuid() === $uuid) {
+                    return $question;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Adds a step to the Exercise.
      *
      * @param Step $step
      *
@@ -559,8 +561,8 @@ class Exercise extends AbstractResource
     public function addStep(Step $step)
     {
         if (!$this->steps->contains($step)) {
+            $step->setOrder($this->steps->count());
             $this->steps->add($step);
-
             $step->setExercise($this);
         }
 
@@ -568,7 +570,7 @@ class Exercise extends AbstractResource
     }
 
     /**
-     * Remove a Step from the Exercise.
+     * Removes a Step from the Exercise.
      *
      * @param Step $step
      *
@@ -581,5 +583,125 @@ class Exercise extends AbstractResource
         }
 
         return $this;
+    }
+
+    /**
+     * Sets show feedback.
+     *
+     * @param bool $showFeedback
+     */
+    public function setShowFeedback($showFeedback)
+    {
+        $this->showFeedback = $showFeedback;
+    }
+
+    /**
+     * Gets show feedback.
+     *
+     * @return bool
+     */
+    public function getShowFeedback()
+    {
+        return $this->showFeedback;
+    }
+
+    /**
+     * Sets totalScoreOn.
+     *
+     * @param float $totalScoreOn
+     */
+    public function setTotalScoreOn($totalScoreOn)
+    {
+        $this->totalScoreOn = $totalScoreOn;
+    }
+
+    /**
+     * Gets totalScoreOn.
+     *
+     * @return float
+     */
+    public function getTotalScoreOn()
+    {
+        return $this->totalScoreOn;
+    }
+
+    /**
+     * Sets successScore.
+     *
+     * @param float $successScore
+     */
+    public function setSuccessScore($successScore)
+    {
+        $this->successScore = $successScore;
+    }
+
+    /**
+     * Gets successScore.
+     *
+     * @return float
+     */
+    public function getSuccessScore()
+    {
+        return $this->successScore;
+    }
+
+    public function setNumbering($numbering)
+    {
+        $this->numbering = $numbering;
+    }
+
+    public function getNumbering()
+    {
+        return $this->numbering;
+    }
+
+    public function setPicking($picking)
+    {
+        $this->picking = $picking;
+    }
+
+    public function getPicking()
+    {
+        return $this->picking;
+    }
+
+    public function setMaxPapers($maxPapers)
+    {
+        $this->maxPapers = $maxPapers;
+    }
+
+    public function getMaxPapers()
+    {
+        return $this->maxPapers;
+    }
+
+    /**
+     * Gets allPapersStatistics.
+     *
+     * @return bool
+     */
+    public function isAllPapersStatistics()
+    {
+        return $this->allPapersStatistics;
+    }
+
+    /**
+     * Sets allPapersStatistics.
+     *
+     * @param bool $allPapersStatistics
+     */
+    public function setAllPapersStatistics($allPapersStatistics)
+    {
+        $this->allPapersStatistics = $allPapersStatistics;
+    }
+
+    public function setMandatoryQuestions($mandatoryQuestions)
+    {
+        $this->mandatoryQuestions = $mandatoryQuestions;
+    }
+
+    public function getMandatoryQuestions()
+    {
+        return $this->mandatoryQuestions;
     }
 }

@@ -11,37 +11,38 @@
 
 namespace Claroline\CoreBundle\Twig;
 
-use JMS\DiExtraBundle\Annotation\Inject;
-use JMS\DiExtraBundle\Annotation\InjectParams;
-use JMS\DiExtraBundle\Annotation\Service;
-use JMS\DiExtraBundle\Annotation\Tag;
-use Claroline\CoreBundle\Manager\ResourceManager;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Resource\ResourceType;
+use Claroline\CoreBundle\Manager\Resource\ResourceNodeManager;
+use Claroline\CoreBundle\Manager\ResourceManager;
+use JMS\DiExtraBundle\Annotation as DI;
 
 /**
- * @Service
- * @Tag("twig.extension")
+ * @DI\Service
+ * @DI\Tag("twig.extension")
  */
 class ResourceExtension extends \Twig_Extension
 {
-    protected $resourceManager;
+    /**
+     * @var ResourceManager
+     */
+    private $resourceManager;
+    private $resourceNodeManager;
 
     /**
-     * @InjectParams({
-     *     "resourceManager" = @Inject("claroline.manager.resource_manager")
+     * ResourceExtension constructor.
+     *
+     * @DI\InjectParams({
+     *     "resourceManager" = @DI\Inject("claroline.manager.resource_manager"),
+     *     "resourceNodeManager" = @DI\Inject("claroline.manager.resource_node")
      * })
+     *
+     * @param ResourceManager $resourceManager
      */
-    public function __construct(ResourceManager $resourceManager)
+    public function __construct(ResourceNodeManager $resourceNodeManager, ResourceManager $resourceManager)
     {
         $this->resourceManager = $resourceManager;
-    }
-
-    public function getFunctions()
-    {
-        return array(
-            'isMenuActionImplemented' => new \Twig_Function_Method($this, 'isMenuActionImplemented'),
-            'getCurrentUrl' => new \Twig_Function_Method($this, 'getCurrentUrl'),
-        );
+        $this->resourceNodeManager = $resourceNodeManager;
     }
 
     public function getName()
@@ -49,9 +50,29 @@ class ResourceExtension extends \Twig_Extension
         return 'resource_extension';
     }
 
+    public function getFunctions()
+    {
+        return [
+            'isMenuActionImplemented' => new \Twig_Function_Method($this, 'isMenuActionImplemented'),
+            'getCurrentUrl' => new \Twig_Function_Method($this, 'getCurrentUrl'),
+            'isCodeProtected' => new \Twig_Function_Method($this, 'isCodeProtected'),
+            'requiresUnlock' => new \Twig_Function_Method($this, 'requiresUnlock'),
+        ];
+    }
+
     public function isMenuActionImplemented(ResourceType $resourceType = null, $menuName)
     {
         return $this->resourceManager->isResourceActionImplemented($resourceType, $menuName);
+    }
+
+    public function isCodeProtected(ResourceNode $resourceNode)
+    {
+        return $this->resourceNodeManager->isCodeProtected($resourceNode);
+    }
+
+    public function requiresUnlock(ResourceNode $resourceNode)
+    {
+        return $this->resourceNodeManager->requiresUnlock($resourceNode);
     }
 
     public function getCurrentUrl()

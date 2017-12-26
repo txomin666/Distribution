@@ -1,82 +1,243 @@
-import React, { Component } from 'react'
-import { DropdownButton, MenuItem } from 'react-bootstrap'
+import React from 'react'
+import {PropTypes as T} from 'prop-types'
+import classes from 'classnames'
+import DropdownButton from 'react-bootstrap/lib/DropdownButton'
+import MenuItem from 'react-bootstrap/lib/MenuItem'
 
-const T = React.PropTypes
+import {t} from '#/main/core/translation'
+import {TooltipElement} from '#/main/core/layout/components/tooltip-element.jsx'
+import {MenuItemAction} from '#/main/core/layout/components/dropdown.jsx'
 
-const PagePrimaryAction = props =>
-  <button
-    type="button"
-    className="btn btn-link"
-    onClick={props.handleAction}
+/**
+ * Base component for each page actions.
+ *
+ * @param props
+ * @constructor
+ */
+const PageAction = props =>
+  <TooltipElement
+    id={props.id}
+    position="bottom"
+    tip={props.title}
   >
-    {props.icon && <span className={props.icon}></span>}
-    &nbsp;{props.label}
-  </button>
+    {typeof props.action === 'function' ?
+      <button
+        type="button"
+        role="button"
+        className={classes(
+          'btn page-action-btn',
+          {
+            'disabled': props.disabled,
+            'page-action-primary': props.primary,
+            'page-action-danger': props.dangerous,
+            'page-action-default': !props.primary && !props.dangerous
+          },
+          props.className
+        )}
+        disabled={props.disabled}
+        onClick={() => !props.disabled && props.action()}
+      >
+        <span className={classes('page-action-icon', props.icon)} aria-hidden={true} />
+        {props.children}
+      </button>
+      :
+      <a
+        role="link"
+        className={classes(
+          'btn page-action-btn',
+          {
+            'disabled': props.disabled,
+            'page-action-primary': props.primary,
+            'page-action-danger': props.dangerous,
+            'page-action-default': !props.primary && !props.dangerous
+          },
+          props.className
+        )}
+        disabled={props.disabled}
+        href={!props.disabled ? props.action : ''}
+      >
+        <span className={classes('page-action-icon', props.icon)} aria-hidden={true} />
+        {props.children}
+      </a>
+    }
+  </TooltipElement>
 
-PagePrimaryAction.propTypes = {
-  icon: T.string,
-  label: T.string.isRequired,
-  handleAction: T.func.isRequired
+PageAction.propTypes = {
+  id: T.string.isRequired,
+  primary: T.bool,
+  dangerous: T.bool,
+  title: T.string.isRequired,
+  icon: T.string.isRequired,
+  disabled: T.bool,
+  children: T.node,
+
+  /**
+   * Additional CSS classes.
+   */
+  className: T.string,
+
+  /**
+   * The target action of the button.
+   */
+  action: T.oneOfType([T.string, T.func]).isRequired
 }
 
-const MoreActionsDropdown = props =>
-  <DropdownButton
-    id={`dropdown-other-actions`}
-    title={<span className="fa fa-fw fa-ellipsis-v"></span>}
-    bsStyle={`link`}
-    noCaret={true}
-    pullRight={true}
-  >
-    <MenuItem header>More actions</MenuItem>
-
-    {props.actions.map((action, index) => (
-      <MenuItem key={index} eventKey={index}>
-        {action.icon && <span className={action.icon}></span>}
-        &nbsp;{action.label}
-      </MenuItem>
-    ))}
-  </DropdownButton>
-
-MoreActionsDropdown.propTypes = {
-  actions: T.arrayOf(
-    T.shape({
-      icon: T.string,
-      label: T.string.isRequired,
-      primary: T.bool,
-      handleAction: T.func.isRequired
-    })
-  ).isRequired
+PageAction.defaultProps = {
+  disabled: false,
+  primary: false,
+  dangerous: false
 }
 
-export default class PageActions extends Component {
-  render() {
-    const primaryActions = this.props.actions.filter(action => action.primary)
-    const secondaryActions = this.props.actions.filter(action => !action.primary)
+/**
+ * Toggles fullscreen mode.
+ *
+ * @param props
+ * @constructor
+ */
+const FullScreenAction = props =>
+  <PageAction
+    id="page-fullscreen"
+    title={t(props.fullscreen ? 'fullscreen_off' : 'fullscreen_on')}
+    icon={classes('fa', {
+      'fa-expand': !props.fullscreen,
+      'fa-compress': props.fullscreen
+    })}
+    action={props.toggleFullscreen}
+  />
 
-    return (
-      <div className="page-actions">
-        {primaryActions.map((primaryAction, index) => (
-          <PagePrimaryAction
-            key={index}
-            icon={primaryAction.icon}
-            label={primaryAction.label}
-            handleAction={primaryAction.handleAction}
-          />
-        ))}
+FullScreenAction.propTypes = {
+  fullscreen: T.bool.isRequired,
+  toggleFullscreen: T.func.isRequired
+}
 
-        {0 !== secondaryActions.length && <MoreActionsDropdown actions={secondaryActions} />}
-      </div>
-    )
+const MoreAction = props => {
+  // set defaults
+  const actions = props.actions.map(action => Object.assign({}, {
+    displayed: true,
+    disabled: false,
+    dangerous: false
+  }, action))
+
+  // filters and groups actions
+  const unclassifiedActions = actions.filter(action => action.displayed && !action.dangerous && !action.group)
+  const dangerousActions = actions.filter(action => action.displayed && action.dangerous)
+
+  // generate actions groups
+  const groupActions = {}
+  for (let i=0; i < actions.length; i++) {
+    const action = actions[i]
+    if (action.displayed && !action.dangerous && !!action.group) {
+      if (!groupActions[action.group]) {
+        groupActions[action.group] = []
+      }
+
+      groupActions[action.group].push(action)
+    }
   }
+
+  return (
+    <TooltipElement
+      id="page-more-title"
+      position="bottom"
+      tip={t('show_more_actions')}
+    >
+      <DropdownButton
+        id="page-more"
+        title={<span className="page-action-icon fa fa-ellipsis-v" />}
+        className="btn page-action-btn page-action-default"
+        noCaret={true}
+        pullRight={true}
+      >
+        {0 !== unclassifiedActions.length &&
+          <MenuItem header={true}>{props.title}</MenuItem>
+        }
+
+        {unclassifiedActions.map((action, actionIndex) =>
+          <MenuItemAction
+            key={`page-more-${actionIndex}`}
+            {...action}
+          />
+        )}
+
+        {Object.keys(groupActions).map((group, groupIndex) => [
+          <MenuItem key={`page-more-group-${groupIndex}`} header={true}>{group}</MenuItem>,
+          ...groupActions[group].map((action, actionIndex) =>
+            <MenuItemAction
+              key={`page-more-group-action${actionIndex}`}
+              {...action}
+            />
+          )
+        ])}
+
+        {0 !== dangerousActions.length &&
+          <MenuItem divider />
+        }
+
+        {dangerousActions.map((action, actionIndex) =>
+          <MenuItemAction
+            key={`page-more-dangerous-${actionIndex}`}
+            {...action}
+          />
+        )}
+
+      </DropdownButton>
+    </TooltipElement>
+  )
 }
+
+MoreAction.propTypes = {
+  title: T.string,
+  actions: T.arrayOf(T.shape({
+    icon: T.string,
+    label: T.string.isRequired,
+    action: T.oneOfType([T.string, T.func]).isRequired,
+    group: T.string,
+    dangerous: T.bool,
+    displayed: T.bool,
+    disabled: T.bool
+  })).isRequired
+}
+
+MoreAction.defaultProps = {
+  title: t('more_actions')
+}
+
+/**
+ * Groups some actions together.
+ *
+ * @param props
+ * @constructor
+ */
+const PageGroupActions = props =>
+  <div className={classes('page-actions-group', props.className)}>
+    {props.children}
+  </div>
+
+PageGroupActions.propTypes = {
+  className: T.string,
+  children: T.node.isRequired
+}
+
+/**
+ * Creates actions bar for a page.
+ *
+ * @param props
+ * @constructor
+ */
+const PageActions = props =>
+  <nav className={classes('page-actions', props.className)}>
+    {props.children}
+  </nav>
 
 PageActions.propTypes = {
-  actions: T.arrayOf(
-    T.shape({
-      icon: T.string,
-      label: T.string.isRequired,
-      primary: T.bool,
-      handleAction: T.func.isRequired
-    })
-  ).isRequired
+  className: T.string,
+  children: T.node.isRequired
+}
+
+export {
+  PageAction,
+  FullScreenAction,
+  MoreAction,
+  PageGroupActions,
+  PageActions
 }

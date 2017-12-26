@@ -26,6 +26,7 @@ class ProfileType extends AbstractType
     private $langs;
     private $authenticationDrivers;
     private $accesses;
+    private $currentUser;
 
     /**
      * Constructor.
@@ -40,7 +41,8 @@ class ProfileType extends AbstractType
         $isAdmin,
         $isGrantedUserAdministration,
         $accesses,
-        $authenticationDrivers = null
+        $authenticationDrivers = null,
+        $currentUser = null
     ) {
         $this->accesses = $accesses;
         $this->platformRoles = $platformRoles;
@@ -49,6 +51,7 @@ class ProfileType extends AbstractType
         $this->langs = $localeManager->retrieveAvailableLocales();
         $this->authenticationDrivers = $authenticationDrivers;
         $this->forApi = false;
+        $this->currentUser = $currentUser;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -96,15 +99,9 @@ class ProfileType extends AbstractType
             )
             ->add(
                 'organizations',
-                'entity',
+                'organization_picker',
                 [
-                    'label' => 'organizations',
-                    'class' => 'Claroline\CoreBundle\Entity\Organization\Organization',
-                    'expanded' => true,
-                    'multiple' => true,
-                    'property' => 'name',
-                    'read_only' => true,
-                    'disabled' => true,
+                   'label' => 'organizations',
                 ]
             );
 
@@ -185,10 +182,17 @@ class ProfileType extends AbstractType
                 )
                 ->add(
                     'organizations',
+                    'organization_picker',
+                    [
+                       'label' => 'organizations',
+                    ]
+                )
+                ->add(
+                    'groups',
                     'entity',
                     [
-                        'label' => 'organizations',
-                        'class' => 'Claroline\CoreBundle\Entity\Organization\Organization',
+                        'label' => 'groups',
+                        'class' => 'Claroline\CoreBundle\Entity\Group',
                         'expanded' => true,
                         'multiple' => true,
                         'property' => 'name',

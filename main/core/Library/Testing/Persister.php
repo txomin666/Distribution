@@ -9,8 +9,10 @@ use Claroline\CoreBundle\Entity\Group;
 use Claroline\CoreBundle\Entity\Organization\Location;
 use Claroline\CoreBundle\Entity\Organization\Organization;
 use Claroline\CoreBundle\Entity\ProfileProperty;
+use Claroline\CoreBundle\Entity\Resource\Directory;
 use Claroline\CoreBundle\Entity\Resource\File;
 use Claroline\CoreBundle\Entity\Resource\MaskDecoder;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\Resource\ResourceType;
 use Claroline\CoreBundle\Entity\Role;
 use Claroline\CoreBundle\Entity\User;
@@ -65,7 +67,6 @@ class Persister
         $user->setUsername($username);
         $user->setPlainPassword($username);
         $user->setMail($username.'@mail.com');
-        $user->setGuid(uniqid());
         $user->addRole($roleUser);
         $user->setPublicUrl($username);
         $user->setCreationDate(new \DateTime());
@@ -95,6 +96,21 @@ class Persister
         return $workspace;
     }
 
+    public function directory($name, ResourceNode $parent, Workspace $workspace, User $creator)
+    {
+        $directory = new Directory();
+        $directory->setName($name);
+        $dirType = $this->om->getRepository('ClarolineCoreBundle:Resource\ResourceType')->findOneByName('directory');
+
+        return $this->container->get('claroline.manager.resource_manager')->create(
+          $directory,
+          $dirType,
+          $creator,
+          $workspace,
+          $parent
+      );
+    }
+
     public function grantAdminRole(User $user)
     {
         $role = $this->role('ROLE_ADMIN');
@@ -105,7 +121,6 @@ class Persister
     public function group($name)
     {
         $group = new Group();
-        $group->setGuid($this->container->get('claroline.utilities.misc')->generateGuid());
         $group->setName($name);
         $this->om->persist($group);
 
@@ -195,11 +210,6 @@ class Persister
         return $location;
     }
 
-    public function facet($name, $forceCreationForm, $isMain)
-    {
-        return $this->container->get('claroline.manager.facet_manager')->createFacet($name, $forceCreationForm, $isMain);
-    }
-
     public function panelFacet(Facet $facet, $name, $collapse, $autoEditable = false)
     {
         return $this->container->get('claroline.manager.facet_manager')->addPanel($facet, $name, $collapse, $autoEditable);
@@ -223,7 +233,7 @@ class Persister
     {
         $toolManager = $this->container->get('claroline.manager.tool_manager');
         $tool = $toolManager->getAdminToolByName($toolName);
-        $role = $this->container->get('claroline.manager.role_manager')->getUserRole($user);
+        $role = $this->container->get('claroline.manager.role_manager')->getUserRole($user->getUsername());
         $toolManager->addRoleToAdminTool($tool, $role);
     }
 

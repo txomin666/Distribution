@@ -11,7 +11,6 @@
 namespace Claroline\CoreBundle\Library\Transfert\ConfigurationBuilders\Tools\Resources;
 
 use Claroline\CoreBundle\Entity\Resource\File;
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Library\Transfert\Importer;
 use Claroline\CoreBundle\Library\Transfert\RichTextInterface;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -90,18 +89,13 @@ class FileImporter extends Importer implements ConfigurationInterface, RichTextI
 
     public function import(array $array, $name, $created, $workspace)
     {
-        $ds = DIRECTORY_SEPARATOR;
-
         foreach ($array['data'] as $item) {
             $file = new File();
-            $tmpFile = new SfFile($this->getRootPath().$ds.$item['file']['path']);
-            $content = file_get_contents($this->getRootPath().DIRECTORY_SEPARATOR.$item['file']['path']);
+            $tmpFile = new SfFile($this->getRootPath().DIRECTORY_SEPARATOR.$item['file']['path']);
 
             $file = $this->container->get('claroline.listener.file_listener')->createFile(
                 $file, $tmpFile,  $name, $item['file']['mime_type'], $workspace
             );
-
-            file_put_contents(realpath($this->getRootPath()).$ds.$item['file']['path'], $content);
 
             return $file;
         }
@@ -111,19 +105,20 @@ class FileImporter extends Importer implements ConfigurationInterface, RichTextI
         );
     }
 
-    public function export(Workspace $workspace, array &$_files, $object)
+    public function export($workspace, array &$_files, $object)
     {
         $hash = $object->getHashName();
         $uid = uniqid().'.'.pathinfo($hash, PATHINFO_EXTENSION);
-        $_files[$uid] = $this->container
-            ->getParameter('claroline.param.files_directory').DIRECTORY_SEPARATOR.$hash;
+        $hash = $this->container->getParameter('claroline.param.files_directory').DIRECTORY_SEPARATOR.$hash;
+
+        $_files[$uid] = $hash;
         $data = [];
 
         if (file_exists($_files[$uid])) {
             $data = [['file' => [
-                'path' => $uid,
-                'mime_type' => $object->getResourceNode()->getMimeType(),
-            ]]];
+              'path' => $uid,
+              'mime_type' => $object->getResourceNode()->getMimeType(),
+          ]]];
         }
 
         return $data;

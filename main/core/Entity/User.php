@@ -12,8 +12,12 @@
 namespace Claroline\CoreBundle\Entity;
 
 use Claroline\CoreBundle\Entity\Facet\FieldFacetValue;
-use Claroline\CoreBundle\Entity\Model\WorkspaceModel;
+use Claroline\CoreBundle\Entity\Model\GroupsTrait;
+use Claroline\CoreBundle\Entity\Model\OrganizationsTrait;
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\Organization\Organization;
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
+use Claroline\CoreBundle\Entity\Tool\OrderedTool;
 use Claroline\CoreBundle\Validator\Constraints as ClaroAssert;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -35,7 +39,8 @@ use Symfony\Component\Validator\ExecutionContextInterface;
  *     name="claro_user",
  *     indexes={
  *         @Index(name="code_idx", columns={"administrative_code"}),
- *         @Index(name="enabled_idx", columns={"is_enabled"})
+ *         @Index(name="enabled_idx", columns={"is_enabled"}),
+ *         @Index(name="is_removed", columns={"is_removed"})
  * }
  *
  * )
@@ -45,9 +50,14 @@ use Symfony\Component\Validator\ExecutionContextInterface;
  * @DoctrineAssert\UniqueEntity("mail")
  * @Assert\Callback(methods={"isPublicUrlValid"})
  * @ClaroAssert\Username()
+ * @ClaroAssert\UserAdministrativeCode()
  */
-class User extends AbstractRoleSubject implements Serializable, AdvancedUserInterface, EquatableInterface, OrderableInterface
+class User extends AbstractRoleSubject implements Serializable, AdvancedUserInterface, EquatableInterface
 {
+    use UuidTrait;
+    use GroupsTrait;
+    use OrganizationsTrait;
+
     /**
      * @var int
      *
@@ -73,7 +83,7 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
      *
      * @ORM\Column(name="last_name", length=50)
      * @Assert\NotBlank()
-     * @Groups({"api_user","api_message", "api_user_min"})
+     * @Groups({"api_user", "api_message", "api_user_min"})
      * @SerializedName("lastName")
      */
     protected $lastName;
@@ -141,13 +151,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     protected $mail;
 
     /**
-     * @ORM\Column()
-     * @Groups({"api_user", "api_user_min"})
-     * @SerializedName("guid")
-     */
-    protected $guid;
-
-    /**
      * @var string
      *
      * @ORM\Column(name="administrative_code", nullable=true)
@@ -183,12 +186,14 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     protected $roles;
 
     /**
-     * @var AbstractResource[]|ArrayCollection
+     * @var ResourceNode[]|ArrayCollection
      *
      * @ORM\OneToMany(
      *     targetEntity="Claroline\CoreBundle\Entity\Resource\ResourceNode",
      *     mappedBy="creator"
      * )
+     *
+     * @todo relation should not be declared here (only use Unidirectional)
      */
     protected $resourceNodes;
 
@@ -218,6 +223,14 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     /**
      * @var \DateTime
      *
+     * @ORM\Column(name="last_login", type="datetime", nullable=true)
+     * @Groups({"api_user"})
+     */
+    protected $lastLogin;
+
+    /**
+     * @var \DateTime
+     *
      * @ORM\Column(name="initialization_date", type="datetime", nullable=true)
      * @Groups({"api_user"})
      * @SerializedName("initDate")
@@ -225,12 +238,14 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     protected $initDate;
 
     /**
-     * @var DesktopTool[]|ArrayCollection
+     * @var OrderedTool[]|ArrayCollection
      *
      * @ORM\OneToMany(
      *     targetEntity="Claroline\CoreBundle\Entity\Tool\OrderedTool",
      *     mappedBy="user"
      * )
+     *
+     * @todo relation should not be declared here (only use Unidirectional)
      */
     protected $orderedTools;
 
@@ -357,20 +372,10 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
      *     cascade={"persist"}
      * )
      * @Groups({"api_user"})
+     *
+     * @todo relation should not be declared here (only use Unidirectional)
      */
     protected $fieldsFacetValue;
-
-    /**
-     * @var WorkspaceModel[]|ArrayCollection
-     *
-     * @ORM\ManyToMany(
-     *     targetEntity="Claroline\CoreBundle\Entity\Model\WorkspaceModel",
-     *     inversedBy="users",
-     *     fetch="EXTRA_LAZY"
-     * )
-     * @ORM\JoinTable(name="claro_workspace_model_user")
-     */
-    protected $models;
 
     /**
      * @var string
@@ -396,7 +401,7 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     protected $emailValidationHash;
 
     /**
-     * @var Organization[]|ArrayCollection
+     * @var ArrayCollection
      *
      * @ORM\ManyToMany(
      *     targetEntity="Claroline\CoreBundle\Entity\Organization\Organization",
@@ -421,19 +426,31 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
      */
     protected $administratedOrganizations;
 
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\ManyToMany(
+     *     targetEntity="Claroline\CoreBundle\Entity\Organization\Location",
+     *     inversedBy="users"
+     * )
+     */
+    protected $locations;
+
     public function __construct()
     {
         parent::__construct();
         $this->roles = new ArrayCollection();
         $this->groups = new ArrayCollection();
-        $this->abstractResources = new ArrayCollection();
+        $this->resourceNodes = new ArrayCollection();
+        $this->locations = new ArrayCollection();
         $this->salt = base_convert(sha1(uniqid(mt_rand(), true)), 16, 36);
         $this->orderedTools = new ArrayCollection();
         $this->fieldsFacetValue = new ArrayCollection();
-        $this->models = new ArrayCollection();
         $this->organizations = new ArrayCollection();
         $this->events = new ArrayCollection();
         $this->administratedOrganizations = new ArrayCollection();
+        $this->refreshUuid();
+        $this->setEmailValidationHash(uniqid('', true));
     }
 
     /**
@@ -458,6 +475,11 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     public function getLastName()
     {
         return $this->lastName;
+    }
+
+    public function getFullName()
+    {
+        return trim($this->firstName.' '.$this->lastName);
     }
 
     /**
@@ -556,7 +578,7 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     public function setPassword($password)
     {
         if (null === $password) {
-            return;
+            return $this;
         }
 
         $this->password = $password;
@@ -590,14 +612,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     }
 
     /**
-     * @return Group[]|ArrayCollection
-     */
-    public function getGroups()
-    {
-        return $this->groups;
-    }
-
-    /**
      * Returns the user's roles as an array of string values (needed for
      * Symfony security checks). The roles owned by groups the user is a
      * member are included by default.
@@ -625,7 +639,7 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
      *
      * @param bool $areGroupsIncluded
      *
-     * @return array[Role]
+     * @return Role[]
      */
     public function getEntityRoles($areGroupsIncluded = true)
     {
@@ -645,6 +659,24 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         }
 
         return $roles;
+    }
+
+    /**
+     * Checks if the user has a given role.
+     *
+     * @param bool   $includeGroup
+     * @param string $roleName
+     *
+     * @return bool
+     */
+    public function hasRole($roleName, $includeGroup = true)
+    {
+        $roles = $this->getEntityRoles($includeGroup);
+        $roleNames = array_map(function (Role $role) {
+            return $role->getName();
+        }, $roles);
+
+        return in_array($roleName, $roleNames);
     }
 
     public function eraseCredentials()
@@ -752,6 +784,8 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
 
     /**
      * @param string $serialized
+     *
+     * @deprecated should be removed but I don't know if it's used somewhere
      */
     public function unserialize($serialized)
     {
@@ -813,6 +847,8 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
 
     /**
      * @return mixed
+     *
+     * @deprecated
      */
     public function getPlatformRole()
     {
@@ -823,31 +859,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
                 return $role;
             }
         }
-    }
-
-    /**
-     * Replace the old platform role of a user by a new one.
-     *
-     * @todo This function is working for now but it's buggy. A user can have many platform
-     * roles
-     *
-     * @param Role $platformRole
-     */
-    public function setPlatformRole($platformRole)
-    {
-        $roles = $this->getEntityRoles();
-
-        foreach ($roles as $role) {
-            if ($role->getType() !== Role::WS_ROLE) {
-                $removedRole = $role;
-            }
-        }
-
-        if (isset($removedRole)) {
-            $this->roles->removeElement($removedRole);
-        }
-
-        $this->roles->add($platformRole);
     }
 
     /**
@@ -875,6 +886,11 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         }
     }
 
+    /**
+     * @return OrderedTool[]|ArrayCollection
+     *
+     * @deprecated
+     */
     public function getOrderedTools()
     {
         return $this->orderedTools;
@@ -938,11 +954,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     public function setAcceptedTerms($boolean)
     {
         $this->hasAcceptedTerms = $boolean;
-    }
-
-    public function getOrderableFields()
-    {
-        return ['id', 'username', 'lastName', 'firstName', 'mail'];
     }
 
     public function isAccountNonExpired()
@@ -1036,6 +1047,11 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         return $this->hasTunedPublicUrl;
     }
 
+    /**
+     * @param ExecutionContextInterface $context
+     *
+     * @deprecated should be moved in UserValidator
+     */
     public function isPublicUrlValid(ExecutionContextInterface $context)
     {
         // Search for whitespaces
@@ -1078,18 +1094,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         return $this->initDate;
     }
 
-    public function addModel(WorkspaceModel $model)
-    {
-        if (!$this->models->contains($model)) {
-            $this->models->add($model);
-        }
-    }
-
-    public function removeModel(WorkspaceModel $model)
-    {
-        $this->models->removeElement($model);
-    }
-
     public function setAuthentication($authentication)
     {
         $this->authentication = $authentication;
@@ -1129,16 +1133,6 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         return $this->firstName.' '.$this->lastName;
     }
 
-    public function setGuid($guid)
-    {
-        $this->guid = $guid;
-    }
-
-    public function getGuid()
-    {
-        return $this->guid;
-    }
-
     public function setIsMailValidated($isMailValidated)
     {
         $this->isMailValidated = $isMailValidated;
@@ -1169,6 +1163,13 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         return $this->hideMailWarning;
     }
 
+    /**
+     * @param bool $includedGroups
+     *
+     * @return array
+     *
+     * @todo this should return an array collection
+     */
     public function getOrganizations($includeGroups = true)
     {
         $organizations = [];
@@ -1182,35 +1183,12 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         return array_merge($organizations, $this->organizations->toArray());
     }
 
-    public function addOrganization(Organization $organization)
+    /**
+     * @return ArrayCollection
+     */
+    public function getUserOrganizations()
     {
-        if (!$this->organizations->contains($organization)) {
-            $this->organizations->add($organization);
-        }
-    }
-
-    // todo: remove this method
-    public function setOrganizations($organizations)
-    {
-        $this->organizations = $organizations instanceof ArrayCollection ?
-            $organizations :
-            new ArrayCollection($organizations);
-    }
-
-    public static function getUserSearchableFields()
-    {
-        return [
-            'firstName',
-            'lastName',
-            'mail',
-            'administrativeCode',
-            'username',
-        ];
-    }
-
-    public static function getSearchableFields()
-    {
-        return self::getUserSearchableFields();
+        return $this->organizations;
     }
 
     public function getAdministratedOrganizations()
@@ -1238,6 +1216,12 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
         $this->isRemoved = $isRemoved;
     }
 
+    //alias
+    public function remove()
+    {
+        $this->setIsRemoved(true);
+    }
+
     public function getIsRemoved()
     {
         return $this->isRemoved;
@@ -1256,5 +1240,29 @@ class User extends AbstractRoleSubject implements Serializable, AdvancedUserInte
     public function disable()
     {
         $this->isEnabled = false;
+    }
+
+    public function clearRoles()
+    {
+        foreach ($this->roles as $role) {
+            if ($role->getName() !== 'ROLE_USER') {
+                $this->removeRole($role);
+            }
+        }
+    }
+
+    public function setLastLogin(\DateTime $date)
+    {
+        $this->lastLogin = $date;
+    }
+
+    public function getLastLogin()
+    {
+        return $this->lastLogin;
+    }
+
+    public function getLocations()
+    {
+        return $this->locations;
     }
 }

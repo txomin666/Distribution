@@ -8,6 +8,7 @@
 
 namespace Icap\WebsiteBundle\Repository;
 
+use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Gedmo\Tree\Entity\Repository\NestedTreeRepository;
 use Icap\WebsiteBundle\Entity\Website;
 
@@ -58,6 +59,9 @@ class WebsitePageRepository extends NestedTreeRepository
                 page.left,
                 page.level,
                 page.right,
+                IDENTITY(page.parent) AS parent,
+                page.resourceNodeType,
+                IDENTITY(page.resourceNode) AS resourceNodeId,
                 page.root,
                 page.type
             ');
@@ -73,9 +77,8 @@ class WebsitePageRepository extends NestedTreeRepository
                 ->setParameter('visible', true);
         }
 
-        $options = array('decorate' => false);
         $nodes = $queryBuilder->getQuery()->getArrayResult();
-        $tree = $this->buildTreeArray($nodes, $options);
+        $tree = $this->buildTreeArray($nodes);
 
         return $tree;
     }
@@ -117,5 +120,37 @@ class WebsitePageRepository extends NestedTreeRepository
         }
 
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @param ResourceNode $resourceNode
+     *
+     * @return WebsitePage
+     */
+    public function findRootPageByResourceNode(ResourceNode $resourceNode)
+    {
+        return $this->createQueryBuilder('page')
+            ->leftJoin('page.website', 'website')
+            ->leftJoin('website.resourceNode', 'resource')
+            ->where('resource = :resourceNode')
+            ->andWhere('page.type = :type')
+            ->setParameter('resourceNode', $resourceNode)
+            ->setParameter('type', 'root')
+            ->getQuery()
+            ->getSingleResult();
+    }
+
+    public function buildTreeArray(array $nodes)
+    {
+        $nodeIds = [];
+        $newNodes = [];
+        foreach ($nodes as $node) {
+            if (empty($node['parent']) || in_array($node['parent'], $nodeIds)) {
+                $nodeIds[] = $node['id'];
+                $newNodes[] = $node;
+            }
+        }
+
+        return parent::buildTreeArray($newNodes);
     }
 }

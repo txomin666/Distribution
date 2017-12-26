@@ -1,28 +1,81 @@
-<div class="path-container path-show">
-    <div class="path-header">
-        <h1 class="h4">
-            <button type="button" role="button" style="margin-right: 5px;" class="btn btn-sm btn-primary btn-path-edit" data-ng-if="pathShowCtrl.path.steps.length !== 0 && pathShowCtrl.editEnabled" data-ng-click="pathShowCtrl.edit()" data-placement="top" data-toggle="tooltip" data-original-title="{{ 'edit'|trans:{}:'path_wizards' }}">
-                <span class="fa fa-fw fa-pencil"></span>
-                <span class="sr-only">{{ 'edit'|trans:{}:'path_wizards' }}</span>
-            </button>
+<main
+    class="page path-player"
+    data-ng-class="{fullscreen: pathShowCtrl.fullscreen}"
+>
+    <header class="page-header resource-header">
+        <h1>
+            <div class="c100 sm p{{ progression }} path-progression" data-ng-if="pathShowCtrl.userProgression">
+                <span data-ng-if="100 !== progression">{{ pathShowCtrl.getTotalProgression() }}%</span>
+                <span data-ng-if="100 === progression">
+                    <span class="fa fa-fw fa-check"></span>
+                    <span class="sr-only">{{ pathShowCtrl.getTotalProgression() }}%</span>
+                </span>
+
+                <div class="slice" role="presentation">
+                    <div class="bar" role="presentation"></div>
+                    <div class="fill" role="presentation"></div>
+                </div>
+            </div>
 
             {{ pathShowCtrl.path.name }}
         </h1>
-        <div data-ng-if="pathShowCtrl.path.description" data-ng-bind-html="pathShowCtrl.path.description | trustAsHtml"></div>
 
-        <!-- Breadcrumbs -->
-        <path-navigation class="hidden-xs" data-ng-if="pathShowCtrl.path.breadcrumbs && pathShowCtrl.path.steps.length !== 0"></path-navigation>
+        <nav class="page-actions resource-actions" data-ng-if="pathShowCtrl.path.steps.length !== 0 && pathShowCtrl.editEnabled">
+            <div class="page-actions-group">
+                <button type="button" class="btn page-action-btn page-action-primary" data-ng-click="pathShowCtrl.edit()">
+                    <span class="page-action-icon fa fa-pencil"></span>
+                    <span class="sr-only">{{ 'edit'|trans:{}:'path_wizards' }}</span>
+                </button>
+            </div>
+
+            <div class="page-actions-group">
+                <button type="button" class="btn page-action-btn" data-ng-click="pathShowCtrl.toggleFullscreen()">
+                    <span
+                        class="page-action-icon fa"
+                        data-ng-class="{
+                            'fa-expand': !pathShowCtrl.fullscreen,
+                            'fa-compress': pathShowCtrl.fullscreen
+                        }"
+                    ></span>
+                    <span class="sr-only" data-ng-if="!pathShowCtrl.fullscreen">{{ 'fullscreen_on'|trans:{}:'platform' }}</span>
+                    <span class="sr-only" data-ng-if="pathShowCtrl.fullscreen">{{ 'fullscreen_off'|trans:{}:'platform' }}</span>
+                </button>
+                <div class="btn-group dropdown">
+                    <button class="btn page-action-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        <span class="page-action-icon fa fa-ellipsis-v"></span>
+                        <span class="sr-only">{{ 'more_actions'|trans:{}:'path_wizards' }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right">
+                        <li class="dropdown-header">{{ 'innova_path'|trans:{}:'resource' }}</li>
+                        <li>
+                            <a href="" data-ng-click="pathShowCtrl.unlockManager()">
+                                <span class="fa fa-fw fa-lock"></span> {{ 'path_dashboard'|trans:{}:'path_wizards' }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Description of the path -->
+    <div class="path-description" data-ng-if="pathShowCtrl.path.description" data-ng-bind-html="pathShowCtrl.path.description | trustAsHtml"></div>
+
+    <div class="page-content path-container" data-ng-if="pathShowCtrl.path.steps.length !== 0">
+        <!-- Summary of the Path-->
+        <path-summary-show></path-summary-show>
+
+        <div class="content-container">
+            <!-- Internal breadcrumbs -->
+            <path-navigation class="hidden-xs" data-ng-if="pathShowCtrl.path.breadcrumbs"></path-navigation>
+
+            <!-- User messages -->
+            <alert-box></alert-box>
+
+            <!-- Current step -->
+            <div class="current-step-container" data-ng-view=""></div>
+        </div>
     </div>
-
-    <!-- Summary of the Path-->
-    <path-summary-show data-title="pathShowCtrl.path.name" data-ng-if="pathShowCtrl.path.steps.length !== 0"></path-summary-show>
-
-
-    <!-- User messages -->
-    <alert-box></alert-box>
-
-    <!-- Current step -->
-    <div data-ng-view="" data-ng-if="pathShowCtrl.path.steps.length !== 0"></div>
 
     <!-- Empty path alert -->
     <div class="row" data-ng-if="pathShowCtrl.path.steps.length === 0">
@@ -44,4 +97,4 @@
             </button>
         </div>
     </div>
-</div>
+</main>

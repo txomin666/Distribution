@@ -11,7 +11,6 @@
 
 namespace Claroline\CoreBundle\Controller;
 
-use Claroline\CoreBundle\Entity\Model\WorkspaceModel;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
@@ -35,7 +34,6 @@ use Claroline\CoreBundle\Manager\ToolManager;
 use Claroline\CoreBundle\Manager\UserManager;
 use Claroline\CoreBundle\Manager\WidgetManager;
 use Claroline\CoreBundle\Manager\WorkspaceManager;
-use Claroline\CoreBundle\Manager\WorkspaceModelManager;
 use Claroline\CoreBundle\Manager\WorkspaceTagManager;
 use Claroline\CoreBundle\Manager\WorkspaceUserQueueManager;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -44,8 +42,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Bundle\TwigBundle\TwigEngine;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\FormFactory;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -58,6 +56,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Translation\TranslatorInterface;
 
 /**
@@ -88,7 +87,6 @@ class WorkspaceController extends Controller
     private $utils;
     private $widgetManager;
     private $workspaceManager;
-    private $workspaceModelManager;
     private $workspaceUserQueueManager;
 
     /**
@@ -113,7 +111,6 @@ class WorkspaceController extends Controller
      *     "utils"                     = @DI\Inject("claroline.security.utilities"),
      *     "widgetManager"             = @DI\Inject("claroline.manager.widget_manager"),
      *     "workspaceManager"          = @DI\Inject("claroline.manager.workspace_manager"),
-     *     "workspaceModelManager"     = @DI\Inject("claroline.manager.workspace_model_manager"),
      *     "workspaceUserQueueManager" = @DI\Inject("claroline.manager.workspace_user_queue_manager")
      * })
      */
@@ -138,7 +135,6 @@ class WorkspaceController extends Controller
         Utilities $utils,
         WidgetManager $widgetManager,
         WorkspaceManager $workspaceManager,
-        WorkspaceModelManager $workspaceModelManager,
         WorkspaceUserQueueManager $workspaceUserQueueManager
     ) {
         $this->authorization = $authorization;
@@ -161,7 +157,6 @@ class WorkspaceController extends Controller
         $this->utils = $utils;
         $this->widgetManager = $widgetManager;
         $this->workspaceManager = $workspaceManager;
-        $this->workspaceModelManager = $workspaceModelManager;
         $this->workspaceUserQueueManager = $workspaceUserQueueManager;
     }
 
@@ -315,7 +310,8 @@ class WorkspaceController extends Controller
     /**
      * @EXT\Route(
      *     "/new/form",
-     *     name="claro_workspace_creation_form"
+     *     name="claro_workspace_creation_form",
+     *     options={"expose"=true}
      * )
      *
      * @EXT\Template()
@@ -359,19 +355,18 @@ class WorkspaceController extends Controller
         $this->workspaceManager->setLogger($logger);
 
         if ($form->isValid()) {
-            $model = $form->get('model')->getData();
+            $modelFrom = $form->get('modelFrom')->getData();
+            $workspace = $form->getData();
+            $user = $this->tokenStorage->getToken()->getUser();
+            $workspace->setCreator($user);
 
-            if (!is_null($model)) {
-                $this->createWorkspaceFromModel($model, $form);
-            } else {
-                $workspace = $form->getData();
-                $template = new File($this->templateArchive);
-                $user = $this->tokenStorage->getToken()->getUser();
-                $workspace->setCreator($user);
-                $workspace = $this->workspaceManager->create($workspace, $template);
+            if (!$modelFrom) {
+                $modelFrom = $this->workspaceManager->getDefaultModel();
             }
+
+            $workspace = $this->workspaceManager->copy($modelFrom, $workspace, $workspace->isModel());
             $this->tokenUpdater->update($this->tokenStorage->getToken());
-            $route = $this->router->generate('claro_workspace_by_user');
+            $route = $this->router->generate('claro_workspace_open', ['workspaceId' => $workspace->getId()]);
 
             $msg = $this->get('translator')->trans(
                 'successfull_workspace_creation',
@@ -414,7 +409,8 @@ class WorkspaceController extends Controller
 
         $sessionFlashBag = $this->session->getFlashBag();
         $sessionFlashBag->add(
-            'success', $this->translator->trans(
+            'success',
+            $this->translator->trans(
                 'workspace_delete_success_message',
                 ['%workspaceName%' => $workspace->getName()],
                 'platform'
@@ -459,7 +455,10 @@ class WorkspaceController extends Controller
         $managerRole = $this->roleManager->getManagerRole($workspace);
 
         foreach ($currentRoles as $role) {
-            if ($managerRole->getName() === $role) {
+            //We check if $managerRole exists as an error proof condition.
+            //If something went wrong and it doesn't exists anymore,
+            //restorations tools should be used at this point
+            if ($managerRole && $managerRole->getName() === $role) {
                 $hasManagerAccess = true;
             }
         }
@@ -468,15 +467,23 @@ class WorkspaceController extends Controller
             $hasManagerAccess = true;
         }
 
-        //if manager or admin, show every tools
-        if ($hasManagerAccess) {
-            $orderedTools = $this->toolManager->getOrderedToolsByWorkspace($workspace);
+        if ($workspace->isModel()) {
+            $orderedTools = array_filter($this->toolManager->getOrderedToolsByWorkspace($workspace), function ($orderedTool) {
+                return in_array($orderedTool->getTool()->getName(), ['home', 'resource_manager', 'users', 'parameters']);
+            });
             $hideToolsMenu = false;
         } else {
-            //otherwise only shows the relevant tools
-            $orderedTools = $this->toolManager->getOrderedToolsByWorkspaceAndRoles($workspace, $currentRoles);
-            $hideToolsMenu = $this->workspaceManager->isToolsMenuHidden($workspace);
+            //if manager or admin, show every tools
+            if ($hasManagerAccess) {
+                $orderedTools = $this->toolManager->getOrderedToolsByWorkspace($workspace);
+                $hideToolsMenu = false;
+            } else {
+                //otherwise only shows the relevant tools
+                $orderedTools = $this->toolManager->getOrderedToolsByWorkspaceAndRoles($workspace, $currentRoles);
+                $hideToolsMenu = $this->workspaceManager->isToolsMenuHidden($workspace);
+            }
         }
+
         $roleHasAccess = [];
         $workspaceRolesWithAccess = $this->roleManager
             ->getWorkspaceRoleWithToolAccess($workspace);
@@ -520,6 +527,10 @@ class WorkspaceController extends Controller
         $event = $this->eventDispatcher->dispatch('open_tool_workspace_'.$toolName, new DisplayToolEvent($workspace));
         $this->eventDispatcher->dispatch('log', new LogWorkspaceToolReadEvent($workspace, $toolName));
         $this->eventDispatcher->dispatch('log', new LogWorkspaceEnterEvent($workspace));
+        // Add workspace to recent workspaces if user is not Usurped
+        if ($this->tokenStorage->getToken()->getUser() !== 'anon.' && !$this->isUsurpator($this->tokenStorage->getToken())) {
+            $this->workspaceManager->addRecentWorkspaceForUser($this->tokenStorage->getToken()->getUser(), $workspace);
+        }
 
         if ($toolName === 'resource_manager') {
             $this->session->set('isDesktop', false);
@@ -703,6 +714,7 @@ class WorkspaceController extends Controller
                 }
             }
         }
+
         $tool = $this->workspaceManager->getFirstOpenableTool($workspace);
 
         if ($tool) {
@@ -745,7 +757,7 @@ class WorkspaceController extends Controller
     }
 
     /**
-     * @todo Security context verification.
+     * @todo Security context verification
      * @EXT\Route(
      *     "/{workspace}/add/user/{user}",
      *     name="claro_workspace_add_user",
@@ -768,7 +780,7 @@ class WorkspaceController extends Controller
     }
 
     /**
-     * @todo Security context verification.
+     * @todo Security context verification
      * @EXT\Route(
      *     "/{workspace}/add/user/{user}/queue",
      *     name="claro_workspace_add_user_queue",
@@ -982,7 +994,7 @@ class WorkspaceController extends Controller
     }
 
     /**
-     * @todo Security context verification.
+     * @todo Security context verification
      * @EXT\Route(
      *     "/{workspaceId}/remove/user/{userId}",
      *     name="claro_workspace_delete_user",
@@ -1325,6 +1337,7 @@ class WorkspaceController extends Controller
      */
     public function importFormAction()
     {
+        $this->assertIsGranted('ROLE_WS_CREATOR');
         $importType = new ImportWorkspaceType();
         $form = $this->container->get('form.factory')->create($importType);
 
@@ -1344,28 +1357,108 @@ class WorkspaceController extends Controller
      */
     public function importAction()
     {
+        $this->assertIsGranted('ROLE_WS_CREATOR');
         $importType = new ImportWorkspaceType();
-        $form = $this->container->get('form.factory')->create($importType,  new Workspace());
+        $form = $this->container->get('form.factory')->create($importType, new Workspace());
         $form->handleRequest($this->request);
+        $modelLog = $this->container->getParameter('kernel.root_dir').'/logs/models.log';
+        $logger = FileLogger::get($modelLog);
+        $this->workspaceManager->setLogger($logger);
 
         if ($form->isValid()) {
-            $file = $form->get('workspace')->getData();
-            $template = new File($file);
-            $workspace = $form->getData();
-            $workspace->setCreator($this->tokenStorage->getToken()->getUser());
-            $this->workspaceManager->create($workspace, $template);
-        } else {
-            return new Response(
-                $this->templating->render(
-                    'ClarolineCoreBundle:Workspace:importForm.html.twig',
-                    ['form' => $form->createView()]
-                )
-            );
+            $urlImport = false;
+            if ($form->get('workspace')->getData()) {
+                $file = $form->get('workspace')->getData();
+                $template = new File($file);
+            } elseif ($form->get('fileUrl')->getData() && filter_var($form->get('fileUrl')->getData(), FILTER_VALIDATE_URL)) {
+                $urlImport = true;
+                $url = $form->get('fileUrl')->getData();
+                $template = $this->importFromUrl($url);
+                if ($template === null) {
+                    $msg = $this->translator->trans(
+                        'invalid_host',
+                        ['%url%' => $url],
+                        'platform'
+                    );
+                    $this->session->getFlashBag()->add('error', $msg);
+                }
+            }
+
+            if ($template !== null) {
+                $workspace = $form->getData();
+                $workspace->setCreator($this->tokenStorage->getToken()->getUser());
+                $this->workspaceManager->create($workspace, $template);
+                //delete manually created tmp if url import
+                if ($urlImport) {
+                    $fs = new FileSystem();
+                    $fs->remove($template);
+                }
+                $this->tokenUpdater->update($this->tokenStorage->getToken());
+
+                $route = $this->router->generate('claro_workspace_by_user');
+                $msg = $this->get('translator')->trans(
+                    'successfull_workspace_creation',
+                    ['%name%' => $form->get('name')->getData()],
+                    'platform'
+                );
+                $this->session->getFlashBag()->add('success', $msg);
+
+                return new RedirectResponse($route);
+            }
         }
 
-        $route = $this->router->generate('claro_workspace_by_user');
+        return new Response(
+            $this->templating->render(
+                'ClarolineCoreBundle:Workspace:importForm.html.twig',
+                ['form' => $form->createView()]
+            )
+        );
+    }
 
-        return new RedirectResponse($route);
+    private function importFromUrl($url)
+    {
+        $template = null;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_exec($ch);
+
+        //check if url is a valid provider
+        $retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($retcode === 200 || $retcode === 201) {
+            $import_sub_folder = 'import'.DIRECTORY_SEPARATOR;
+            $import_folder_path = $this->container->get('claroline.config.platform_config_handler')->getParameter('tmp_dir').DIRECTORY_SEPARATOR.$import_sub_folder;
+            $fs = new FileSystem();
+            if (!$fs->exists($import_folder_path)) {
+                $fs->mkdir($import_folder_path);
+            }
+
+            //REST URI hash used as unique file identifier for temporary template
+            $filepath = $import_folder_path.md5($url).'.zip';
+
+            //if already exists resume using it, no need to upload it again
+            if (file_exists($filepath)) {
+                return new File($filepath);
+            } else {
+                $fileWriter = fopen($filepath, 'w+');
+                curl_setopt($ch, CURLOPT_NOBODY, false);
+                curl_setopt($ch, CURLOPT_FILE, $fileWriter);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 900);
+                curl_exec($ch);
+
+                if (!curl_errno($ch)) {
+                    $template = new File($filepath);
+                }
+                fclose($fileWriter);
+            }
+        }
+        curl_close($ch);
+
+        return $template;
     }
 
     /**
@@ -1425,54 +1518,15 @@ class WorkspaceController extends Controller
         ];
     }
 
-    private function createWorkspaceFromModel(WorkspaceModel $model, FormInterface $form)
+    private function isUsurpator($token)
     {
-        $this->workspaceManager->createWorkspaceFromModel(
-            $model,
-            $this->tokenStorage->getToken()->getUser(),
-            $form->get('name')->getData(),
-            $form->get('code')->getData(),
-            $form->get('description')->getData(),
-            $form->get('displayable')->getData(),
-            $form->get('selfRegistration')->getData(),
-            $form->get('selfUnregistration')->getData(),
-            $errors
-        );
-
-        $flashBag = $this->session->getFlashBag();
-
-        foreach ($errors['widgetConfigErrors'] as $widgetConfigError) {
-            $widgetName = $widgetConfigError['widgetName'];
-            $widgetInstanceName = $widgetConfigError['widgetInstanceName'];
-            $msg = '['.
-                $this->translator->trans($widgetName, [], 'widget').
-                '] '.
-                $this->translator->trans(
-                    'widget_configuration_copy_warning',
-                    ['%widgetInstanceName%' => $widgetInstanceName],
-                    'widget'
-                );
-            $flashBag->add('error', $msg);
-        }
-
-        foreach ($errors['resourceErrors'] as $resourceError) {
-            $resourceName = $resourceError['resourceName'];
-            $resourceType = $resourceError['resourceType'];
-            $isCopy = $resourceError['type'] === 'copy';
-
-            $msg = '['.
-                $this->translator->trans($resourceType, [], 'resource').
-                '] ';
-
-            if ($isCopy) {
-                $msg .= $this->translator->trans(
-                    'resource_copy_warning',
-                    ['%resourceName%' => $resourceName],
-                    'resource'
-                );
+        foreach ($token->getRoles() as $role) {
+            if ($role->getRole() === 'ROLE_USURPATE_WORKSPACE_ROLE' || $role instanceof SwitchUserRole) {
+                return true;
             }
-            $flashBag->add('error', $msg);
         }
+
+        return false;
     }
 
     private function throwWorkspaceDeniedException(Workspace $workspace)

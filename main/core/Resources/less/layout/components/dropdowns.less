@@ -1,0 +1,67 @@
+.dropdown-menu {
+    // adds more customization options
+    .box-shadow(@dropdown-menu-box-shadow);
+    border-radius: @dropdown-menu-border-radius;
+
+    > li > a {
+        padding: @dropdown-link-padding;
+    }
+
+    .dropdown-checkbox {
+        label {
+            white-space: nowrap;
+            display: block;
+            padding: @dropdown-link-padding;
+            padding-left: 35px; // for the checkbox
+        }
+
+        &:hover,
+        &:focus {
+            label {
+                background: @dropdown-link-hover-bg;
+            }
+        }
+    }
+
+    // creates contextual links
+    .dropdown-link-danger a {
+        color: @brand-danger;
+
+        &:hover,
+        &:focus {
+            color: white;
+            background: @brand-danger;
+        }
+    }
+
+    // increases space between icons and text
+    .fa {
+        margin-right: @icon-dropdown-spacer;
+    }
+
+    // removes additional margin when checkboxes/radios are inside dropdown
+    .checkbox,
+    .radio {
+        margin: 0;
+    }
+}
+
+.dropdown-header {
+    font-weight: bold;
+    padding: @dropdown-link-padding;
+}
+
+// todo : check why this is needed
+/*.dropdown-menu li label,
+.nav.nav-tabs .dropdown li i {
+    font-weight: normal !important;
+    display: block;
+    padding: 5px 15px;
+    margin: 0;
+    cursor: pointer;
+
+    &:hover, &.active {
+        color:@dropdown-link-hover-color;
+        background:@dropdown-link-hover-bg;
+    }
+}*/
