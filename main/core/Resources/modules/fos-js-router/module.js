@@ -1,5 +1,4 @@
 import angular from 'angular/index'
-import {generateUrl} from './index'
 
 import {generateUrl} from './index'
 

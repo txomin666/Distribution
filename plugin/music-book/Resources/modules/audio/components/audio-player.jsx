@@ -144,7 +144,7 @@ class AudioPlayer extends Component {
             className={classes('btn', !this.state.playing ? 'btn-primary' : 'btn-warning')}
             onClick={() => this.playPause()}
           >
-            <span className={classes('fa fa-fw', !this.state.playing ? 'fa-play' : 'fa-pause')}></span>
+            <span className={classes('fa fa-fw', !this.state.playing ? 'fa-play' : 'fa-pause')} />
           </button>
         </div>
         <div className="audio-waveform">

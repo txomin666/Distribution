@@ -127,7 +127,10 @@
         "innova/media-resource-bundle": "*",
         "ujm/exo-bundle": "*",
         "icap/lesson-bundle": "*",
-        "icap/inwicast-plugin-bundle": "*"
+        "icap/inwicast-plugin-bundle": "*",
+        "claroline/music-book-bundle": "*",
+        "claroline/music-instrument-bundle": "*",
+        "claroline/music-theory-bundle": "*"
     },
     "autoload": {
         "psr-4": {
