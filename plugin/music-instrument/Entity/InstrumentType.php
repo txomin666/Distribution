@@ -2,6 +2,7 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,8 +12,10 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_instrument_type")
  */
-class InstrumentType implements \JsonSerializable
+class InstrumentType
 {
+    use UuidTrait;
+
     /**
      * Identifier of the type.
      *
@@ -41,7 +44,16 @@ class InstrumentType implements \JsonSerializable
     private $class;
 
     /**
-     * Is the instrument can play several notes simultaneously ? (to play chords).
+     * Can the instrument have different tunings ?
+     *
+     * @ORM\Column(type="boolean")
+     *
+     * @var bool
+     */
+    private $tunable = false;
+
+    /**
+     * Can the instrument play several notes simultaneously ? (to play chords).
      *
      * @ORM\Column(type="boolean")
      *
@@ -57,6 +69,14 @@ class InstrumentType implements \JsonSerializable
      * @var bool
      */
     private $enabled = true;
+
+    /**
+     * InstrumentType constructor.
+     */
+    public function __construct()
+    {
+        $this->refreshUuid();
+    }
 
     /**
      * Get id.
@@ -113,6 +133,30 @@ class InstrumentType implements \JsonSerializable
     }
 
     /**
+     * Is tunable ?
+     *
+     * @return bool
+     */
+    public function isTunable()
+    {
+        return $this->tunable;
+    }
+
+    /**
+     * Set tunable.
+     *
+     * @param bool $tunable
+     *
+     * @return $this
+     */
+    public function setTunable($tunable)
+    {
+        $this->tunable = $tunable;
+
+        return $this;
+    }
+
+    /**
      * Is polyphonic ?
      *
      * @return bool
@@ -158,19 +202,5 @@ class InstrumentType implements \JsonSerializable
         $this->enabled = $enabled;
 
         return $this;
-    }
-
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'polyphonic' => $this->polyphonic,
-        ];
     }
 }

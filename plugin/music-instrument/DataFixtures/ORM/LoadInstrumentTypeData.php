@@ -32,6 +32,7 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
             $entity->setName($type['name']);
             $entity->setClass($type['class']);
             $entity->setPolyphonic($type['polyphonic']);
+            $entity->setTunable($type['tunable']);
 
             // Auto enable all instrument types
             $entity->setEnabled(true);
@@ -49,39 +50,46 @@ class LoadInstrumentTypeData extends AbstractFixture implements OrderedFixtureIn
     {
         return [
             [
-                'name' => 'Guitar',
+                'name' => 'guitar',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
+                'tunable' => true,
             ],
             [
-                'name' => 'Ukulele',
+                'name' => 'ukulele',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
+                'tunable' => true,
             ],
             [
-                'name' => 'Bass',
+                'name' => 'bass',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Guitar',
                 'polyphonic' => true,
+                'tunable' => true,
             ],
             [
-                'name' => 'Recorder',
+                'name' => 'recorder',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Recorder',
                 'polyphonic' => false,
+                'tunable' => true,
             ],
             [
-                'name' => 'Keyboard',
+                'name' => 'keyboard',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Keyboard',
                 'polyphonic' => true,
+                'tunable' => false,
             ],
             [
-                'name' => 'Drums',
+                'name' => 'drums',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Drums',
                 'polyphonic' => false,
+                'tunable' => false,
             ],
             [
-                'name' => 'Vocals',
+                'name' => 'vocals',
                 'class' => '\Claroline\MusicInstrumentBundle\Entity\InstrumentType\Vocals',
                 'polyphonic' => false,
+                'tunable' => true,
             ],
         ];
     }

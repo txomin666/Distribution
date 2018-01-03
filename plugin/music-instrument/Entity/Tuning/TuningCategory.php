@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_tuning_category")
  */
-class TuningCategory implements \JsonSerializable
+class TuningCategory
 {
     /**
      * @ORM\Id
@@ -56,19 +56,5 @@ class TuningCategory implements \JsonSerializable
     public function setName($name)
     {
         $this->name = $name;
-    }
-
-    public function jsonSerialize()
-    {
-        return [
-            // Identifier of the Resource
-            'type' => 'tuning_categories',
-            'id' => $this->id,
-
-            // Attributes of the Resource
-            'attributes' => [
-                'name' => $this->name,
-            ],
-        ];
     }
 }

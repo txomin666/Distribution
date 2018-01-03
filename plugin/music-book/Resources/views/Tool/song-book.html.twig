@@ -4,13 +4,8 @@
     {# Claroline CSS #}
     {{ parent() }}
 
-    {# Custom styles #}
-    {% stylesheets debug=false filter='less, cssmin' output='vendor/claromusicbook/song-book.css'
-        '@ClarolineMusicTheoryBundle/Resources/styles/override.less'
-        '@ClarolineMusicBookBundle/Resources/styles/song-book/main.less'
-    %}
-    <link rel="stylesheet" media="screen" href="{{ asset_url }}" />
-    {% endstylesheets %}
+    {# Tool styles #}
+    <link rel="stylesheet" type="text/css" href="{{ themeAsset('claroline-distribution-plugin-music-book-song-book-tool.css') }}" />
 {% endblock %}
 
 {# Title of the Page #}
@@ -22,7 +17,6 @@
 {% block breadcrumb %}
     {{
     macros.breadcrumbs([{
-        'icon': 'fa fa-briefcase',
         'name': 'desktop'|trans({}, 'platform'),
         'href': path('claro_desktop_open')
     }, {
@@ -44,5 +38,6 @@
     {# Translations #}
     <script src="{{ url('bazinga_jstranslation_js', { 'domain': 'tools' }) }}"></script>
 
-    <script src="{{ hotAsset('dist/claroline-distribution-plugin-music-book-song-book.js') }}"></script>
+    {# Tool UI #}
+    <script src="{{ hotAsset('dist/claroline-distribution-plugin-music-book-song-book-tool.js') }}"></script>
 {% endblock %}

@@ -1,20 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import {Provider} from 'react-redux'
-import {createStore} from '#/main/core/utilities/redux'
-import tunerReducer from './reducers'
-import Tuner from './components/tuner.jsx'
+import {bootstrap} from '#/main/core/utilities/app/bootstrap'
 
-const store = createStore(tunerReducer, {
-  tuning: null,
-  tunings: []
-})
+import {reducer} from '#/plugin/music-instrument/tuner/reducer'
+import {Tool} from '#/plugin/music-instrument/tuner/components/tool.jsx'
 
-ReactDOM.render(
-  React.createElement(
-    Provider,
-    {store},
-    React.createElement(Tuner)
-  ),
-  document.getElementById('instrument-tuner')
+// mount the react application
+bootstrap(
+  // app DOM container (also holds initial app data as data attributes)
+  '.tuner-container',
+
+  // app main component (accepts either a `routedApp` or a `ReactComponent`)
+  Tool,
+
+  // app store configuration
+  reducer
 )

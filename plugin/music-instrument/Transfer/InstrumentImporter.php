@@ -2,7 +2,6 @@
 
 namespace Claroline\MusicInstrumentBundle\Transfer;
 
-use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Library\Transfert\Importer;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -18,7 +17,7 @@ class InstrumentImporter extends Importer implements ConfigurationInterface
 {
     /**
      * We need to inject the whole service container
-     * if we try to only inject PathManager, there is a crash because of a circular reference into services.
+     * if we try to only inject needed, there is a crash because of a circular reference into services.
      *
      * @var ContainerInterface
      */
@@ -67,7 +66,7 @@ class InstrumentImporter extends Importer implements ConfigurationInterface
     {
     }
 
-    public function export(Workspace $workspace, array &$files, $object)
+    public function export($workspace, array &$files, $object)
     {
     }
 }

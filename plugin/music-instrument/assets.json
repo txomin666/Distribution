@@ -1,8 +1,15 @@
 {
   "webpack": {
     "entry": {
-      "instrument": "instrument/index",
-      "tuner": "tuner/index"
+      "instrument-resource": "resource/types/instrument/index",
+      "tuner-tool": "tuner/index"
+    }
+  },
+
+  "styles": {
+    "entry": {
+      "instrument-resource": "resource/instrument/index.less",
+      "tuner-tool": "tuner/index.less"
     }
   }
 }

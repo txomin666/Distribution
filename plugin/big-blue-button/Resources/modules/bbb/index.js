@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom'
 import {bootstrap} from '#/main/core/utilities/app/bootstrap'
 import {reducer as modalReducer}    from '#/main/core/layout/modal/reducer'
-import {reducer as resourceNodeReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
 import {
   bbbReducers,
   resourceFormReducers,
@@ -28,7 +28,7 @@ bootstrap(
   }, React.createElement(BBBResource)),
 
   // app store configuration
-  {
+  makeResourceReducer({}, {
     // app reducers
     user: mainReducers,
     resourceForm: resourceFormReducers,
@@ -37,12 +37,8 @@ bootstrap(
     config: mainReducers,
     canEdit: mainReducers,
     canJoin: canJoinReducers,
-    message: messageReducers,
-
-    // generic reducers
-    resourceNode: resourceNodeReducer,
-    modal: modalReducer
-  },
+    message: messageReducers
+  }),
 
   // transform data attributes for redux store
   (initialData) => {

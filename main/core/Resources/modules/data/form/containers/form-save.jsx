@@ -9,6 +9,8 @@ import {generateUrl} from '#/main/core/fos-js-router'
 import {actions} from '#/main/core/data/form/actions'
 import {select} from '#/main/core/data/form/selectors'
 
+// todo remove me. use page-actions.jsx instead (check registration form which don't use page actions)
+
 // this is a HOC to allow any button component with the correct interface to become a form submit
 // it will set `title`, `disabled`, `action` props of the passed btn component
 function makeSaveAction(formName, actionsMap) {

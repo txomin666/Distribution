@@ -2,8 +2,8 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\Resource\AbstractResource;
-use Claroline\MusicInstrumentBundle\Annotation\ApiDefinition;
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType\AbstractType;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -14,11 +14,11 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\EntityListeners({"\Claroline\MusicInstrumentBundle\Listener\Entity\InstrumentListener"})
  * @ORM\Table(name="claro_music_instrument")
- *
- * @ApiDefinition("Claroline\MusicInstrumentBundle\Definitions\InstrumentDefinition")
  */
-class Instrument extends AbstractResource implements \JsonSerializable
+class Instrument extends AbstractResource
 {
+    use UuidTrait;
+
     /**
      * Type of the Instrument.
      *
@@ -62,6 +62,14 @@ class Instrument extends AbstractResource implements \JsonSerializable
      * @var string
      */
     private $model;
+
+    /**
+     * Instrument constructor.
+     */
+    public function __construct()
+    {
+        $this->refreshUuid();
+    }
 
     /**
      * Get type of the Instrument.
@@ -184,33 +192,5 @@ class Instrument extends AbstractResource implements \JsonSerializable
         $this->model = $model;
 
         return $this;
-    }
-
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        $specification = $this->specification->jsonSerialize();
-
-        return [
-            'id' => $this->id,
-
-            // Attributes of the Resource
-            'attributes' => array_merge($specification['attributes'], [
-                'name' => $this->name,
-                'manufacturer' => $this->manufacturer,
-                'model' => $this->model,
-            ]),
-
-            // Relationships with other Resources
-            'relationships' => array_merge($specification['relationships'], [
-                'instrumentType' => [
-                    'data' => $this->type,
-                ],
-            ]),
-        ];
     }
 }

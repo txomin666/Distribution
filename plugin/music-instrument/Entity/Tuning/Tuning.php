@@ -2,6 +2,7 @@
 
 namespace Claroline\MusicInstrumentBundle\Entity\Tuning;
 
+use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\MusicInstrumentBundle\Entity\InstrumentType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,8 +13,10 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_tuning")
  */
-class Tuning implements \JsonSerializable
+class Tuning
 {
+    use UuidTrait;
+
     /**
      * @ORM\Id
      * @ORM\Column(type="integer")
@@ -42,7 +45,12 @@ class Tuning implements \JsonSerializable
     /**
      * Notes that compose the Tuning.
      *
-     * @ORM\OneToMany(targetEntity="Claroline\MusicInstrumentBundle\Entity\Tuning\TuningNote", mappedBy="tuning", orphanRemoval=true, cascade={"persist", "remove"})
+     * @ORM\OneToMany(
+     *     targetEntity="Claroline\MusicInstrumentBundle\Entity\Tuning\TuningNote",
+     *     mappedBy="tuning",
+     *     orphanRemoval=true,
+     *     cascade={"persist", "remove"}
+     * )
      * @ORM\OrderBy({"order" = "ASC"})
      *
      * @var ArrayCollection
@@ -74,6 +82,8 @@ class Tuning implements \JsonSerializable
      */
     public function __construct()
     {
+        $this->refreshUuid();
+
         $this->notes = new ArrayCollection();
     }
 
@@ -225,16 +235,5 @@ class Tuning implements \JsonSerializable
         $this->instrumentType = $instrumentType;
 
         return $this;
-    }
-
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'default' => $this->default,
-            'category' => $this->category,
-            'notes' => $this->notes->toArray(),
-        ];
     }
 }

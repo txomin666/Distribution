@@ -71,18 +71,4 @@ class Recorder extends AbstractType
 
         return $this;
     }
-
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->id,
-            'range' => $this->range,
-            'fingering' => $this->fingering,
-        ];
-    }
 }

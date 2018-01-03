@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 import {PropTypes as T} from 'prop-types'
 
 import {registerModals} from '#/main/core/layout/modal'
-import {Page, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
+import {RoutedPage, PageHeader, PageContent} from '#/main/core/layout/page/components/page.jsx'
 import {ResourceActions} from '#/main/core/layout/resource/components/resource-actions.jsx'
 
 import {MODAL_RESOURCE_PROPERTIES, EditPropertiesModal} from '#/main/core/layout/resource/components/modal/edit-properties.jsx'
@@ -32,7 +32,7 @@ class Resource extends Component {
 
   render() {
     return (
-      <Page
+      <RoutedPage
         className="resource-page"
         embedded={this.props.embedded}
         fullscreen={this.state.fullscreen}
@@ -60,7 +60,7 @@ class Resource extends Component {
         <PageContent>
           {this.props.children}
         </PageContent>
-      </Page>
+      </RoutedPage>
     )
   }
 }

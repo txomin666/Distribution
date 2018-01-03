@@ -15,7 +15,7 @@ class InstrumentListener
 {
     /**
      * PrePersist
-     * Persists the linked Specification too (or add an empty one) when an Instrument is removed.
+     * Persists the linked Specification too (or add an empty one) when an Instrument is persisted.
      *
      * @param Instrument         $instrument
      * @param LifecycleEventArgs $event

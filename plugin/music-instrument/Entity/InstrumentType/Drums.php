@@ -13,15 +13,5 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Drums extends AbstractType
 {
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->id,
-        ];
-    }
+
 }

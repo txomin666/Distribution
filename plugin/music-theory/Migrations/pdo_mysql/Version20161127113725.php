@@ -62,6 +62,7 @@ class Version20161127113725 extends AbstractMigration
         $this->addSql("
             CREATE TABLE claro_music_note (
                 id INT AUTO_INCREMENT NOT NULL, 
+                uuid VARCHAR(36) NOT NULL,
                 info_id INT DEFAULT NULL, 
                 previous_id INT DEFAULT NULL, 
                 next_id INT DEFAULT NULL, 
@@ -70,6 +71,7 @@ class Version20161127113725 extends AbstractMigration
                 frequency DOUBLE PRECISION NOT NULL, 
                 midi INT NOT NULL, 
                 INDEX IDX_F90575D55D8BC1F8 (info_id), 
+                UNIQUE INDEX UNIQ_F90575D5D17F50A6 (uuid),
                 UNIQUE INDEX UNIQ_F90575D52DE62210 (previous_id), 
                 UNIQUE INDEX UNIQ_F90575D5AA23F6C8 (next_id), 
                 PRIMARY KEY(id)

@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_interval")
  */
-class Interval implements \JsonSerializable
+class Interval
 {
     /**
      * @ORM\Id
@@ -188,25 +188,5 @@ class Interval implements \JsonSerializable
         $this->value = $value;
 
         return $this;
-    }
-
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return array(
-            'type' => 'intervals',
-            'id' => $this->id,
-            'attributes' => array(
-                'name' => $this->name,
-                'symbol' => $this->symbol,
-                'number' => $this->number,
-                'quality' => $this->quality,
-                'value' => $this->value,
-            ),
-        );
     }
 }

@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_tuning_note")
  */
-class TuningNote implements \JsonSerializable
+class TuningNote
 {
     /**
      * @ORM\Id
@@ -131,10 +131,5 @@ class TuningNote implements \JsonSerializable
         $this->note = $note;
 
         return $this;
-    }
-
-    public function jsonSerialize()
-    {
-        return $this->note;
     }
 }

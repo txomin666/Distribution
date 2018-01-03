@@ -7,7 +7,7 @@ export default class NoteInput extends Component {
     return (
       <div className="note-input">
         <button type="button" className="btn btn-secondary" onClick={() => this.props.handlePrevious(this.props.note)}>
-          <span className="fa fa-fw fa-caret-up"></span>
+          <span className="fa fa-fw fa-caret-up" />
           <span className="sr-only">next</span>
         </button>
 
@@ -20,8 +20,8 @@ export default class NoteInput extends Component {
           <small>{this.props.note.octave}</small>
         </div>
 
-        <button type="button" class="btn btn-secondary" onClick={() => this.props.handleNext(this.props.note)}>
-          <span className="fa fa-fw fa-caret-down"></span>
+        <button type="button" className="btn btn-secondary" onClick={() => this.props.handleNext(this.props.note)}>
+          <span className="fa fa-fw fa-caret-down" />
           <span className="sr-only">previous</span>
         </button>
       </div>

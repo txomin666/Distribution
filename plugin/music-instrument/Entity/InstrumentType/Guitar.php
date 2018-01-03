@@ -84,6 +84,24 @@ class Guitar extends AbstractType
     private $frets = 19;
 
     /**
+     * Does the guitar have frets ?
+     *
+     * @ORM\Column(type="boolean")
+     *
+     * @var bool
+     */
+    private $fretless = false;
+
+    /**
+     * The fret markers type.
+     *
+     * @ORM\Column(type="string")
+     *
+     * @var string
+     */
+    private $markers = 'circle';
+
+    /**
      * Is the Guitar left-handed ?
      *
      * @ORM\Column(type="boolean")
@@ -213,6 +231,30 @@ class Guitar extends AbstractType
     }
 
     /**
+     * Is fretless ?
+     *
+     * @return bool
+     */
+    public function isFretless()
+    {
+        return $this->fretless;
+    }
+
+    /**
+     * Set fretless.
+     *
+     * @param bool $fretless
+     *
+     * @return $this
+     */
+    public function setFretless($fretless)
+    {
+        $this->fretless = $fretless;
+
+        return $this;
+    }
+
+    /**
      * Is left handed ?
      *
      * @return bool
@@ -237,21 +279,26 @@ class Guitar extends AbstractType
     }
 
     /**
-     * Serialize the Entity.
+     * Get fret markers.
      *
-     * @return array
+     * @return string
      */
-    public function jsonSerialize()
+    public function getMarkers()
     {
-        return [
-            'id' => $this->id,
-            'leftHanded' => $this->leftHanded,
-            'headstock' => $this->headstock,
-            'body' => $this->body,
-            'amplification' => $this->amplification,
-            'strings' => $this->strings,
-            'frets' => $this->frets,
-            'tuning' => $this->tuning,
-        ];
+        return $this->markers;
+    }
+
+    /**
+     * Set fret markers.
+     *
+     * @param string $markers
+     *
+     * @return $this
+     */
+    public function setMarkers($markers)
+    {
+        $this->markers = $markers;
+
+        return $this;
     }
 }

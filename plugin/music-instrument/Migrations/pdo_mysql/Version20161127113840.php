@@ -17,6 +17,7 @@ class Version20161127113840 extends AbstractMigration
         $this->addSql('
             CREATE TABLE claro_music_instrument (
                 id INT AUTO_INCREMENT NOT NULL, 
+                uuid VARCHAR(36) NOT NULL,
                 type_id INT DEFAULT NULL, 
                 manufacturer VARCHAR(255) DEFAULT NULL, 
                 model VARCHAR(255) DEFAULT NULL, 
@@ -28,14 +29,23 @@ class Version20161127113840 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
         ');
         $this->addSql('
+            CREATE UNIQUE INDEX UNIQ_2D9D7CD8D17F50A6 ON claro_music_instrument (uuid)
+        ');
+
+        $this->addSql('
             CREATE TABLE claro_music_instrument_type (
                 id INT AUTO_INCREMENT NOT NULL, 
+                uuid VARCHAR(36) NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 enabled TINYINT(1) NOT NULL, 
                 class_name VARCHAR(255) NOT NULL, 
+                tunable TINYINT(1) NOT NULL,
                 polyphonic TINYINT(1) NOT NULL, 
                 PRIMARY KEY(id)
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
+        ');
+        $this->addSql('
+            CREATE UNIQUE INDEX UNIQ_9C767DC2D17F50A6 ON claro_music_instrument_type (uuid)
         ');
         $this->addSql('
             CREATE TABLE claro_music_instrument_recorder (
@@ -57,6 +67,8 @@ class Version20161127113840 extends AbstractMigration
                 strings INT NOT NULL, 
                 frets INT NOT NULL, 
                 leftHanded TINYINT(1) NOT NULL, 
+                fretless TINYINT(1) NOT NULL, 
+                ADD markers VARCHAR(255) NOT NULL,
                 UNIQUE INDEX UNIQ_240B3054CF11D9C (instrument_id), 
                 INDEX IDX_240B305442776A1D (tuning_id), 
                 PRIMARY KEY(id)
@@ -90,6 +102,7 @@ class Version20161127113840 extends AbstractMigration
         $this->addSql('
             CREATE TABLE claro_music_tuning (
                 id INT AUTO_INCREMENT NOT NULL, 
+                uuid VARCHAR(36) NOT NULL,
                 category_id INT DEFAULT NULL, 
                 type_id INT DEFAULT NULL, 
                 name VARCHAR(255) NOT NULL, 
@@ -98,6 +111,9 @@ class Version20161127113840 extends AbstractMigration
                 INDEX IDX_BF20D80C54C8C93 (type_id), 
                 PRIMARY KEY(id)
             ) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB
+        ');
+        $this->addSql('
+            CREATE UNIQUE INDEX UNIQ_BF20D80D17F50A6 ON claro_music_tuning (uuid)
         ');
         $this->addSql('
             CREATE TABLE claro_music_tuning_category (

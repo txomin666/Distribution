@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * @ORM\MappedSuperclass()
  */
-abstract class AbstractType implements \JsonSerializable
+abstract class AbstractType
 {
     /**
      * @ORM\Id
@@ -64,6 +64,4 @@ abstract class AbstractType implements \JsonSerializable
 
         return $this;
     }
-
-    abstract public function jsonSerialize();
 }

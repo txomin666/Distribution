@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity()
  * @ORM\Table(name="claro_music_song")
  */
-class Song extends AbstractResource implements \JsonSerializable
+class Song extends AbstractResource
 {
     /**
      * Artist of the Song.
@@ -144,21 +144,5 @@ class Song extends AbstractResource implements \JsonSerializable
         }
 
         return $this;
-    }
-
-    /**
-     * Serialize the Entity.
-     *
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'artist' => $this->artist,
-            'cover' => $this->cover,
-            'tracks' => $this->tracks->toArray(),
-        ];
     }
 }
