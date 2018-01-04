@@ -4,7 +4,7 @@ namespace Claroline\MusicBookBundle\Controller\Api;
 
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
-use Claroline\CoreBundle\Library\Validation\ValidationException;
+use Claroline\CoreBundle\Validator\Exception\InvalidDataException;
 use Claroline\MusicBookBundle\Entity\Song;
 use Claroline\MusicBookBundle\Manager\SongManager;
 use JMS\DiExtraBundle\Annotation as DI;
@@ -100,7 +100,7 @@ class SongController
             $song = $this->songManager->create($request->get('data'));
 
             return new JsonResponse($song);
-        } catch (ValidationException $e) {
+        } catch (InvalidDataException $e) {
             return new JsonResponse($e->getErrors(), 422);
         }
     }
@@ -124,7 +124,7 @@ class SongController
             $song = $this->songManager->update($request->get('data'), $song);
 
             return new JsonResponse($song);
-        } catch (ValidationException $e) {
+        } catch (InvalidDataException $e) {
             return new JsonResponse($e->getErrors(), 422);
         }
     }
