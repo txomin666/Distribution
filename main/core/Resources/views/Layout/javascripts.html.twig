@@ -15,19 +15,7 @@
 </script>
 
 {# Polyfills #}
-<script src="{{ hotAsset('dist/claroline-distribution-main-core-core-js.js') }}"></script>
-<script src="{{ hotAsset('dist/claroline-distribution-main-core-whatwg-fetch.js') }}"></script>
-<script src="{{ hotAsset('dist/claroline-distribution-main-core-modernizr.js') }}"></script>
-
-{# SVG external reference polyfill for IE<13 #}
-{% javascripts debug=false filter='jsmin' output='vendor/svg4everybody/svg4everybody.js'
-    '../node_modules/svg4everybody/dist/svg4everybody.js'
-%}
-    <script src="{{ asset_url }}"></script>
-    <script>
-        svg4everybody();
-    </script>
-{% endjavascripts %}
+<script src="{{ hotAsset('dist/claroline-distribution-main-core-polyfills.js') }}"></script>
 
 {% javascripts debug=false filter='jsmin' output='vendor/twitter/bootstrap/js/bootstrap.js'
     'packages/bootstrap/js/transition.js'

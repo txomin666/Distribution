@@ -1,9 +1,7 @@
 {
   "webpack": {
     "entry": {
-      "modernizr": "modernizr/modernizr",
-      "core-js": "core-js",
-      "whatwg-fetch": "fetch-shim",
+      "polyfills": "shim",
       "translator": "translation/browser",
       "organization-field": "symfony/form/organization/index",
       "user-management": "administration/user",
