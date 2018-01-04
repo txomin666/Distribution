@@ -1,8 +1,7 @@
-import 'angular/angular.min'
-
-import bootstrap from 'angular-bootstrap'
-import translation from 'angular-ui-translation/angular-translation'
-import bazinga from '../fos-js-router/module'
+import angular from 'angular/index'
+import 'angular-bootstrap'
+import 'angular-ui-translation/angular-translation'
+import '../fos-js-router/module'
 
 import PluginController from './Controller/PluginController'
 import WarningController from './Controller/WarningController'

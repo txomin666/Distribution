@@ -1,8 +1,7 @@
-import 'angular/angular.min'
+import angular from 'angular/index'
 import 'angular-ui-select'
 
 import Interceptors from '../interceptorsDefault'
-import ClarolineSearchController from './Controller/ClarolineSearchController'
 import ClarolineSearchDirective from './Directive/ClarolineSearchDirective'
 import ClarolineSearchService from './Service/ClarolineSearchService'
 import SearchOptionsService  from './Service/SearchOptionsService'
