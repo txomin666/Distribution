@@ -4,6 +4,13 @@
  * (@see webpack DllPlugin and DllReferencePlugin)
  */
 module.exports = {
+  'react_dll': [
+    'react',
+    'redux',
+    'react-redux',
+    'reselect',
+    'prop-types'
+  ],
   'angular_dll': [
     'angular',
     'angular-animate',
@@ -27,6 +34,5 @@ module.exports = {
     'angular-ui-tree',
     'angular-ui-pageslide',
     'ng-file-upload'
-  ],
-  'es6_dll': ['core-js', 'whatwg-fetch']
+  ]
 }

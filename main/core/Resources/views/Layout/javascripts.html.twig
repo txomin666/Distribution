@@ -1,8 +1,14 @@
 {# todo : this needs to be removed and be managed server side #}
 <script src='{{ asset('bundles/clarolinecore/js/iframe/iframe.js') }}'></script>
 
-<script src="{{ hotAsset('dist/es6_dll.js') }}"></script>
-<script src="{{ hotAsset('dist/angular_dll.js') }}"></script> 
+{# Polyfills #}
+<script src="{{ hotAsset('dist/claroline-distribution-main-core-polyfills.js') }}"></script>
+
+{# AngularJS & related libraries #}
+<script src="{{ hotAsset('dist/angular_dll.js') }}"></script>
+
+{# React/Redux & related libraries #}
+<script src="{{ hotAsset('dist/react_dll.js') }}"></script>
 
 {% if app.environment == 'prod' %}
     <script src="{{ hotAsset('dist/commons.js') }}"></script>
@@ -13,9 +19,6 @@
         $('.outdated-browser-warning').hide();
     }
 </script>
-
-{# Polyfills #}
-<script src="{{ hotAsset('dist/claroline-distribution-main-core-polyfills.js') }}"></script>
 
 {% javascripts debug=false filter='jsmin' output='vendor/twitter/bootstrap/js/bootstrap.js'
     'packages/bootstrap/js/transition.js'
@@ -145,24 +148,6 @@
     <script src="{{ asset_url }}"></script>
 {% endjavascripts %}
 
-{# Angular JS #}
-{% javascripts debug=false filter='jsmin' output='vendor/angular.js'
-    'packages/angular/angular.min.js'
-    'packages/angular-route/angular-route.min.js'
-    'packages/angular-sanitize/angular-sanitize.min.js'
-%}
-    <script src="{{ asset_url }}"></script>
-{% endjavascripts %}
-
-{# Angular UI #}
-{% javascripts debug=false filter='jsmin' output='vendor/angular-ui.js'
-    'packages/angular-ui-tree/dist/angular-ui-tree.js'
-    'packages/angular-ui-select/dist/select.min.js'
-    'packages/angular-ui-router/release/angular-ui-router.min.js'
-%}
-    <script src="{{ asset_url }}"></script>
-{% endjavascripts %}
-
 {# TinyMCE #}
 <script src="{{ asset('bundles/stfalcontinymce/vendor/tinymce/tinymce.jquery.min.js') }}"></script>
 <script src="{{ asset('bundles/stfalcontinymce/vendor/tinymce/jquery.tinymce.min.js') }}"></script>
@@ -184,7 +169,6 @@
     <script src="{{ asset_url }}"></script>
 {% endjavascripts %}
 
-
 <script>
     $('body').tooltip({
         selector: '[data-toggle=tooltip]'
@@ -202,7 +186,7 @@
         $.ajax({
             url: Routing.generate('claro_security_validate_email_hide'),
             type: 'GET',
-            success: function (datas) {
+            success: function () {
                 $('.alert-email-confirm').hide();
             }
         });
