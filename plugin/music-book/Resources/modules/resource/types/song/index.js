@@ -1,4 +1,4 @@
-import {bootstrap} from '#/main/core/utilities/app/bootstrap'
+import {bootstrap} from '#/main/core/scaffolding/bootstrap'
 
 import {reducer} from '#/plugin/music-book/resource/types/song/reducer'
 import {Resource} from '#/plugin/music-book/resource/types/song/components/resource.jsx'

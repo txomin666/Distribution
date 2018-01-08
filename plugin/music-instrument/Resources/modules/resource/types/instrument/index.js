@@ -1,4 +1,4 @@
-import {bootstrap} from '#/main/core/utilities/app/bootstrap'
+import {bootstrap} from '#/main/core/scaffolding/bootstrap'
 
 import {registerInstrumentTypes} from '#/plugin/music-instrument/data'
 import {registerDefaultInstrumentTypes} from '#/plugin/music-instrument/instruments'

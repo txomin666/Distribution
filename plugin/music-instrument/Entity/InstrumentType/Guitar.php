@@ -99,7 +99,7 @@ class Guitar extends AbstractType
      *
      * @var string
      */
-    private $markers = 'circle';
+    private $markers = 'dot';
 
     /**
      * Is the Guitar left-handed ?

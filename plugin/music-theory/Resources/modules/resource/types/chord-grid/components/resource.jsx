@@ -1,6 +1,6 @@
 import React from 'react'
 
-import {ResourceContainer} from '#/main/core/layout/resource/containers/resource.jsx'
+import {ResourceContainer} from '#/main/core/resource/containers/resource.jsx'
 
 const Resource = props =>
   <ResourceContainer

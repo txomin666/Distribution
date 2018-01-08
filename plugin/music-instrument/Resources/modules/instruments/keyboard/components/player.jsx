@@ -6,17 +6,15 @@ import {constants} from '#/plugin/music-theory/constants'
 
 const PianoKey = props =>
   <button
-    className={
-      classes(
-        'key',
-        props.note.accidental ? 'black-key' : 'white-key',
-        props.pressed ? 'active' : null
-      )
-    }
+    className={classes('key', {
+      'active': props.pressed,
+      'white-key': !props.note.accidental,
+      'black-key': props.note.accidental,
+    })}
     onMouseDown={props.onPress}
     onMouseUp={props.onRelease}
   >
-    <span className={classes('note-name', !props.showNote ? 'sr-only' : null)}>
+    <span className={classes('note', !props.showNote && 'sr-only', props.note.accidental && 'accidental')}>
       {props.note.sharp_name}
     </span>
   </button>

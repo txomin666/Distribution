@@ -1,4 +1,4 @@
-import {makeActionCreator} from '#/main/core/utilities/redux'
+import {makeActionCreator} from '#/main/core/scaffolding/actions'
 
 export const TUNING_SELECT = 'TUNING_SELECT'
 

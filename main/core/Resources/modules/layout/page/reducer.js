@@ -1,7 +1,7 @@
 import merge from 'lodash/merge'
 import difference from 'lodash/difference'
 
-import {combineReducers} from '#/main/core/utilities/redux'
+import {combineReducers} from '#/main/core/scaffolding/reducer'
 
 import {reducer as apiReducer} from '#/main/core/api/reducer'
 import {reducer as alertReducer} from '#/main/core/layout/alert/reducer'

@@ -1,10 +1,10 @@
 import cloneDeep from 'lodash/cloneDeep'
 import set from 'lodash/set'
 
-import {makeReducer} from '#/main/core/utilities/redux'
+import {makeReducer} from '#/main/core/scaffolding/reducer'
 
 // generic reducers
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 
 import {validate} from './validator'
 import {

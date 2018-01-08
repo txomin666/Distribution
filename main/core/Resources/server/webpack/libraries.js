@@ -7,9 +7,13 @@ module.exports = {
   'react_dll': [
     'react',
     'redux',
+    'react-dom',
     'react-redux',
+    'react-router-dom',
     'reselect',
-    'prop-types'
+    'prop-types',
+    'invariant',
+    'classnames'
   ],
   'angular_dll': [
     'angular',

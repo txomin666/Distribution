@@ -1,6 +1,6 @@
 
-import {makeReducer} from '#/main/core/utilities/redux/reducer'
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeReducer} from '#/main/core/scaffolding/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 
 const reducer = makeResourceReducer({}, {
   song: makeReducer({}, {

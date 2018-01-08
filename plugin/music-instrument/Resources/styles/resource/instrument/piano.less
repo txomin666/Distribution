@@ -22,7 +22,7 @@
 
 // The notes names on white keys
 @white-note-color:     @text-color;
-@white-note-font-size: @font-size-base;
+@white-note-font-size: @note-font-size;
 
 // Black keys definition
 @black-key-index:      2;
@@ -35,7 +35,7 @@
 
 // The notes names on black keys
 @black-note-color:     #FFFFFF;
-@black-note-font-size: 10px;
+@black-note-font-size: @note-accidental-font-size;
 
 .colorizeWhiteKey(@base-bg) {
     background: @base-bg;
@@ -155,7 +155,7 @@
                 border-bottom-right-radius: 2px;
             }
 
-            .note-name {
+            .note {
                 color: @white-note-color;
                 font-size: @white-note-font-size;
                 bottom: @white-key-height;
@@ -213,7 +213,7 @@
                 box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.75);
             }
 
-            .note-name {
+            .note {
                 color: @black-note-color;
                 font-size: @black-note-font-size;
                 z-index: @black-key-index + 1;

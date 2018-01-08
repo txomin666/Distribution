@@ -1,7 +1,7 @@
-import {bootstrap} from '#/main/core/utilities/app/bootstrap'
+import {bootstrap} from '#/main/core/scaffolding/bootstrap'
 
 // reducers
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 
 import {BookReference} from './components/book-reference.jsx'
 import {reducer} from './reducer'

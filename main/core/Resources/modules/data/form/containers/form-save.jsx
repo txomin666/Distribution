@@ -4,7 +4,7 @@ import {connect} from 'react-redux'
 import invariant from 'invariant'
 
 import {t} from '#/main/core/translation'
-import {generateUrl} from '#/main/core/fos-js-router'
+import {generateUrl} from '#/main/core/api/router'
 
 import {actions} from '#/main/core/data/form/actions'
 import {select} from '#/main/core/data/form/selectors'

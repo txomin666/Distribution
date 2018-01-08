@@ -28,17 +28,21 @@ const HEADSTOCK_TYPES = {
 }
 
 // markers
-const MARKER_TYPE_CIRCLE   = 'circle'
+const MARKER_TYPE_DOT      = 'dot'
 const MARKER_TYPE_SHARK    = 'shark'
 const MARKER_TYPE_TRAPEZE  = 'trapeze'
 const MARKER_TYPE_TRIANGLE = 'triangle'
+const MARKER_TYPE_DIAMOND  = 'diamond'
 
 const MARKER_TYPES = {
-  [MARKER_TYPE_CIRCLE]:   trans('guitar_marker_circle', {}, 'resource'),
+  [MARKER_TYPE_DOT]:      trans('guitar_marker_dot', {}, 'resource'),
   [MARKER_TYPE_SHARK]:    trans('guitar_marker_shark', {}, 'resource'),
   [MARKER_TYPE_TRAPEZE]:  trans('guitar_marker_trapeze', {}, 'resource'),
-  [MARKER_TYPE_TRIANGLE]: trans('guitar_marker_triangle', {}, 'resource')
+  [MARKER_TYPE_TRIANGLE]: trans('guitar_marker_triangle', {}, 'resource'),
+  [MARKER_TYPE_DIAMOND]:  trans('guitar_marker_diamond', {}, 'resource')
 }
+
+const MARKER_POSITIONS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24]
 
 export const constants = {
   // amplification
@@ -55,8 +59,9 @@ export const constants = {
   HEADSTOCK_TYPE_TOP_BOTTOM,
   // markers
   MARKER_TYPES,
-  MARKER_TYPE_CIRCLE,
+  MARKER_TYPE_DOT,
   MARKER_TYPE_SHARK,
   MARKER_TYPE_TRAPEZE,
-  MARKER_TYPE_TRIANGLE
+  MARKER_TYPE_TRIANGLE,
+  MARKER_POSITIONS
 }

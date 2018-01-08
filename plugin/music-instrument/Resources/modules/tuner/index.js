@@ -1,4 +1,4 @@
-import {bootstrap} from '#/main/core/utilities/app/bootstrap'
+import {bootstrap} from '#/main/core/scaffolding/bootstrap'
 
 import {reducer} from '#/plugin/music-instrument/tuner/reducer'
 import {Tool} from '#/plugin/music-instrument/tuner/components/tool.jsx'

@@ -8,7 +8,7 @@ import {
 import thunk from 'redux-thunk'
 
 import {apiMiddleware} from '#/main/core/api/middleware'
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 import {reducers as quizReducers} from './reducers'
 import {reducers as editorReducers} from './editor/reducers'
 import {reducers as playerReducers} from './player/reducers'

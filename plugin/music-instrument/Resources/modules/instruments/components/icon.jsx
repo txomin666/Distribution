@@ -1,6 +1,6 @@
 import React, {PropTypes as T} from 'react'
 
-import {asset} from '#/main/core/asset'
+import {asset} from '#/main/core/scaffolding/asset'
 
 const Icon = props =>
   <svg className={`instrument-icon instrument-icon-${props.size}`}>

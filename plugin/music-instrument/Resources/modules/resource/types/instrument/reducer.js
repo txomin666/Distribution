@@ -1,5 +1,5 @@
 import {makeFormReducer} from '#/main/core/data/form/reducer'
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 
 /*import {
  TUNING_SELECT

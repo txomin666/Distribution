@@ -1,7 +1,7 @@
 import React from 'react'
 
 import {Routes, navigate} from '#/main/core/router'
-import {ResourceContainer} from '#/main/core/layout/resource/containers/resource.jsx'
+import {ResourceContainer} from '#/main/core/resource/containers/resource.jsx'
 
 import {Editor} from '#/plugin/music-instrument/resource/types/instrument/editor/components/editor.jsx'
 import {Player} from '#/plugin/music-instrument/resource/types/instrument/player/components/player.jsx'

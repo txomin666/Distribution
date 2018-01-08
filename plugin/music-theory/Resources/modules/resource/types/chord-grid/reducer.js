@@ -1,4 +1,4 @@
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 
 const reducer = makeResourceReducer({}, {
 

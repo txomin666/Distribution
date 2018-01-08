@@ -4,9 +4,9 @@ import {
   hashHistory as history,
   HashRouter as Router
 } from 'react-router-dom'
-import {bootstrap} from '#/main/core/utilities/app/bootstrap'
+import {bootstrap} from '#/main/core/scaffolding/bootstrap'
 import {reducer as modalReducer}    from '#/main/core/layout/modal/reducer'
-import {makeResourceReducer} from '#/main/core/layout/resource/reducer'
+import {makeResourceReducer} from '#/main/core/resource/reducer'
 import {
   bbbReducers,
   resourceFormReducers,
