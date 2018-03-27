@@ -60,4 +60,24 @@ class TextPlayerListener
         $event->setResponse($response);
         $event->stopPropagation();
     }
+
+    /**
+     * @DI\Observe("play_file_text_html")
+     *
+     * @param PlayFileEvent $event
+     */
+    public function onOpenHtml(PlayFileEvent $event)
+    {
+        $path = $this->container->getParameter('claroline.param.files_directory')
+            .DIRECTORY_SEPARATOR
+            .$event->getResource()->getHashName();
+        $text = file_get_contents($path);
+        $response = new Response($text);
+        $response->headers->set(
+            'Content-Type',
+            'text/html'
+        );
+        $event->setResponse($response);
+        $event->stopPropagation();
+    }
 }
