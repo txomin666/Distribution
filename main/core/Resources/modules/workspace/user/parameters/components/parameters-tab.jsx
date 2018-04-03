@@ -2,6 +2,8 @@ import React from 'react'
 import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 
+import get from 'lodash/get'
+
 import {url} from '#/main/core/api/router'
 import {trans} from '#/main/core/translation'
 
@@ -31,8 +33,14 @@ const ParametersTabActions = () =>
  * @param props
  * @constructor
  */
-const Parameters = props =>
-  <FormContainer
+const Parameters = props => {
+
+    const roleEnum = {}
+    props.workspace.roles.forEach(role => {
+      roleEnum[role.id] = trans(role.translationKey)
+    })
+
+  return (<FormContainer
     level={3}
     name="parameters"
     sections={[
@@ -68,6 +76,19 @@ const Parameters = props =>
             type: 'boolean',
             label: trans('activate_self_unregistration'),
             help: trans('self_unregistration_workspace_help')
+          },
+          {
+            name: 'registration.defaultRole',
+            type: 'enum',
+            label: trans('default_role'),
+            options: {
+              choices: roleEnum
+            },
+            onChange: (roleId) => props.updateProp(
+              'registration.defaultRole',
+              props.workspace.roles.find(role => role.id === roleId)
+            ),
+            calculated: () => get(props.workspace, 'registration.defaultRole.id', null)
           }
         ]
       }, {
@@ -105,7 +126,8 @@ const Parameters = props =>
         ]
       }
     ]}
-  />
+  />)
+}
 
 Parameters.propTypes = {
   workspace: T.shape(
