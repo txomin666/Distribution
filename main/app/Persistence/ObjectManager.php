@@ -90,7 +90,7 @@ class ObjectManager extends ObjectManagerDecorator
      */
     public function flush()
     {
-        if (0 === $this->flushSuiteLevel && $this->allowFlush) {
+        if (0 === $this->flushSuiteLevel) {
             if ($this->activateLog) {
                 $this->log('Flush was started.');
             }
