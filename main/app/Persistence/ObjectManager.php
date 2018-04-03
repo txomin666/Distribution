@@ -34,6 +34,7 @@ class ObjectManager extends ObjectManagerDecorator
     private $activateLog = false;
     private $allowForceFlush = true;
     private $showFlushLevel = false;
+    private $allowFlush = true;
 
     /**
      * ObjectManager constructor.
@@ -90,7 +91,7 @@ class ObjectManager extends ObjectManagerDecorator
      */
     public function flush()
     {
-        if (0 === $this->flushSuiteLevel) {
+        if (0 === $this->flushSuiteLevel && $this->allowFlush) {
             if ($this->activateLog) {
                 $this->log('Flush was started.');
             }
@@ -383,5 +384,15 @@ class ObjectManager extends ObjectManagerDecorator
         }
 
         //else we look what's fetchable or no for that class
+    }
+
+    public function enableFlush()
+    {
+        $this->allowFlush = true;
+    }
+
+    public function disableFlush()
+    {
+        $this->allowFlush = false;
     }
 }

@@ -109,17 +109,6 @@ const Parameters = (props) => {
             ]
           },
           {
-            id: 'display',
-            title: trans('display'),
-            fields: [
-              {
-                name: 'display.displayable',
-                type: 'boolean',
-                label: trans('displayable_in_workspace_list')
-              }
-            ]
-          },
-          {
             id: 'restrictions',
             title: trans('access_restrictions'),
             fields: [
