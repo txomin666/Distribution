@@ -24,7 +24,7 @@ const Actions = () =>
     />
   </PageActions>
 
-const Parameters = (props) => {
+const Parameters = () => {
   return (
     <div>
       <FormContainer

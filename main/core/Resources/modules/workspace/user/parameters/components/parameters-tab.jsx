@@ -35,10 +35,10 @@ const ParametersTabActions = () =>
  */
 const Parameters = props => {
 
-    const roleEnum = {}
-    props.workspace.roles.forEach(role => {
-      roleEnum[role.id] = trans(role.translationKey)
-    })
+  const roleEnum = {}
+  props.workspace.roles.forEach(role => {
+    roleEnum[role.id] = trans(role.translationKey)
+  })
 
   return (<FormContainer
     level={3}

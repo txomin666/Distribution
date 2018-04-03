@@ -34,7 +34,6 @@ class ObjectManager extends ObjectManagerDecorator
     private $activateLog = false;
     private $allowForceFlush = true;
     private $showFlushLevel = false;
-    private $allowFlush = true;
 
     /**
      * ObjectManager constructor.
@@ -384,15 +383,5 @@ class ObjectManager extends ObjectManagerDecorator
         }
 
         //else we look what's fetchable or no for that class
-    }
-
-    public function enableFlush()
-    {
-        $this->allowFlush = true;
-    }
-
-    public function disableFlush()
-    {
-        $this->allowFlush = false;
     }
 }
