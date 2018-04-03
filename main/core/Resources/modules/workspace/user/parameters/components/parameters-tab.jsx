@@ -46,7 +46,7 @@ const Parameters = props =>
             name: 'registration.url',
             type: 'url',
             label: trans('registration_url'),
-            calculated: url(['claro_workspace_subscription_url_generate', {slug: props.workspace.meta.slug}, true]),
+            calculated: () => url(['claro_workspace_subscription_url_generate', {slug: props.workspace.meta.slug}, true]),
             required: true,
             disabled: true
           }, {
@@ -79,7 +79,7 @@ const Parameters = props =>
             name: 'access_max_users',
             type: 'boolean',
             label: trans('access_max_users'),
-            calculated: props.workspace.restrictions && null !== props.workspace.restrictions.maxUsers && '' !== props.workspace.restrictions.maxUsers,
+            calculated: () => props.workspace.restrictions && null !== props.workspace.restrictions.maxUsers && '' !== props.workspace.restrictions.maxUsers,
             onChange: checked => {
               if (checked) {
                 // initialize with the current nb of users with the role
