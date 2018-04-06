@@ -168,6 +168,7 @@ class PathSerializer
             }, $step->getInheritedResources()->toArray()),
             'display' => [
                 'numbering' => $step->getNumbering(),
+                'height' => $step->getActivityHeight(),
             ],
             'children' => array_map(function (Step $child) {
                 return $this->serializeStep($child);
@@ -276,6 +277,9 @@ class PathSerializer
 
         if (isset($data['display']) && isset($data['display']['numbering'])) {
             $step->setNumbering($data['display']['numbering']);
+        }
+        if (isset($data['display']) && isset($data['display']['height'])) {
+            $step->setActivityHeight($data['display']['height']);
         }
 
         /* Set primary resource */
