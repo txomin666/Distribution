@@ -173,6 +173,7 @@ class PathSerializer
                 return $this->serializeStep($child);
             }, $step->getChildren()->toArray()),
             'userProgression' => $this->serializeUserProgression($step),
+            'parent' => $step->getParent() ? $step->getParent()->getUuid() : null,
         ];
     }
 
@@ -213,7 +214,7 @@ class PathSerializer
     private function serializeUserProgression(Step $step)
     {
         $user = $this->tokenStorage->getToken()->getUser();
-        $userProgression = $user !== 'anon.' ?
+        $userProgression = 'anon.' !== $user ?
             $this->userProgressionRepo->findOneBy(['step' => $step, 'user' => $user]) :
             null;
         $data = [

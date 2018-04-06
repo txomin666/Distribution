@@ -43,6 +43,12 @@ const reducer = {
       [STEP_PASTE]: () => true
     }),
     data: makeReducer(defaultState.data, {
+      ['FORM_UPDATE_PROP/pathForm']: (state) => {
+
+        const newState = cloneDeep(state)
+
+        return newState
+      },
       [STEP_ADD]: (state, action) => {
         const newState = cloneDeep(state)
 
