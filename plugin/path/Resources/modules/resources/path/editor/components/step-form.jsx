@@ -123,10 +123,7 @@ InheritedResourcesSection.propTypes = {
 
 const StepForm = props => {
   const listSteps = {}
-
-  props.steps.forEach(step => {
-    listSteps[step.id] = step.title
-  })
+  props.steps.filter(step => step.id !== props.id).forEach(step => listSteps[step.id] = step.title)
 
   return(<FormContainer
     level={3}

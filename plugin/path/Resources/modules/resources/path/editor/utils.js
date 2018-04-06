@@ -12,6 +12,17 @@ function getFormDataPart(id, steps) {
   return formDataPart
 }
 
+function getStep(steps, id)
+{
+    for (let i = 0; i < steps.length; i++) {
+      if (steps[i].id === id) {
+        return steps[i]
+      }
+
+      return getStep(steps[i].children, id)
+    }
+}
+
 function getStepPath(id, steps, level, indexes) {
   const index = steps.findIndex(s => s.id === id)
 
@@ -100,5 +111,6 @@ export {
   getStepPath,
   manageInheritedResources,
   generateCopy,
-  updateCopyBeforeAdding
+  updateCopyBeforeAdding,
+  getStep
 }
