@@ -884,7 +884,7 @@ class ResourceManager
             $resource = $this->getResourceFromNode($node);
             $this->dispatcher->dispatch($eventName, 'PublicationChange', [$resource]);
 
-            $usersToNotify = $node->getWorkspace() ?
+            $usersToNotify = $node->getWorkspace() && !$node->getWorkspace()->isDisabledNotifications() ?
                 $this->container->get('claroline.manager.user_manager')->getUsersByWorkspaces([$node->getWorkspace()], null, null, false) :
                 [];
 
@@ -1518,17 +1518,21 @@ class ResourceManager
     /**
      * @param Workspace    $workspace
      * @param ResourceType $resourceType
+     * @param bool         $filterDeleted
      *
      * @return ResourceNode[]
      */
     public function getByWorkspaceAndResourceType(
         Workspace $workspace,
-        ResourceType $resourceType
+        ResourceType $resourceType,
+        $filterDeleted = false
     ) {
-        return $this->resourceNodeRepo->findBy(
-            ['workspace' => $workspace, 'resourceType' => $resourceType],
-            ['name' => 'ASC']
-        );
+        $findBy = ['workspace' => $workspace, 'resourceType' => $resourceType];
+        if ($filterDeleted) {
+            $findBy['active'] = true;
+        }
+
+        return $this->resourceNodeRepo->findBy($findBy, ['name' => 'ASC']);
     }
 
     /**
