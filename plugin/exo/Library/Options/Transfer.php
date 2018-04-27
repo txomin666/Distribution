@@ -58,4 +58,11 @@ final class Transfer
      * @var string
      */
     const PERSIST_TAG = 'persistTag';
+
+    /**
+     * Refrest UUID for steps and questions before persisting.
+     *
+     * @var string
+     */
+    const REFRESH_UUID = 'refreshUuid';
 }
