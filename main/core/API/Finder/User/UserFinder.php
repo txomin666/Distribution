@@ -47,7 +47,8 @@ class UserFinder implements FinderInterface
      *     "authChecker"      = @DI\Inject("security.authorization_checker"),
      *     "tokenStorage"     = @DI\Inject("security.token_storage"),
      *     "workspaceManager" = @DI\Inject("claroline.manager.workspace_manager"),
-     *     "om"               = @DI\Inject("claroline.persistence.object_manager")
+     *     "om"               = @DI\Inject("claroline.persistence.object_manager"),
+     *     "em"               = @DI\Inject("doctrine.orm.entity_manager")
      * })
      *
      * @param AuthorizationCheckerInterface $authChecker
@@ -59,12 +60,14 @@ class UserFinder implements FinderInterface
         AuthorizationCheckerInterface $authChecker,
         TokenStorageInterface $tokenStorage,
         WorkspaceManager $workspaceManager,
-        ObjectManager $om
+        ObjectManager $om,
+        $em
     ) {
         $this->authChecker = $authChecker;
         $this->tokenStorage = $tokenStorage;
         $this->workspaceManager = $workspaceManager;
         $this->om = $om;
+        $this->_em = $em;
     }
 
     public function getClass()
@@ -72,8 +75,11 @@ class UserFinder implements FinderInterface
         return 'Claroline\CoreBundle\Entity\User';
     }
 
-    public function configureQueryBuilder(QueryBuilder $qb, array $searches = [], array $sortBy = null)
-    {
+    public function configureQueryBuilder(
+        QueryBuilder $qb,
+        array $searches = [],
+        array $sortBy = null
+    ) {
         if (isset($searches['contactable'])) {
             $qb = $this->getContactableUsers($qb);
             unset($searches['contactable']);
@@ -84,6 +90,7 @@ class UserFinder implements FinderInterface
                 case 'name':
                     $qb->andWhere('UPPER(obj.username) LIKE :name OR UPPER(CONCAT(obj.firstName, \' \', obj.lastName)) LIKE :name');
                     $qb->setParameter('name', '%'.strtoupper($filterValue).'%');
+                    break;
                 case 'id':
                     $qb->andWhere('obj.uuid IN (:userUuids)');
                     $qb->setParameter('userUuids', is_array($filterValue) ? $filterValue : [$filterValue]);
@@ -147,27 +154,68 @@ class UserFinder implements FinderInterface
                     $qb->andWhere('ao.uuid IN (:administratedOrganizations)');
                     $qb->setParameter('administratedOrganizations', is_array($filterValue) ? $filterValue : [$filterValue]);
                     break;
-                //case 'contactable':
                 case 'workspace':
-                    $qb->leftJoin('obj.roles', 'wsuroles');
-                    $qb->leftJoin('wsuroles.workspace', 'rws');
-                    $qb->leftJoin('obj.groups', 'wsugrps');
-                    $qb->leftJoin('wsugrps.roles', 'guroles');
-                    $qb->leftJoin('guroles.workspace', 'grws');
 
-                    if (is_array($filterValue)) {
-                        $qb->andWhere($qb->expr()->orX(
-                            $qb->expr()->in('rws.uuid', ':workspaceId'),
-                            $qb->expr()->in('grws.uuid', ':workspaceId')
-                        ));
-                    } else {
-                        $qb->andWhere($qb->expr()->orX(
-                            $qb->expr()->eq('rws.uuid', ':workspaceId'),
-                            $qb->expr()->eq('grws.uuid', ':workspaceId')
-                        ));
+                    //this one is REALLY tricky for performance reasons.
+                    //we need to make a union but it's not supported by the querybuilder.
+                    //It's not supported at all by doctrine actually.
+                    //Let's return a request object with the correct sql.
+                    if (!is_array($filterValue)) {
+                        $filterValue = [$filterValue];
                     }
 
-                    $qb->setParameter('workspaceId', $filterValue);
+                    $byUserSearch = $byGroupSearch = $searches;
+                    $byUserSearch['_workspace_user'] = $filterValue;
+                    $byGroupSearch['_workspace_group'] = $filterValue;
+                    unset($byUserSearch['workspace']);
+                    unset($byGroupSearch['workspace']);
+
+                    $qbUser = $this->om->createQueryBuilder();
+                    $qbUser->select('DISTINCT obj')->from($this->getClass(), 'obj');
+                    $this->configureQueryBuilder($qbUser, $byUserSearch, $sortBy);
+                    //this is our first part of the union
+                    $sqlUser = $qbUser->getQuery()->getSql();
+
+                    $qbGroup = $this->om->createQueryBuilder();
+                    $qbGroup->select('DISTINCT obj')->from($this->getClass(), 'obj');
+                    $this->configureQueryBuilder($qbGroup, $byGroupSearch, $sortBy);
+                    //this is the second part of the union
+                    $sqlGroup = $qbGroup->getQuery()->getSql();
+
+                    $together = $sqlUser.' UNION '.$sqlGroup;
+                    //we might want to add a count somehere here
+                    //add limit & offset too
+                    if ($searches['_options']['count']) {
+                        $together = "SELECT COUNT(*) FROM ($together) AS wathever";
+                    }
+
+                    $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($this->_em);
+                    $rsm->addRootEntityFromClassMetadata($this->getClass(), 'obj');
+                    $query = $this->_em->createNativeQuery($together, $rsm);
+
+                    return $query;
+
+                    break;
+                case '_workspace_user':
+                    $filterValue = array_map(function ($value) {
+                        return "'$value'";
+                    }, $filterValue);
+                    $string = join($filterValue, ',');
+                    $qb->leftJoin('obj.roles', 'wsuroles');
+                    $qb->leftJoin('wsuroles.workspace', 'rws');
+                    $qb->andWhere('rws.uuid IN ('.$string.')');
+
+                    break;
+                case '_workspace_group':
+                    $filterValue = array_map(function ($value) {
+                        return "'$value'";
+                    }, $filterValue);
+                    $string = join($filterValue, ',');
+                    $qb->leftJoin('obj.groups', 'grps');
+                    $qb->leftJoin('grps.roles', 'grpRole');
+                    $qb->leftJoin('grpRole.workspace', 'ws');
+                    $qb->andWhere('ws.uuid IN ('.$string.')');
+
                     break;
                 case 'blacklist':
                     $qb->andWhere("obj.uuid NOT IN (:{$filterName})");
@@ -182,7 +230,7 @@ class UserFinder implements FinderInterface
                     if (is_bool($filterValue)) {
                         $qb->andWhere("obj.{$filterName} = :{$filterName}");
                         $qb->setParameter($filterName, $filterValue);
-                    } else {
+                    } elseif (is_string($filterValue)) {
                         $qb->andWhere("UPPER(obj.{$filterName}) LIKE :{$filterName}");
                         $qb->setParameter($filterName, '%'.strtoupper($filterValue).'%');
                     }

@@ -146,21 +146,29 @@ class FinderProvider
             /** @var QueryBuilder $qb */
             $qb = $this->om->createQueryBuilder();
 
-            $qb->select($count ? 'COUNT(DISTINCT obj)' : 'DISTINCT obj')
-               ->from($class, 'obj');
+            $qb->select($count ? 'COUNT(DISTINCT obj)' : 'DISTINCT obj')->from($class, 'obj');
+
+            //make an option parameters for query builder ?
+            $filters['_options'] = [
+              'page' => $page,
+              'limit' => $limit,
+              'count' => $count,
+            ];
 
             // filter query - let's the finder implementation process the filters to configure query
-            $this->get($class)->configureQueryBuilder($qb, $filters, $sortBy);
+            $query = $this->get($class)->configureQueryBuilder($qb, $filters, $sortBy);
 
-            // order query if implementation has not done it
-            $this->sortResults($qb, $sortBy);
+            if (!$query) {
+                // order query if implementation has not done it
+                $this->sortResults($qb, $sortBy);
 
-            if (!$count && 0 < $limit) {
-                $qb->setFirstResult($page * $limit);
-                $qb->setMaxResults($limit);
+                if (!$count && 0 < $limit) {
+                    $qb->setFirstResult($page * $limit);
+                    $qb->setMaxResults($limit);
+                }
+
+                $query = $qb->getQuery();
             }
-
-            $query = $qb->getQuery();
 
             return $count ? (int) $query->getSingleScalarResult() : $query->getResult();
         } catch (FinderException $e) {
