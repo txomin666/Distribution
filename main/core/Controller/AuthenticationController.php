@@ -181,7 +181,7 @@ class AuthenticationController
 
         if ($form->isValid()) {
             $data = $form->getData();
-            $user = $this->userManager->getUserbyEmail($data['email']);
+            $user = $this->om->getRepository('ClarolineCoreBundle:User')->findOneByEmail($data['email']);
 
             if (!empty($user)) {
                 $user->setHashTime(time());
@@ -190,12 +190,11 @@ class AuthenticationController
                 $this->om->persist($user);
                 $this->om->flush();
 
-                if ($this->mailManager->sendForgotPassword($user)) {
+                $this->mailManager->sendForgotPassword($user);
                     return [
                         'user' => $user,
                         'form' => $form->createView(),
                     ];
-                }
 
                 return [
                     'error' => $this->translator->trans('mail_config_problem', [], 'platform'),
