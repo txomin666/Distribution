@@ -159,7 +159,7 @@ class UserFinder implements FinderInterface
                     //this one is REALLY tricky for performance reasons.
                     //we need to make a union but it's not supported by the querybuilder.
                     //It's not supported at all by doctrine actually.
-                    //Let's return a request object with the correct sql.
+                    //Let's return a query object with the correct sql.
                     if (!is_array($filterValue)) {
                         $filterValue = [$filterValue];
                     }
@@ -186,12 +186,15 @@ class UserFinder implements FinderInterface
                     //we might want to add a count somehere here
                     //add limit & offset too
                     if ($searches['_options']['count']) {
-                        $together = "SELECT COUNT(*) FROM ($together) AS wathever";
+                        $together = "SELECT COUNT(*) as count FROM ($together) AS wathever";
+                        $rsm = new \Doctrine\ORM\Query\ResultSetMapping();
+                        $rsm->addScalarResult('count', 'count', 'integer');
+                        $query = $this->_em->createNativeQuery($together, $rsm);
+                    } else {
+                        $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($this->_em);
+                        $rsm->addRootEntityFromClassMetadata($this->getClass(), 'obj');
+                        $query = $this->_em->createNativeQuery($together, $rsm);
                     }
-
-                    $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($this->_em);
-                    $rsm->addRootEntityFromClassMetadata($this->getClass(), 'obj');
-                    $query = $this->_em->createNativeQuery($together, $rsm);
 
                     return $query;
 

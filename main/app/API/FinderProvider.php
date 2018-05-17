@@ -170,7 +170,10 @@ class FinderProvider
                 $query = $qb->getQuery();
             }
 
-            return $count ? (int) $query->getSingleScalarResult() : $query->getResult();
+            var_dump($query->getSql());
+            $result = $count ? (int) $query->getSingleScalarResult() : $query->getResult();
+
+            return $result;
         } catch (FinderException $e) {
             $data = $this->om->getRepository($class)->findBy($filters, null, 0 < $limit ? $limit : null, $page);
 
