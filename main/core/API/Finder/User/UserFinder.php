@@ -78,7 +78,8 @@ class UserFinder implements FinderInterface
     public function configureQueryBuilder(
         QueryBuilder $qb,
         array $searches = [],
-        array $sortBy = null
+        array $sortBy = null,
+        array $options = ['count' => false, 'page' => 0, 'limit' => -1]
     ) {
         if (isset($searches['contactable'])) {
             $qb = $this->getContactableUsers($qb);
@@ -186,7 +187,8 @@ class UserFinder implements FinderInterface
                     $together = $sqlUser.' UNION '.$sqlGroup;
                     //we might want to add a count somehere here
                     //add limit & offset too
-                    if ($searches['_options']['count']) {
+                    var_dump($together);
+                    if ($options['count']) {
                         $together = "SELECT COUNT(*) as count FROM ($together) AS wathever";
                         $rsm = new \Doctrine\ORM\Query\ResultSetMapping();
                         $rsm->addScalarResult('count', 'count', 'integer');
