@@ -170,7 +170,6 @@ class FinderProvider
                 $query = $qb->getQuery();
             }
 
-            var_dump($query->getSql());
             $result = $count ? (int) $query->getSingleScalarResult() : $query->getResult();
 
             return $result;
