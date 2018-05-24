@@ -110,4 +110,34 @@ class OrganizationController extends AbstractCrudController
 
         return new JsonResponse($this->serializer->serialize($organization));
     }
+
+    /**
+     * Only keep the roots organizations.
+     * This is a very heavy operation =/.
+     */
+    private function filterOrganizations(array $organizations)
+    {
+        foreach ($organizations as $organization) {
+            foreach ($organizations as $childKey => $child) {
+                if ($this->hasRecursiveChild($organization, $child)) {
+                    unset($organizations[$childKey]);
+                }
+            }
+        }
+
+        return array_values($organizations);
+    }
+
+    private function hasRecursiveChild($parent, $target)
+    {
+        foreach ($parent['children'] as $child) {
+            if ($child['id'] === $target['id']) {
+                return true;
+            }
+
+            return $this->hasRecursiveChild($child, $target);
+        }
+
+        return false;
+    }
 }
