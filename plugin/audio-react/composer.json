@@ -1,0 +1,20 @@
+{
+    "name": "judileroi/audio-react-bundle",
+    "description" : "Claroline Audio React Bundle",
+    "type" : "claroline-plugin",
+    "authors" : [{
+			"name" : "Judicael Tandjiekpon",
+			"email" : "sagbo-judicael.tandjiekpon@univ-grenoble-alpes.fr"
+		}
+	],
+    "keywords": ["Claroline", "AudioReact"],
+    "homepage": "https://github.com/judileroi/AudioReactBundle",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.4.1"
+    },
+    "autoload": {
+        "psr-0": { "Innova\\AudioReactBundle": "" }
+    },
+    "target-dir": "Innova/AudioReactBundle"
+}

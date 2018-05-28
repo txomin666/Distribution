@@ -1,0 +1,6 @@
+innova_audio_react:
+    resource: "@InnovaAudioReactBundle/Controller/AudioReactController.php"
+    prefix:   /
+    type: annotation
+
+

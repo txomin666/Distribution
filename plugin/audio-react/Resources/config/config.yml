@@ -1,0 +1,11 @@
+plugin:
+  has_options: false
+  icon: res_audio_react.png
+
+  resources:
+    - class: Innova\AudioReactBundle\Entity\MediaResource
+      name: innova_audio_react
+      is_exportable: false
+      actions:
+        - name: administrate
+          menu_name: innova_audio_react_administrate
