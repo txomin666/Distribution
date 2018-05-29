@@ -6,6 +6,8 @@ const SUBTITLE_ADD = 'SUBTITLE_ADD'
 const SUBTITLE_UPDATE = 'SUBTITLE_UPDATE'
 const SUBTITLE_REMOVE = 'SUBTITLE_REMOVE'
 const EDITOR_READ = 'EDITOR_READ'
+const ADD_REGION_TO_PLAYER ='ADD_REGION_TO_PLAYER'
+
 
 const actions = {}
 
@@ -53,15 +55,15 @@ actions.deleteSubtitle = (id) => ({
   }
 })
 
-actions.addSubtitle = makeActionCreator(SUBTITLE_ADD, 'subtitle')
-actions.updateSubtitle = makeActionCreator(SUBTITLE_UPDATE, 'subtitle')
-actions.removeSubtitle = makeActionCreator(SUBTITLE_REMOVE, 'id')
+// actions.addSubtitle = makeActionCreator(SUBTITLE_ADD, 'subtitle')
+// actions.updateSubtitle = makeActionCreator(SUBTITLE_UPDATE, 'subtitle')
+// actions.removeSubtitle = makeActionCreator(SUBTITLE_REMOVE, 'id')
 actions.editorCanEdit = makeActionCreator(EDITOR_READ,'editor')
+actions.addRegionToPlayer = makeActionCreator(ADD_REGION_TO_PLAYER,'region')
+
 
 export {
   actions,
-  SUBTITLE_ADD,
-  SUBTITLE_UPDATE,
-  SUBTITLE_REMOVE,
-  EDITOR_READ
+  EDITOR_READ,
+  ADD_REGION_TO_PLAYER
 }

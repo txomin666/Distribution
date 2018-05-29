@@ -16,7 +16,7 @@ const  PlayerComponent = props =>{
       <div>
         <h1>AudioReactPlayer Mode Play</h1>
         <WavePlayer
-          audioFile={'http://localhost/test.mp3'}
+          src={'http://localhost/test.mp3'}
         />
       </div>
     )   
