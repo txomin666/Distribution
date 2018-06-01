@@ -17,6 +17,8 @@ use Claroline\CoreBundle\Entity\Organization\Organization;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Manager\WorkspaceManager;
+use Doctrine\ORM\Query\ResultSetMapping;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\ORM\QueryBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -187,14 +189,13 @@ class UserFinder implements FinderInterface
                     $together = $sqlUser.' UNION '.$sqlGroup;
                     //we might want to add a count somehere here
                     //add limit & offset too
-                    var_dump($together);
                     if ($options['count']) {
                         $together = "SELECT COUNT(*) as count FROM ($together) AS wathever";
-                        $rsm = new \Doctrine\ORM\Query\ResultSetMapping();
+                        $rsm = new ResultSetMapping();
                         $rsm->addScalarResult('count', 'count', 'integer');
                         $query = $this->_em->createNativeQuery($together, $rsm);
                     } else {
-                        $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($this->_em);
+                        $rsm = new ResultSetMappingBuilder($this->_em);
                         $rsm->addRootEntityFromClassMetadata($this->getClass(), 'c0_');
                         $query = $this->_em->createNativeQuery($together, $rsm);
                     }
