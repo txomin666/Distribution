@@ -84,6 +84,10 @@ class UserCrud
             }
         }
 
+        $user->setIsMailNotified($this->config->getParameter('auto_enable_email_redirect'));
+        $user->setHideMailWarning($this->config->getParameter('auto_validate_email'));
+        $user->setIsMailValidated($this->config->getParameter('auto_validate_email'));
+
         $this->om->persist($user);
 
         if (in_array(Options::ADD_NOTIFICATIONS, $options)) {

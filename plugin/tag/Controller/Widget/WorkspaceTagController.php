@@ -108,12 +108,16 @@ class WorkspaceTagController extends Controller
           $this->tokenStorage->getToken()->getUser(),
           [$widgetInstance]
         );
-        $tags = explode(',', $displayConfigs[0]->getDetails()['tags']);
+
+
         $workspaces = [];
+	if ($displayConfigs[0]) {
+        $tags = explode(',', $displayConfigs[0]->getDetails()['tags']);
 
         foreach ($tags as $tag) {
             $workspaces[$tag] = $this->tagManager->getTaggedWorkspaces($tag);
         }
+}
 
         return ['workspaces' => $workspaces];
     }
