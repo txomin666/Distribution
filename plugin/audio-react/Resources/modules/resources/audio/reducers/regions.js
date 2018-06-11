@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {makeReducer} from '#/main/core/scaffolding/reducer'
 
 import {
@@ -27,24 +26,6 @@ const regionReducer = {
     }
 
 
-=======
-import cloneDeep from 'lodash/cloneDeep'
-import {makeReducer} from '#/main/core/scaffolding/reducer'
-
-import {
-  ADD_REGION_TO_PLAYER
-} from '#/plugin/audio-react/resources/audio/actions'
-
-const regionReducer = {
-  regions: makeReducer([], {
-
-    [ADD_REGION_TO_PLAYER]: (state, action) => {
-      const newState = cloneDeep(state)
-      newState.push(action.region)
-
-      return newState
-    }
->>>>>>> 29f8b47be55c5e7e6931963a02715d88bbd3ac4d
   })
 }
 
