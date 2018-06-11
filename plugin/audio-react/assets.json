@@ -1,0 +1,12 @@
+{
+  "webpack": {
+    "entry": {
+      "player": "resources/audio"
+    }
+  },
+  "styles": {
+    "entry": {
+      "audio": "react.less"
+    }
+  }
+}
