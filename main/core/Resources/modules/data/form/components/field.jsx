@@ -26,7 +26,7 @@ const FormField = props => {
     )
   } else {
     return React.createElement(typeDef.components.form, merge({}, props.options, {
-      id: props.name,
+      id: props.name.replace(/\./g, '-'),
       label: props.label,
       hideLabel: props.hideLabel,
       disabled: props.disabled,

@@ -2,6 +2,7 @@ import React from 'react'
 import {PropTypes as T} from 'prop-types'
 
 import {EmbeddedApp} from '#/main/app/components/embedded-app'
+import {trans} from '#/main/core/translation'
 
 import {WidgetInstance as WidgetInstanceTypes} from '#/main/core/widget/prop-types'
 import {getWidget} from '#/main/core/widget/types'
@@ -15,7 +16,7 @@ import {getWidget} from '#/main/core/widget/types'
 const Widget = props =>
   <section className={`widget ${props.instance.type}-widget`}>
     {props.instance.name &&
-      <h2 className="h-first widget-title">{props.instance.name}</h2>
+      <h2 className="h-first widget-title">{trans(props.instance.name)}</h2>
     }
 
     <EmbeddedApp
