@@ -295,6 +295,7 @@ class ResourceController extends Controller
             [$this->resourceManager->getResourceFromNode($node), $isIframe]
         );
         $this->dispatcher->dispatch('log', 'Log\LogResourceRead', [$node]);
+        $this->dispatcher->dispatch('log', 'Log\LogWorkspaceEnter', [$node->getWorkspace()]);
 
         return $event->getResponse();
     }

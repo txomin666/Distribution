@@ -1,4 +1,4 @@
-import {API_REQUEST} from '#/main/core/api/actions'
+import {API_REQUEST} from '#/main/app/api'
 import {actions as formActions} from '#/main/core/data/form/actions'
 
 export const actions = {}
@@ -15,3 +15,16 @@ actions.open = (formName, id = null, defaultProps) => {
     return formActions.resetForm(formName, defaultProps, true)
   }
 }
+
+actions.sendMessages = (messages, users) => ({
+  [API_REQUEST]: {
+    url: ['apiv2_plannednotificationmessage_messages_send'],
+    request: {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: messages.map(message => message.id),
+        users: users
+      })
+    }
+  }
+})

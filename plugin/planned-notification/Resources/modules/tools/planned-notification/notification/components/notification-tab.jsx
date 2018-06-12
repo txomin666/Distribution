@@ -4,14 +4,14 @@ import {connect} from 'react-redux'
 
 import {makeId} from '#/main/core/scaffolding/id'
 import {trans} from '#/main/core/translation'
-import {matchPath, Routes, withRouter} from '#/main/core/router'
+import {matchPath, Routes, withRouter} from '#/main/app/router'
 
 import {PageActions} from '#/main/core/layout/page/components/page-actions.jsx'
 import {PageAction} from '#/main/core/layout/page'
 import {FormPageActionsContainer} from '#/main/core/data/form/containers/page-actions.jsx'
 
 import {select} from '#/plugin/planned-notification/tools/planned-notification/selectors'
-import {constants} from '#/plugin/planned-notification/tools/planned-notification/constants'
+import {WORKSPACE_REGISTRATION_USER} from '#/plugin/planned-notification/tools/planned-notification/constants'
 import {actions} from '#/plugin/planned-notification/tools/planned-notification/notification/actions'
 import {Notifications} from '#/plugin/planned-notification/tools/planned-notification/notification/components/notifications.jsx'
 import {Notification} from '#/plugin/planned-notification/tools/planned-notification/notification/components/notification.jsx'
@@ -47,13 +47,13 @@ const NotificationTabEditActions = withRouter(NotificationTabEditActionsComponen
 const NotificationTabActionsComponent = props =>
   <PageActions>
     {!!matchPath(props.location.pathname, {path: '/notifications/form'}) &&
-      <PageAction
-        id="notification-form-save"
-        title={trans('cancel')}
-        icon="fa fa-times"
-        primary={false}
-        action="#/notifications"
-      />
+    <PageAction
+      id="notification-form-save"
+      title={trans('cancel')}
+      icon="fa fa-times"
+      primary={false}
+      action="#/notifications"
+    />
     }
   </PageActions>
 
@@ -96,7 +96,7 @@ const NotificationTab = connect(
         id: makeId(),
         workspace: workspace,
         parameters: {
-          action: constants.WORKSPACE_REGISTRATION_USER,
+          action: WORKSPACE_REGISTRATION_USER,
           interval: 1,
           byMail: true,
           byMessage: false
