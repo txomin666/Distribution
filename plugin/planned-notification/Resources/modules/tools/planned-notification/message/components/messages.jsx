@@ -3,7 +3,7 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 
 import {trans} from '#/main/core/translation'
-import {actions as modalActions} from '#/main/app/overlay/modal/store'
+import {actions as modalActions} from '#/main/core/layout/modal/actions'
 import {MODAL_DATA_PICKER} from '#/main/core/data/list/modals'
 import {DataListContainer} from '#/main/core/data/list/containers/data-list.jsx'
 import {HtmlText} from '#/main/core/layout/components/html-text.jsx'

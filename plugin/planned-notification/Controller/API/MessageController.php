@@ -31,7 +31,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class MessageController extends AbstractCrudController
 {
-    /* var FinderProvider */
+    /** @var FinderProvider */
     protected $finder;
 ￼
     /** @var PlannedNotificationManager */
