@@ -12,7 +12,7 @@ const regionReducer = {
       var regions = Object.values(action.regions)
       var newState = []
       regions.forEach((region)=>{
-        newState.push({id:region.id,start:region.start,end:region.end,text:region.text})
+        newState.push({id:region.id,start:region.start,end:region.end,note:region.data.note})
       })
       newState = Object.assign({},state,{list:newState})
       return newState

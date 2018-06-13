@@ -49,7 +49,8 @@ class WavePlayer extends React.Component {
     this.wavesurfer = WaveSurfer.create({
       container: $waveform,
       waveColor: 'blue',
-      progressColor: 'purple'
+      progressColor: 'purple',
+      height:200
     })
     this.wavesurfer.load(this.props.src)
 
@@ -60,15 +61,19 @@ class WavePlayer extends React.Component {
 
     /** Created on region */
     this.wavesurfer.on('region-created', r => {
-      
+      //console.log(this.wavesurfer.regions.list)
     })
 
-    /** Deleted on region */
-    this.wavesurfer.on('region-delected', r => {})
 
     /** Deleted on region */
-    this.wavesurfer.on('region-dblclick', (r, e) => {
-      this.wavesurfer.play(r.start, r.end)
+    this.wavesurfer.on('region-delected', r => {
+      console.log('delected')
+    })
+
+
+    /** Update on region */
+    this.wavesurfer.on('region-updated', (r, e) => {
+      this.props.updateRegions(this.wavesurfer.regions.list)
     })
 
     /** Initialize First Region on WaveSurfer */
@@ -77,7 +82,10 @@ class WavePlayer extends React.Component {
         id: this.uuidv4(),
         start: 0,
         end: this.wavesurfer.getDuration(),
-        color: 'rgba(14, 90, 60, 0.1)'
+        color: 'rgba('+Math.floor(Math.random() * 255)+', '+Math.floor(Math.random() * 150)+', '+Math.floor(Math.random() * 255)+', 0.2)',
+        data:{
+          note:''
+        }
       }
       this.wavesurfer.addRegion(r)
       this.props.updateRegions(this.wavesurfer.regions.list)
@@ -96,23 +104,36 @@ class WavePlayer extends React.Component {
 
   regionAdd() {
     if (this.state.regionActive && this.wavesurfer.getCurrentTime() > 0) {
-      delete this.wavesurfer.regions.list[this.state.regionActive.id]
+      var regionsNow = Object.values(this.wavesurfer.regions.list)
+      this.wavesurfer.clearRegions()
+      regionsNow.forEach(r=>{
+        if(r.id !=this.state.regionActive.id){
+          this.wavesurfer.addRegion(r)
+        }
+      })
       let first = {
         id: this.uuidv4(),
         start: this.state.regionActive.start,
         end: this.wavesurfer.getCurrentTime(),
-        color: 'rgba(255, 0, 0, 0.5)',
-        drag:true,
-        resize:true
+        color: 'rgba('+Math.floor(Math.random() * 255)+', '+Math.floor(Math.random() * 150)+', '+Math.floor(Math.random() * 255)+', 0.2)',
+        resize:true,
+        drag:false,
+        data:{
+          note:''
+        }
       }
 
       let second = {
         id: this.uuidv4(),
         start: this.wavesurfer.getCurrentTime() + 0.001,
         end: this.state.regionActive.end,
-        color: 'rgba(255, 0, 0, 0.5)',
-        drag:true,
-        resize:true        
+        color: 'rgba('+Math.floor(Math.random() * 100)+', '+Math.floor(Math.random() * 150)+', '+Math.floor(Math.random() * 255)+', 0.2)',
+        resize:true,
+        drag:false,
+        data:{
+          note:''
+        }
+      
       }
       this.wavesurfer.addRegion(first)
       this.wavesurfer.addRegion(second)
@@ -120,6 +141,7 @@ class WavePlayer extends React.Component {
       this.props.updateRegions(this.wavesurfer.regions.list)
     }
   }
+
 
   regionRemove() {
 
@@ -157,6 +179,21 @@ class WavePlayer extends React.Component {
     })
     
   }
+
+  regionNote(e){
+    var regionsNow = Object.values(this.wavesurfer.regions.list)
+    this.wavesurfer.clearRegions()
+    regionsNow.forEach(r=>{
+      if(r.id ==this.state.regionActive.id){
+        r.data = {
+          note:e.target.value
+        }
+      }
+      this.wavesurfer.addRegion(r)
+    })
+    this.props.updateRegions(this.wavesurfer.regions.list)
+     
+  }
   
   render() {
     
@@ -176,6 +213,7 @@ class WavePlayer extends React.Component {
           <WaveSurferRegionList
             regionSelect={this.regionSelect.bind(this)}
             regionPlay = {this.regionPlay}
+            regionNote = {this.regionNote.bind(this)}
           />
         </div>
       )
