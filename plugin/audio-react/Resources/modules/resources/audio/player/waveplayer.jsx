@@ -87,8 +87,6 @@ class WavePlayer extends React.Component {
           note:''
         }
       }
-      this.wavesurfer.addRegion(r)
-      this.props.updateRegions(this.wavesurfer.regions.list)
       this.setState({regionActive: r},()=>{
         this.props.updateActiveRegion(r)
       })
@@ -104,7 +102,9 @@ class WavePlayer extends React.Component {
 
   regionAdd() {
     if (this.state.regionActive && this.wavesurfer.getCurrentTime() > 0) {
-      var regionsNow = Object.values(this.wavesurfer.regions.list)
+      var regionsNow = []
+      if(this.wavesurfer.regions) regionsNow = Object.values(this.wavesurfer.regions.list)
+       
       this.wavesurfer.clearRegions()
       regionsNow.forEach(r=>{
         if(r.id !=this.state.regionActive.id){
@@ -117,7 +117,7 @@ class WavePlayer extends React.Component {
         end: this.wavesurfer.getCurrentTime(),
         color: 'rgba('+Math.floor(Math.random() * 255)+', '+Math.floor(Math.random() * 150)+', '+Math.floor(Math.random() * 255)+', 0.2)',
         resize:true,
-        drag:false,
+        drag:true,
         data:{
           note:''
         }
@@ -129,7 +129,7 @@ class WavePlayer extends React.Component {
         end: this.state.regionActive.end,
         color: 'rgba('+Math.floor(Math.random() * 100)+', '+Math.floor(Math.random() * 150)+', '+Math.floor(Math.random() * 255)+', 0.2)',
         resize:true,
-        drag:false,
+        drag:true,
         data:{
           note:''
         }
@@ -144,11 +144,15 @@ class WavePlayer extends React.Component {
 
 
   regionRemove() {
-
-    // regionList.forEach((region,index,object) => {
-    //   if(region.id == this.state.wavesurfer.regionActive.id)
-    //     object.splice(index, 1)
-    // })
+    var regionsNow = Object.values(this.wavesurfer.regions.list)
+    this.wavesurfer.clearRegions()
+    regionsNow.forEach(r=>{
+      if(r.id !=this.state.regionActive.id){
+        this.wavesurfer.addRegion(r)
+      }    
+    })
+    this.props.updateRegions(this.wavesurfer.regions.list)
+     
   }
 
   regionActiveUpdate(r){
@@ -166,6 +170,8 @@ class WavePlayer extends React.Component {
       this.state.regionActive.end
     )
   }
+
+
 
   regionSelect(region){
     let r = {
@@ -214,6 +220,7 @@ class WavePlayer extends React.Component {
             regionSelect={this.regionSelect.bind(this)}
             regionPlay = {this.regionPlay}
             regionNote = {this.regionNote.bind(this)}
+            regionRemove = {this.regionRemove.bind(this)}
           />
         </div>
       )

@@ -4,5 +4,11 @@
     "audio_editor_mode_play_continu_free": "Continu libre",
     "audio_editor_mode_play_continu_active": "Continu actif",
     "audio_editor_mode_play_scenarize_active": "Scénarisé actif", 
-    "audio_editor_header_options": "Resource options" 
+    "audio_editor_header_options": "Resource options" ,
+    "audio_editor_language_english_us": "Anglais (US)" ,
+    "audio_editor_language_english_gb": "Anglais (GB)" ,
+    "audio_editor_language_german": "Allemand" ,
+    "audio_editor_language_spain": "Espagnol" ,
+    "audio_editor_language_italian": "Italien" ,
+    "audio_editor_language_french": "Frrancais" 
 }

@@ -4,7 +4,7 @@ import {connect} from 'react-redux'
 
 const WaveSurferRegionList = props => {
 
-  let {regions,regionSelect,regionActive,regionPlay,regionNote} = props
+  let {regions,regionSelect,regionActive,regionPlay,regionNote,regionRemove} = props
   if (regions && regionActive )
     return (
       <div>
@@ -17,7 +17,7 @@ const WaveSurferRegionList = props => {
         {regions.map(region => {
           return (
             <div key={region.id} className="player-react-list">
-              <div className={`row region-list-item ${regionActive.id==region.id ? 'region-active' : ''}`}  onClick={()=>regionSelect(region)} >
+              <div className={`row region-list-item ${regionActive.id==region.id ? 'region-active' : ''}`}  onMouseOver={()=>regionSelect(region)} >
                 <div className="col-xs-1">
                   <input
                     type="text"
@@ -35,7 +35,7 @@ const WaveSurferRegionList = props => {
                   />
                 </div>
                 <div className="col-xs-8">
-                  <input type="text" className="form-control" onChange={props.regionNote} value={region.note} />
+                  <input type="text" className="form-control" onChange={regionNote} value={region.note} />
                 </div>
                 <div className="col-xs-2">
                   <div className="btn-group" role="group">
@@ -57,6 +57,7 @@ const WaveSurferRegionList = props => {
                       <i className="fa fa-cog" />
                     </button>
                     <button
+                      onClick={regionRemove}
                       role="button"
                       data-ng-disabled="$ctrl.resource.regions.length === 1"
                       type="button"
