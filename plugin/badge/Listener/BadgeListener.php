@@ -231,7 +231,7 @@ class BadgeListener
         ];
 
         return $this->templateingEngine->render(
-            'IcapBadgeBundle:Tool:Workspace\list.html.twig',
+            'IcapBadgeBundle::open.html.twig',
             ['workspace' => $workspace, 'parameters' => $parameters]
         );
     }

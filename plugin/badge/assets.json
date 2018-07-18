@@ -1,0 +1,14 @@
+{
+  "webpack": {
+    "entry": {
+      "badge": "bootstrap"
+    }
+  },
+
+  "styles": {
+    "entry": {
+      "badge": "badge.less"
+    }
+  }
+}
+

@@ -1,0 +1,23 @@
+{% extends workspace is defined
+    ? "ClarolineCoreBundle:workspace:layout.html.twig"
+    : "ClarolineCoreBundle::layout.html.twig" %}
+
+{% block stylesheets %}
+    {{ parent() }}
+
+    <link rel="stylesheet" type="text/css" href="{{ themeAsset('claroline-distribution-plugin-badge-badge.css') }}" />
+{% endblock %}
+
+{% block content %}
+    <div class="page-container badge-container"
+         data-export-pdf-enabled="{{ config.getParameter('is_pdf_export_active') | json_encode | raw | escape }}"
+    >
+
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script type="text/javascript" src="{{ hotAsset('dist/claroline-distribution-plugin-badge-badge.js') }}" ></script>
+{% endblock javascripts %}
