@@ -2,6 +2,7 @@
 
 namespace Icap\BadgeBundle\Manager;
 
+use Claroline\AppBundle\API\FinderProvider;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Claroline\CoreBundle\Event\Log\LogGenericEvent;
@@ -39,20 +40,33 @@ class BadgeManager
      */
     protected $tokenStorage;
 
+    protected $finder;
+
     /**
      * Constructor.
      *
      * @DI\InjectParams({
      *     "entityManager"   = @DI\Inject("doctrine.orm.entity_manager"),
      *     "eventDispatcher" = @DI\Inject("event_dispatcher"),
-     *     "tokenStorage"    = @DI\Inject("security.token_storage")
+     *     "tokenStorage"    = @DI\Inject("security.token_storage"),
+     *     "finder"          = @DI\Inject("claroline.api.finder"),
      * })
+     *
+     * @param EntityManager            $entityManager
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param TokenStorageInterface    $tokenStorage
+     * @param FinderProvider           $finder
      */
-    public function __construct(EntityManager $entityManager, EventDispatcherInterface $eventDispatcher, TokenStorageInterface $tokenStorage)
-    {
+    public function __construct(
+        EntityManager            $entityManager,
+        EventDispatcherInterface $eventDispatcher,
+        TokenStorageInterface    $tokenStorage,
+        FinderProvider           $finder
+    ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->tokenStorage = $tokenStorage;
+        $this->finder = $finder;
     }
 
     /**
@@ -142,7 +156,7 @@ class BadgeManager
         $badgeRevoked = false;
         $userBadgeRepository = $this->entityManager->getRepository('IcapBadgeBundle:UserBadge');
         $userBadge = $userBadgeRepository->findOneByBadgeAndUser($badge, $user);
-        if ($userBadge !== null) {
+        if (null !== $userBadge) {
             $this->entityManager->remove($userBadge);
             if (!$delayFlushAndEvent) {
                 $this->entityManager->flush();
@@ -371,7 +385,7 @@ class BadgeManager
 
         $user = $this->tokenStorage->getToken()->getUser();
 
-        if ($user !== 'anon.') {
+        if ('anon.' !== $user) {
             foreach ($workspaceBadges as $workspaceBadge) {
                 $isOwned = false;
                 foreach ($workspaceBadge->getUserBadges() as $userBadge) {
@@ -450,7 +464,7 @@ class BadgeManager
     {
         $loggedUser = $this->tokenStorage->getToken()->getUser();
         $userBadgeRepository = $this->entityManager->getRepository('IcapBadgeBundle:UserBadge');
-        $lastAwardedBadges = $loggedUser !== 'anon.' ?
+        $lastAwardedBadges = 'anon.' !== $loggedUser ?
             $userBadgeRepository->findUserLastAwardedBadges($loggedUser, $limit) :
             [];
 
@@ -501,5 +515,17 @@ class BadgeManager
         }
 
         return count($userBadges);
+    }
+
+    public function getPlatformBadges($filters)
+    {
+        return $this->finder->search('Icap\BadgeBundle\Entity\Badge', $filters, []);
+    }
+
+    public function getWorkspaceBadges(Workspace $workspace, $filters)
+    {
+        return $this->finder->search('Icap\BadgeBundle\Entity\Badge', $filters, [
+            'workspace' => $workspace->getId(),
+        ]);
     }
 }

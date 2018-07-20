@@ -1,8 +1,8 @@
-import {Player} from '#/plugin/badge/player/components/player'
-import {reducer} from '#/plugin/badge/store'
+import {Player} from '#/plugin/badge/player/player'
+import {reducer} from '#/plugin/badge/player/store'
 
 /**
- * Badge application.
+ * Badge player application.
  *
  * @constructor
  */
@@ -11,6 +11,6 @@ export const App = () => ({
   store: reducer,
   styles: 'claroline-distribution-plugin-badge',
   initialData: initialData => Object.assign({}, initialData, {
-    exportPdfEnabled: initialData.exportPdfEnabled
+    inWorkspace: initialData.inWorkspace
   })
 })

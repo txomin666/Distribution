@@ -2,42 +2,92 @@
 
 namespace Icap\BadgeBundle\Controller\Api;
 
-use Icap\BadgeBundle\Entity\Badge;
-use Icap\BadgeBundle\Repository\BadgeRepository;
-use FOS\RestBundle\View\ViewHandler;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Claroline\CoreBundle\Security\PermissionCheckerTrait;
 use FOS\RestBundle\View\View;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Icap\BadgeBundle\Entity\Badge;
+use Icap\BadgeBundle\Repository\BadgeManager;
 use JMS\DiExtraBundle\Annotation\Inject;
 use JMS\DiExtraBundle\Annotation\InjectParams;
-use JMS\DiExtraBundle\Annotation\Service;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
-/**
- * @Route("/api/badges", service="icap_badge.api.badge")
- * @Service("icap_badge.api.badge")
- */
 class BadgeController
 {
-    /**
-     * @var BadgeRepository
-     */
-    private $badgeRepository;
+    use PermissionCheckerTrait;
 
     /**
-     * @var ViewHandler
+     * @var BadgeManager
      */
-    private $viewHandler;
+    private $badgeManager;
 
     /**
      * @InjectParams({
-     *     "badgeRepository" = @Inject("icap_badge.repository.badge"),
-     *     "viewHandler"     = @Inject("fos_rest.view_handler")
+     *     "badgeManager" = @Inject("icap_badge.manager.badge")
      * })
+     *
+     * @param BadgeManager $badgeManager
      */
-    public function __construct(BadgeRepository $badgeRepository, ViewHandler $viewHandler)
+    public function __construct(BadgeManager $badgeManager)
     {
-        $this->badgeRepository = $badgeRepository;
-        $this->viewHandler = $viewHandler;
+        $this->badgeManager = $badgeManager;
+    }
+
+    /**
+     * Get badge by its uuid.
+     *
+     * @EXT\Route("/badges/{uuid}", name="apiv2_badge_get")
+     * @EXT\Method("GET")
+     *
+     * @param Badge | null $badge
+     *
+     * @return JsonResponse
+     */
+    public function getAction(Badge $badge = null)
+    {
+        return $badge;
+    }
+
+    /**
+     * Get all platform badges.
+     *
+     * @EXT\Route("/badges", name="apiv2_platform_badge_list")
+     * @EXT\Method("GET")
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function listPlatformAction(Request $request)
+    {
+        $params = $request->query->all();
+
+        $badges = $this->badgeManager->getPlatformBadges($params);
+
+        return new JsonResponse($badges);
+    }
+
+    /**
+     * Get all workspace badges.
+     *
+     * @EXT\Route("/workspace/{workspace}/badges", name="apiv2_workspace_badge_list")
+     * @EXT\Method("GET")
+     *
+     * @param Request   $request
+     * @param Workspace $workspace
+     *
+     * @return JsonResponse
+     */
+    public function listWorkspaceAction(Request $request, Workspace $workspace)
+    {
+        //TODO: test workspace access right
+
+        $params = $request->query->all();
+
+        $badges = $this->badgeManager->getWorkspaceBadges($workspace, $params);
+
+        return new JsonResponse($badges);
     }
 
     /**
@@ -50,25 +100,6 @@ class BadgeController
         $view = View::create()
             ->setStatusCode(200)
             ->setData($badges);
-
-        return $this->viewHandler->handle($view);
-    }
-
-    /**
-     * @Route("/{id}", name="icap_badge_api_badge_get", requirements={"id" = "\d+"}, defaults={"_format" = "json"})
-     */
-    public function getAction($id)
-    {
-        /** @var \Icap\BadgeBundle\Entity\Badge $badge */
-        $badge = $this->badgeRepository->find($id);
-
-        if (null === $badge) {
-            throw new NotFoundHttpException('Badge not found');
-        }
-
-        $view = View::create()
-            ->setStatusCode(200)
-            ->setData($badge);
 
         return $this->viewHandler->handle($view);
     }

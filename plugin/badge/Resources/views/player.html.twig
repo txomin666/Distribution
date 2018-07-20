@@ -9,8 +9,9 @@
 {% endblock %}
 
 {% block content %}
-    <div class="page-container badge-container"
-         data-export-pdf-enabled="{{ config.getParameter('is_pdf_export_active') | json_encode | raw | escape }}"
+    <div class="page-container badge-player-container"
+         {#data-export-pdf-enabled="{{ config.getParameter('is_pdf_export_active') | json_encode | raw | escape }}"#}
+         data-in-workspace="{{ workspace is defined ? 'true' : 'false' }}"
     >
 
     </div>
@@ -19,5 +20,5 @@
 {% block javascripts %}
     {{ parent() }}
 
-    <script type="text/javascript" src="{{ hotAsset('dist/claroline-distribution-plugin-badge-badge.js') }}" ></script>
+    <script type="text/javascript" src="{{ hotAsset('dist/claroline-distribution-plugin-badge-badge-player.js') }}" ></script>
 {% endblock javascripts %}

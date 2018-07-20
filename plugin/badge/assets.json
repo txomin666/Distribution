@@ -1,7 +1,8 @@
 {
   "webpack": {
     "entry": {
-      "badge": "bootstrap"
+      "badge-editor": "editor/bootstrap",
+      "badge-player": "player/bootstrap"
     }
   },
 

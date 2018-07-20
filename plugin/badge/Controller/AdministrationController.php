@@ -64,7 +64,7 @@ class AdministrationController extends Controller
      *     defaults={"badgePage" = 1, "claimPage" = 1, "userPage" = 1}
      * )
      *
-     * @Template("IcapBadgeBundle::open.html.twig")
+     * @Template("IcapBadgeBundle::editor.html.twig")
      */
     public function listAction($badgePage = 1, $claimPage = 1, $userPage = 1)
     {

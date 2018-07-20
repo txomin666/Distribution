@@ -231,7 +231,7 @@ class BadgeListener
         ];
 
         return $this->templateingEngine->render(
-            'IcapBadgeBundle::open.html.twig',
+            'IcapBadgeBundle::editor.html.twig',
             ['workspace' => $workspace, 'parameters' => $parameters]
         );
     }
@@ -246,7 +246,7 @@ class BadgeListener
         $user = $this->tokenStorage->getToken()->getUser();
 
         return $this->templateingEngine->render(
-            'IcapBadgeBundle:Tool:MyWorkspace\toolList.html.twig',
+            'IcapBadgeBundle::player.html.twig',
             [
                 'workspace' => $workspace,
                 'user' => $user,
@@ -267,7 +267,7 @@ class BadgeListener
         $badgeCollections = $this->doctrine->getRepository('IcapBadgeBundle:BadgeCollection')->findByUser($user);
 
         return $this->templateingEngine->render(
-            'IcapBadgeBundle:profile:badges.html.twig',
+            'IcapBadgeBundle::player.html.twig',
             [
                 'userBadges' => $userBadges,
                 'badgeClaims' => $badgeClaims,
