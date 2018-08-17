@@ -46,7 +46,10 @@ const WikiSectionContent = props =>
         {!props.isRoot &&
         <Button
           type={CALLBACK_BUTTON}
-          callback={() => {document.getElementsByClassName('page-title')[0].scrollIntoView({block: 'end', behavior: 'smooth',  inline: 'start'})}}
+          callback={() => {
+            alert('CALLBACK')
+            document.getElementsByClassName('page-title')[0].scrollIntoView({block: 'end', behavior: 'smooth',  inline: 'start'})}
+          }
           icon={'fa fa-fw fa-arrow-up'}
           className={'btn btn-link'}
           tooltip="top"
@@ -63,7 +66,9 @@ const WikiSectionContent = props =>
             className={classNames({'btn': !props.isRoot}, {'btn-link': !props.isRoot}, {'page-actions-btn': props.isRoot})}
             tooltip="top"
             primary={props.isRoot}
-            callback={() => props.addSection(props.section.id)}
+            callback={() => {
+              props.addSection(props.section.id)
+            }}
             label={trans(props.isRoot ? 'create_new_section' : 'add_new_subsection', {}, 'icap_wiki')}
             title={trans(props.isRoot ? 'create_new_section' : 'add_new_subsection', {}, 'icap_wiki')}
             confirm={!props.saveEnabled ? undefined : {
