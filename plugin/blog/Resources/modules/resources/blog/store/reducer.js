@@ -7,16 +7,17 @@ import {reducer as commentReducer} from '#/plugin/blog/resources/blog/comment/st
 import {reducer as toolbarReducer} from '#/plugin/blog/resources/blog/toolbar/store'
 import {reducer as moderationReducer} from '#/plugin/blog/resources/blog/moderation/store'
 import {SWITCH_MODE} from '#/plugin/blog/resources/blog/store/actions'
+import {select} from '#/plugin/blog/resources/blog/selectors'
 
 const reducer = {
   calendarSelectedDate: makeReducer('', {
-    [LIST_FILTER_ADD+'/posts']: (state, action) => {
+    [LIST_FILTER_ADD + '/' + select.STORE_NAME + '.posts']: (state, action) => {
       if(action.property === 'publicationDate'){
         return action.value
       }
       return state
     },
-    [LIST_FILTER_REMOVE+'/posts']: (state, action) => {
+    [LIST_FILTER_REMOVE + '/' + select.STORE_NAME + '.posts']: (state, action) => {
       if(action.filter.property === 'publicationDate'){
         return null
       }
@@ -24,11 +25,11 @@ const reducer = {
     }
   }),
   goHome: makeReducer(false, {
-    [FORM_SUBMIT_SUCCESS+'/post_edit']: () => true,
+    [FORM_SUBMIT_SUCCESS + '/' + select.STORE_NAME + '.post_edit']: () => true,
     [SWITCH_MODE]: () => false
   }),
   user: makeReducer({}, {}),
-  mode: makeReducer('list_posts', {
+  mode: makeReducer(select.STORE_NAME + '.list_posts', {
     [SWITCH_MODE]: (state, action) => action.mode
   }),
   posts: postReducer.posts,

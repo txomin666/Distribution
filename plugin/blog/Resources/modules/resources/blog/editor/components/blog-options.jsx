@@ -196,13 +196,13 @@ const BlogOptions = withRouter(connect(
   dispatch => ({
     cancel: (history) => {
       dispatch(
-        formActions.cancelChanges(constants.OPTIONS_EDIT_FORM_NAME)
+        formActions.cancelChanges(select.STORE_NAME + '.' + constants.OPTIONS_EDIT_FORM_NAME)
       )
       history.push('/')
     },
     saveOptions: (blogId, tagOptionsChanged) => {
       dispatch(
-        formActions.saveForm(constants.OPTIONS_EDIT_FORM_NAME, ['apiv2_blog_options_update', {blogId: blogId}])
+        formActions.saveForm(select.STORE_NAME + '.' + constants.OPTIONS_EDIT_FORM_NAME, ['apiv2_blog_options_update', {blogId: blogId}])
       ).then(
         () => {
           //if tag options changed

@@ -1,4 +1,4 @@
-import {BlogContainer} from '#/plugin/blog/resources/blog/player/components/resource.jsx'
+import {BlogContainer} from '#/plugin/blog/resources/blog/containers/blog'
 import {reducer} from '#/plugin/blog/resources/blog/store/reducer.js'
 
 /**
@@ -8,7 +8,7 @@ import {reducer} from '#/plugin/blog/resources/blog/store/reducer.js'
  */
 export const App = () => ({
   component: BlogContainer,
-  store: reducer,
+  store: reducer/*,
   styles: 'claroline-distribution-plugin-blog-blog-resource',
   initialData: initialData => Object.assign({}, initialData, {
     user: initialData.user,
@@ -30,5 +30,5 @@ export const App = () => ({
     resource: {
       node: initialData.resourceNode
     }
-  })
+  })*/
 })

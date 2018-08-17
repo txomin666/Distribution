@@ -49,7 +49,7 @@ const reducer = combineReducers({
     [SECTION_RESTORED]: () => true,
     [FORM_SUBMIT_SUCCESS + '/' + selectors.STORE_NAME + '.sections.currentSection']: (state, action) => action.updatedData.meta.moved || false
   }),
-  currentSection: makeFormReducer('sections.currentSection', defaultCurrentSection, {
+  currentSection: makeFormReducer(selectors.STORE_NAME + '.sections.currentSection', defaultCurrentSection, {
     id: makeReducer(defaultCurrentSection.id, {
       [UPDATE_CURRENT_EDIT_SECTION]: (state, action) => action.sectionId,
       [UPDATE_CURRENT_PARENT_SECTION]: () => null,

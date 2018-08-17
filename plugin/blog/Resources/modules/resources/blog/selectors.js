@@ -39,6 +39,31 @@ const comments = createSelector(
   (blog) => blog.comments
 )
 
+const posts = createSelector(
+  [blog],
+  (blog) => blog.posts
+)
+
+const pdfenabled = createSelector(
+  [blog],
+  (blog) => blog.pdfenabled
+)
+
+const postEdit = createSelector(
+  [blog],
+  (blog) => blog.post_edit
+)
+
+const goHome = createSelector(
+  [blog],
+  (blog) => blog.goHome
+)
+
+const calendarSelectedDate = createSelector(
+  [blog],
+  (blog) => blog.calendarSelectedDate
+)
+
 const countTags = createSelector(
   [blog],
   (blog) => blog.data.tags.reduce((obj, tag) => {
@@ -73,5 +98,10 @@ export const select = {
   showCommentForm,
   showComments,
   comments,
+  posts,
+  pdfenabled,
+  postEdit,
+  goHome,
+  calendarSelectedDate,
   STORE_NAME
 }
