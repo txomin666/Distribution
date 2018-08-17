@@ -5,7 +5,7 @@ import {connect} from 'react-redux'
 import {trans} from '#/main/core/translation'
 import {url} from '#/main/app/api'
 
-import {actions as formActions} from '#/main/app/content/form/store'
+
 import {ResourcePage} from '#/main/core/resource/containers/page'
 import {RoutedPageContent} from '#/main/core/layout/router'
 import {DOWNLOAD_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
@@ -16,8 +16,6 @@ import {History} from '#/plugin/wiki/resources/wiki/history/components/history'
 import {VersionDetail} from '#/plugin/wiki/resources/wiki/history/components/version-detail'
 import {VersionCompare} from '#/plugin/wiki/resources/wiki/history/components/version-compare'
 import {DeletedSections} from '#/plugin/wiki/resources/wiki/deleted/components/deleted-sections'
-import {actions as historyActions} from '#/plugin/wiki/resources/wiki/history/store'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
 
 const Resource = props =>
   <ResourcePage
@@ -99,20 +97,6 @@ Resource.propTypes = {
   setCurrentHistoryVersion: T.func.isRequired,
   setCurrentHistoryCompareSet: T.func.isRequired
 }
-
-const WikiResource = connect(
-  (state) => ({
-    wiki: selectors.wiki(state),
-    canEdit: selectors.canEdit(state),
-    canExport: selectors.canExport(state)
-  }),
-  (dispatch) => ({
-    resetForm: (formData) => dispatch(formActions.resetForm('wikiForm', formData)),
-    setCurrentHistorySection: (sectionId = null) => dispatch(historyActions.setCurrentHistorySection(sectionId)),
-    setCurrentHistoryVersion: (sectionId = null, contributionId = null) => dispatch(historyActions.setCurrentHistoryVersion(sectionId, contributionId)),
-    setCurrentHistoryCompareSet: (sectionId = null, id1 = null, id2 = null) => dispatch(historyActions.setCurrentHistoryCompareSet(sectionId, id1, id2))
-  })
-)(Resource)
 
 export {
   WikiResource

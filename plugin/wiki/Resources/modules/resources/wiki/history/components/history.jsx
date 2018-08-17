@@ -5,11 +5,10 @@ import {withRouter} from '#/main/app/router'
 
 import {trans} from '#/main/core/translation'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
-import {hasPermission} from '#/main/core/resource/permissions'
 import {currentUser} from '#/main/core/user/current'
-import {selectors as resourceSelect} from '#/main/core/resource/store'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {actions} from '#/plugin/wiki/resources/wiki/history/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store'
 
 const loggedUser = currentUser()
 
@@ -88,9 +87,9 @@ HistoryComponent.propTypes = {
 
 const History = withRouter(connect(
   state => ({
-    section: state.history.currentSection,
-    canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
-    mode: state.wiki.mode
+    section: selectors.currentSection(state),
+    canEdit: selectors.canEdit(state),
+    mode: selectors.mode(state)
   }),
   dispatch => (
     {

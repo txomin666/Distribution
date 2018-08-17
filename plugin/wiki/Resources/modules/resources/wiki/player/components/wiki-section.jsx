@@ -20,6 +20,7 @@ import {actions as formActions} from '#/main/app/content/form/store/actions'
 import {actions as modalActions} from '#/main/app/overlay/modal/store'
 import {actions} from '#/plugin/wiki/resources/wiki/player/store'
 import {MODAL_WIKI_SECTION_DELETE} from '#/plugin/wiki/resources/wiki/player/modals/section'
+import {selectors} from '#/plugin/wiki/resources/wiki/store'
 
 const loggedUser = currentUser()
 
@@ -187,10 +188,10 @@ implementPropTypes(WikiSectionComponent, SectionTypes)
 
 const WikiSection = connect(
   (state, props = {}) => ({
-    displaySectionNumbers: props.displaySectionNumbers ? props.displaySectionNumbers : state.wiki.display.sectionNumbers,
-    mode: state.wiki.mode,
-    wikiId: state.wiki.id,
-    currentSection: state.sections.currentSection,
+    displaySectionNumbers: props.displaySectionNumbers ? props.displaySectionNumbers : selectors.wiki(state).display.sectionNumbers,
+    mode: selectors.mode(state),
+    wikiId: selectors.wiki(state).id,
+    currentSection: selectors.wiki(state),
     canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
     loggedUserId: loggedUser === null ? null : loggedUser.id,
     saveEnabled: formSelect.saveEnabled(formSelect.form(state, 'sections.currentSection'))

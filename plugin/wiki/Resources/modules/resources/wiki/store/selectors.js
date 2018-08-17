@@ -2,19 +2,71 @@ import {param} from '#/main/app/config'
 
 import {selectors as resourceSelect} from '#/main/core/resource/store'
 import {hasPermission} from '#/main/core/resource/permissions'
+import {createSelector} from 'reselect'
 
 import {findInTree} from '#/plugin/wiki/resources/wiki/utils'
 
-const wiki = (state) => state.wiki
+const STORE_NAME = 'resource'
 
-const section = (state, id) => findInTree(state.sections.tree, id, 'children', 'id')
+const resource = (state) => state[STORE_NAME]
 
-const canEdit = (state) => hasPermission('edit', resourceSelect.resourceNode(state))
-const canExport = (state) => hasPermission('export', resourceSelect.resourceNode(state)) && param('is_pdf_export_active')
+const wiki = createSelector(
+  [resource],
+  (resource) => resource.wiki
+)
+
+const sections = createSelector(
+  [resource],
+  (resource) => resource.sections
+)
+
+const sectionsTree = createSelector(
+  [sections],
+  (sections) => sections.tree
+)
+
+const currentSection = createSelector(
+  [resource],
+  (resource) => resource.history.currentSection
+)
+
+const currentVersion = createSelector(
+  [resource],
+  (resource) => resource.history.currentVersion
+)
+
+const compareSet = createSelector(
+  [resource],
+  (resource) => resource.history.compareSet
+)
+
+const mode = createSelector(
+  [wiki],
+  (wiki) => wiki.mode
+)
+
+const section = (state, id) => findInTree(state[STORE_NAME].sections.tree, id, 'children', 'id')
+
+const canEdit = createSelector(
+  [resource],
+  (resource) => hasPermission('edit', resourceSelect.resourceNode(resource))
+)
+
+const canExport = createSelector(
+  [resource],
+  (resource) => hasPermission('export', resourceSelect.resourceNode(resource)) && param('is_pdf_export_active')
+)
 
 export const selectors = {
+  STORE_NAME,
   wiki,
+  currentSection,
+  sections,
+  compareSet,
+  currentVersion,
+  mode,
   section,
   canEdit,
+  sectionsTree,
   canExport
 }

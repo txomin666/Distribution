@@ -6,6 +6,7 @@ import {trans} from '#/main/core/translation'
 import {CALLBACK_BUTTON} from '#/main/app/buttons'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {actions} from '#/plugin/wiki/resources/wiki/deleted/store/actions'
+import {reducer, selectors} from '#/plugin/wiki/resources/wiki/store'
 
 const DeletedSectionsComponent = props =>
   <section className="wiki-deleted-sections-list">
@@ -86,7 +87,7 @@ DeletedSectionsComponent.propTypes = {
 
 const DeletedSections = connect(
   (state) => ({
-    wiki: state.wiki
+    wiki: selectors.wiki(state)
   }),
   (dispatch) => ({
     restoreSections: (wikiId, ids) => dispatch(actions.restoreSections(wikiId, ids)),
