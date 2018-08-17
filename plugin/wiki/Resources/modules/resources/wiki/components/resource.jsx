@@ -1,6 +1,5 @@
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
-import {connect} from 'react-redux'
 
 import {trans} from '#/main/core/translation'
 import {url} from '#/main/app/api'
@@ -99,5 +98,5 @@ Resource.propTypes = {
 }
 
 export {
-  WikiResource
+  Resource as WikiResource
 }

@@ -30,7 +30,7 @@ class WikiSectionFormComponent extends Component
       <FormData
         className={'wiki-section-form'}
         level={3}
-        name="sections.currentSection"
+        name={selectors.STORE_NAME + '.sections.currentSection'}
         sections={[
           {
             icon: 'fa fa-fw fa-cog',
@@ -125,11 +125,11 @@ WikiSectionFormComponent.propTypes = {
 
 const WikiSectionForm = connect(
   state => ({
-    isNew: formSelect.isNew(formSelect.form(state, 'sections.currentSection')),
-    saveEnabled: formSelect.saveEnabled(formSelect.form(state, 'sections.currentSection')),
-    valid: formSelect.valid(formSelect.form(state, 'sections.currentSection')),
-    isRoot: formSelect.data(formSelect.form(state, 'sections.currentSection')).id === selectors.sectionsTree(state).id,
-    sectionChoices: buildSectionMoveChoices(selectors.sectionsTree(state), formSelect.data(formSelect.form(state, 'sections.currentSection')).id)
+    isNew: formSelect.isNew(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection')),
+    saveEnabled: formSelect.saveEnabled(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection')),
+    valid: formSelect.valid(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection')),
+    isRoot: formSelect.data(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection')).id === selectors.sectionsTree(state).id,
+    sectionChoices: buildSectionMoveChoices(selectors.sectionsTree(state), formSelect.data(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection')).id)
   })
 )(WikiSectionFormComponent)
 

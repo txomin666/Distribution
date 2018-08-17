@@ -194,7 +194,7 @@ const WikiSection = connect(
     currentSection: selectors.wiki(state),
     canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
     loggedUserId: loggedUser === null ? null : loggedUser.id,
-    saveEnabled: formSelect.saveEnabled(formSelect.form(state, 'sections.currentSection'))
+    saveEnabled: formSelect.saveEnabled(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection'))
   }),
   (dispatch, props = {}) => (
     {
@@ -207,7 +207,7 @@ const WikiSection = connect(
           sectionTitle: section.activeContribution.title
         })
       ),
-      saveSection: (id, isNew) => dispatch(formActions.saveForm('sections.currentSection', [isNew ? 'apiv2_wiki_section_create' : 'apiv2_wiki_section_update', {id}]))
+      saveSection: (id, isNew) => dispatch(formActions.saveForm(selectors.STORE_NAME + '.sections.currentSection', [isNew ? 'apiv2_wiki_section_create' : 'apiv2_wiki_section_update', {id}]))
     }
   )
 )(WikiSectionComponent)

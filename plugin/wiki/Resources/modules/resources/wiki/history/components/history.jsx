@@ -16,7 +16,7 @@ const HistoryComponent = props =>
   <section className="wiki-section-history">
     <h2>{(props.section.activeContribution.title ? (props.section.activeContribution.title + ': ') : '') + trans('revision_history', {}, 'icap_wiki')}</h2>
     <ListData
-      name="history.contributions"
+      name={selectors.STORE_NAME + '.history.contributions'}
       fetch={{
         url: ['apiv2_wiki_section_contribution_history', {sectionId: props.section.id}],
         autoload: true
