@@ -98,5 +98,5 @@ Resource.propTypes = {
 }
 
 export {
-  Resource as WikiResource
+  Resource
 }
