@@ -6,7 +6,7 @@ import {trans} from '#/main/core/translation'
 import {LINK_BUTTON} from '#/main/app/buttons'
 import {selectors as formSelect} from '#/main/app/content/form/store/selectors'
 import {FormData} from '#/main/app/content/form/containers/data'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 import {Wiki as WikiTypes} from '#/plugin/wiki/resources/wiki/prop-types'
 import {WIKI_MODES, WIKI_MODE_CHOICES} from '#/plugin/wiki/resources/wiki/constants'
 

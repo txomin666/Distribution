@@ -8,7 +8,7 @@ import {Button} from '#/main/app/action/components/button'
 import {CALLBACK_BUTTON} from '#/main/app/buttons'
 import {FormData} from '#/main/app/content/form/containers/data'
 import {buildSectionMoveChoices} from '#/plugin/wiki/resources/wiki/utils'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 // todo : use standard form buttons
 

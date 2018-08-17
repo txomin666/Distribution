@@ -7,7 +7,7 @@ import {Contents} from '#/plugin/wiki/resources/wiki/player/components/contents'
 import {WikiSection} from '#/plugin/wiki/resources/wiki/player/components/wiki-section'
 import {WikiSectionTree} from '#/plugin/wiki/resources/wiki/player/components/wiki-section-tree'
 import {actions} from '#/plugin/wiki/resources/wiki/player/store'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 class PlayerComponent extends Component {
   constructor(props) {

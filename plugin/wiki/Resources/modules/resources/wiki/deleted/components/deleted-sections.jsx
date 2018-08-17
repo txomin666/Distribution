@@ -6,7 +6,7 @@ import {trans} from '#/main/core/translation'
 import {CALLBACK_BUTTON} from '#/main/app/buttons'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {actions} from '#/plugin/wiki/resources/wiki/deleted/store/actions'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 const DeletedSectionsComponent = props =>
   <section className="wiki-deleted-sections-list">

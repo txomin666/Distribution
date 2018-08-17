@@ -8,7 +8,7 @@ import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 import {currentUser} from '#/main/core/user/current'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {actions} from '#/plugin/wiki/resources/wiki/history/store'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 const loggedUser = currentUser()
 

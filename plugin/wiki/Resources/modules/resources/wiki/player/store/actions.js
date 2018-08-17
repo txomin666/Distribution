@@ -1,7 +1,7 @@
 import {makeActionCreator} from '#/main/app/store/actions'
 import {actions as formActions} from '#/main/app/content/form/store/actions'
 import {API_REQUEST} from '#/main/app/api'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 export const UPDATE_CURRENT_EDIT_SECTION = 'UPDATE_CURRENT_EDIT_SECTION'
 export const UPDATE_CURRENT_PARENT_SECTION = 'UPDATE_CURRENT_PARENT_SECTION'

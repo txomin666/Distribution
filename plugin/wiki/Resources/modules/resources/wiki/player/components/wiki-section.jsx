@@ -20,7 +20,7 @@ import {actions as formActions} from '#/main/app/content/form/store/actions'
 import {actions as modalActions} from '#/main/app/overlay/modal/store'
 import {actions} from '#/plugin/wiki/resources/wiki/player/store'
 import {MODAL_WIKI_SECTION_DELETE} from '#/plugin/wiki/resources/wiki/player/modals/section'
-import {selectors} from '#/plugin/wiki/resources/wiki/store'
+import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
 
 const loggedUser = currentUser()
 
