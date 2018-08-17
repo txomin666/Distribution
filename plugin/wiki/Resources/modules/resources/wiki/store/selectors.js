@@ -59,6 +59,7 @@ const canExport = createSelector(
 
 export const selectors = {
   STORE_NAME,
+  resource,
   wiki,
   currentSection,
   sections,

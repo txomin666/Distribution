@@ -5,10 +5,11 @@ import {trans} from '#/main/core/translation'
 import {constants as listConst} from '#/main/app/content/list/constants'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {PostCard} from '#/plugin/blog/resources/blog/post/components/post'
+import {select} from '#/plugin/blog/resources/blog/selectors'
 
 const UnpublishedPostsComponent = (props) =>
   <ListData
-    name="moderationPosts"
+    name={select.STORE_NAME + '.moderationPosts'}
     fetch={{
       url: ['apiv2_blog_post_list_unpublished', {blogId: props.blogId}],
       autoload: true

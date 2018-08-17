@@ -5,13 +5,14 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import {moveItemInArray} from '#/plugin/blog/resources/blog/toolbar/utils'
 import {
-  BLOG_OPTIONS_WIDGET_VISIBILITY, 
-  BLOG_OPTIONS_WIDGET_UP, 
+  BLOG_OPTIONS_WIDGET_VISIBILITY,
+  BLOG_OPTIONS_WIDGET_UP,
   BLOG_OPTIONS_WIDGET_DOWN
 } from '#/plugin/blog/resources/blog/editor/store/actions'
+import {select} from '#/plugin/blog/resources/blog/selectors'
 
 const reducer = {
-  options: makeFormReducer('blog.data.options', {}, {
+  options: makeFormReducer(select.STORE_NAME + '.blog.data.options', {}, {
     pendingChanges: makeReducer({}, {
       [BLOG_OPTIONS_WIDGET_VISIBILITY]: () => true,
       [BLOG_OPTIONS_WIDGET_UP]: () => true,

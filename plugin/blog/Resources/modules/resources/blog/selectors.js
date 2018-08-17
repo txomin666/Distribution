@@ -1,6 +1,43 @@
 import {createSelector} from 'reselect'
 
-const blog = state => state.blog
+const STORE_NAME = 'resource'
+
+const resource = (state) => state[STORE_NAME]
+
+const blog = createSelector(
+  [resource],
+  (resource) => resource.blog
+)
+
+const trustedUsers = createSelector(
+  [blog],
+  (blog) => blog.trustedUsers
+)
+
+const mode = createSelector(
+  [blog],
+  (blog) => blog.mode
+)
+
+const showEditCommentForm = createSelector(
+  [blog],
+  (blog) => blog.showEditCommentForm
+)
+
+const showCommentForm = createSelector(
+  [blog],
+  (blog) => blog.showCommentForm
+)
+
+const showComments = createSelector(
+  [blog],
+  (blog) => blog.showComments
+)
+
+const comments = createSelector(
+  [blog],
+  (blog) => blog.comments
+)
 
 const countTags = createSelector(
   [blog],
@@ -27,5 +64,14 @@ const displayTagsFrequency = createSelector(
 )
 
 export const select = {
-  countTags, displayTagsFrequency
+  countTags,
+  displayTagsFrequency,
+  blog,
+  mode,
+  trustedUsers,
+  showEditCommentForm,
+  showCommentForm,
+  showComments,
+  comments,
+  STORE_NAME
 }
