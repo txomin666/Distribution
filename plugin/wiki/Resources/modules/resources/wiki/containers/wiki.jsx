@@ -4,6 +4,8 @@ import {withReducer} from '#/main/app/store/components/withReducer'
 
 import {actions as formActions} from '#/main/app/content/form/store'
 import {actions as historyActions} from '#/plugin/wiki/resources/wiki/history/store'
+import {selectors as resourceSelect} from '#/main/core/resource/store'
+import {hasPermission} from '#/main/core/resource/permissions'
 
 import {Resource} from '#/plugin/wiki/resources/wiki/components/resource'
 import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
@@ -13,8 +15,8 @@ const WikiResource = withReducer(selectors.STORE_NAME, reducer)(
   connect(
     (state) => ({
       wiki: selectors.wiki(state),
-      canEdit: selectors.canEdit(state),
-      canExport: selectors.canExport(state)
+      canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
+      canExport: hasPermission('export', resourceSelect.resourceNode(state))
     }),
     (dispatch) => ({
       resetForm: (formData) => dispatch(formActions.resetForm(selectors.STORE_NAME + '.wikiForm', formData)),

@@ -74,8 +74,8 @@ UnpublishedPostsComponent.propTypes = {
 
 const UnpublishedPosts = connect(
   state => ({
-    posts: state.posts.data,
-    blogId: state.blog.data.id
+    posts: select.posts(state).posts.data,
+    blogId: select.blog(state).data.id
   })
 )(UnpublishedPostsComponent)
 

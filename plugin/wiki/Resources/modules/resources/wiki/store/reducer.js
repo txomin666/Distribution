@@ -1,4 +1,4 @@
-import {makeReducer} from '#/main/app/store/reducer'
+import {combineReducers, makeReducer} from '#/main/app/store/reducer'
 import {FORM_SUBMIT_SUCCESS} from '#/main/app/content/form/store/actions'
 import {RESOURCE_LOAD} from '#/main/core/resource/store/actions'
 import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
@@ -14,14 +14,14 @@ const wikiReducer = makeReducer({}, {
   [RESOURCE_LOAD]: (state, action) => action.resourceData.wiki || state
 })
 
-const reducer = {
+const reducer = combineReducers({
   wiki: wikiReducer,
   wikiForm: editorReducer,
   sections: sectionsReducer,
   deletedSections: deletedSectionsReducer,
   history: historyReducer,
   exportPdfEnabled: makeReducer(false, {})
-}
+})
 
 export {
   reducer

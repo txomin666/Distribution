@@ -9,6 +9,8 @@ import {currentUser} from '#/main/core/user/current'
 import {ListData} from '#/main/app/content/list/containers/data'
 import {actions} from '#/plugin/wiki/resources/wiki/history/store'
 import {selectors} from '#/plugin/wiki/resources/wiki/store/selectors'
+import {selectors as resourceSelect} from '#/main/core/resource/store'
+import {hasPermission} from '#/main/core/resource/permissions'
 
 const loggedUser = currentUser()
 
@@ -88,7 +90,7 @@ HistoryComponent.propTypes = {
 const History = withRouter(connect(
   state => ({
     section: selectors.currentSection(state),
-    canEdit: selectors.canEdit(state),
+    canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
     mode: selectors.mode(state)
   }),
   dispatch => (

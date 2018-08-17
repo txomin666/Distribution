@@ -47,6 +47,7 @@ const mode = createSelector(
 
 const section = (state, id) => findInTree(state[STORE_NAME].sections.tree, id, 'children', 'id')
 
+/*
 const canEdit = createSelector(
   [resource],
   (resource) => hasPermission('edit', resourceSelect.resourceNode(resource))
@@ -55,7 +56,7 @@ const canEdit = createSelector(
 const canExport = createSelector(
   [resource],
   (resource) => hasPermission('export', resourceSelect.resourceNode(resource)) && param('is_pdf_export_active')
-)
+)*/
 
 export const selectors = {
   STORE_NAME,
@@ -67,7 +68,7 @@ export const selectors = {
   currentVersion,
   mode,
   section,
-  canEdit,
-  sectionsTree,
-  canExport
+  //canEdit,
+  sectionsTree
+  //canExport
 }
