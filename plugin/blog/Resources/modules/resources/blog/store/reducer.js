@@ -56,7 +56,9 @@ const reducer = combineReducers({
         [RESOURCE_LOAD]: (state, action) => action.resourceData.blog.title || state
       }),
       authors: toolbarReducer.authors,
-      archives: makeReducer({}, {}),
+      archives: makeReducer({}, {
+        [RESOURCE_LOAD]: (state, action) => action.resourceData.archives || state
+      }),
       tags: toolbarReducer.tags,
       options: editorReducer.options
     })

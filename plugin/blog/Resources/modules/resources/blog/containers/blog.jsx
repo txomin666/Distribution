@@ -28,14 +28,6 @@ export {
 }
 
 /*
-blog: {
-  data: {
-    archives: initialData.archives,
-    options: {
-      data: initialData.blog.options
-    }
-  }
-},
 posts: {
   pageSize: initialData.blog.options.postPerPage
 },

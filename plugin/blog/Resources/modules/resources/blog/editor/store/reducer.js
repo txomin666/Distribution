@@ -10,6 +10,7 @@ import {
   BLOG_OPTIONS_WIDGET_DOWN
 } from '#/plugin/blog/resources/blog/editor/store/actions'
 import {select} from '#/plugin/blog/resources/blog/selectors'
+import {RESOURCE_LOAD} from '#/main/core/resource/store/actions'
 
 const reducer = {
   options: makeFormReducer(select.STORE_NAME + '.blog.data.options', {}, {
@@ -19,6 +20,7 @@ const reducer = {
       [BLOG_OPTIONS_WIDGET_DOWN]: () => true
     }),
     data: makeReducer({}, {
+      [RESOURCE_LOAD]: (state, action) => action.resourceData.blog.options || state,
       [BLOG_OPTIONS_WIDGET_VISIBILITY]: (state, action) => {
         const data = cloneDeep(state)
         const widget = find(data.widgetOrder, ['id', action.id])
