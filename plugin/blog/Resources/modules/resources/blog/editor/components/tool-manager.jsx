@@ -46,7 +46,7 @@ const ToolManager = connect(
     orderedPanels: select.blog(state).data.options.data.widgetOrder,
     orderedPanelsSize: select.blog(state).data.options.data.widgetOrder.length,
     panels: select.blog(state).data.options.data.widgetList,
-    panelDiff: differenceBy(select.blog(state).data.options.data.widgetList, state.blog.data.options.data.widgetOrder, 'id')
+    panelDiff: differenceBy(select.blog(state).data.options.data.widgetList, select.blog(state).data.options.data.widgetOrder, 'id')
   })
 )(ToolManagerComponent)
 

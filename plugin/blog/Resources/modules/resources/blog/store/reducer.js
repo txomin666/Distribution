@@ -8,6 +8,7 @@ import {reducer as toolbarReducer} from '#/plugin/blog/resources/blog/toolbar/st
 import {reducer as moderationReducer} from '#/plugin/blog/resources/blog/moderation/store'
 import {SWITCH_MODE} from '#/plugin/blog/resources/blog/store/actions'
 import {select} from '#/plugin/blog/resources/blog/selectors'
+import {RESOURCE_LOAD} from '#/main/core/resource/store/actions'
 
 const reducer = combineReducers({
   calendarSelectedDate: makeReducer('', {
@@ -28,7 +29,9 @@ const reducer = combineReducers({
     [FORM_SUBMIT_SUCCESS + '/' + select.STORE_NAME + '.post_edit']: () => true,
     [SWITCH_MODE]: () => false
   }),
-  user: makeReducer({}, {}),
+  user: makeReducer({}, {
+    [RESOURCE_LOAD]: (state, action) => action.resourceData.user || state
+  }),
   mode: makeReducer(select.STORE_NAME + '.list_posts', {
     [SWITCH_MODE]: (state, action) => action.mode
   }),
@@ -46,8 +49,12 @@ const reducer = combineReducers({
   trustedUsers: moderationReducer.trustedUsers,
   blog: combineReducers({
     data: combineReducers({
-      id: makeReducer({}, {}),
-      title: makeReducer({}, {}),
+      id: makeReducer({}, {
+        [RESOURCE_LOAD]: (state, action) => action.resourceData.blog.id || state
+      }),
+      title: makeReducer({}, {
+        [RESOURCE_LOAD]: (state, action) => action.resourceData.blog.title || state
+      }),
       authors: toolbarReducer.authors,
       archives: makeReducer({}, {}),
       tags: toolbarReducer.tags,

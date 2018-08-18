@@ -73,7 +73,10 @@ class HomeTabSerializer
         foreach ($savedContainers as $container) {
             //temporary
             $widgetContainerConfig = $container->getWidgetContainerConfigs()[0];
-            $containers[$widgetContainerConfig->getPosition()] = $container;
+
+            if ($widgetContainerConfig) {
+                $containers[$widgetContainerConfig->getPosition()] = $container;
+            }
         }
 
         ksort($containers);
