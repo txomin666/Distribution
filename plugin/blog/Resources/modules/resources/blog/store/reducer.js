@@ -9,7 +9,7 @@ import {reducer as moderationReducer} from '#/plugin/blog/resources/blog/moderat
 import {SWITCH_MODE} from '#/plugin/blog/resources/blog/store/actions'
 import {select} from '#/plugin/blog/resources/blog/selectors'
 
-const reducer = {
+const reducer = combineReducers({
   calendarSelectedDate: makeReducer('', {
     [LIST_FILTER_ADD + '/' + select.STORE_NAME + '.posts']: (state, action) => {
       if(action.property === 'publicationDate'){
@@ -54,6 +54,8 @@ const reducer = {
       options: editorReducer.options
     })
   })
-}
+})
 
-export {reducer}
+export {
+  reducer
+}
