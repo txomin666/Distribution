@@ -27,7 +27,7 @@ const PostFormComponent = props =>
   <div>
     {(props.mode === constants.CREATE_POST || !isEmpty(props.post.data)) &&
       <FormData
-        name="post_edit"
+        name={select.STORE_NAME + '.post_edit'}
         sections={[
           {
             id: 'Post',
