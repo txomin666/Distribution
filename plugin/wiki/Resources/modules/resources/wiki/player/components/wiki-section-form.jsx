@@ -23,9 +23,11 @@ class WikiSectionFormComponent extends Component
     if (node) {
       node.scrollIntoView({block: 'end', behavior: 'smooth'})
     }
+    console.log('mount')
   }
 
   render() {
+    console.log('render')
     return (
       <FormData
         className={'wiki-section-form'}

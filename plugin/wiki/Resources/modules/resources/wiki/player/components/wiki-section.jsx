@@ -196,7 +196,7 @@ const WikiSection = connect(
     displaySectionNumbers: props.displaySectionNumbers ? props.displaySectionNumbers : selectors.wiki(state).display.sectionNumbers,
     mode: selectors.mode(state),
     wikiId: selectors.wiki(state).id,
-    currentSection: selectors.wiki(state),
+    currentSection: selectors.sections(state).currentSection,
     canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
     loggedUserId: loggedUser === null ? null : loggedUser.id,
     saveEnabled: formSelect.saveEnabled(formSelect.form(state, selectors.STORE_NAME + '.sections.currentSection'))
