@@ -11,64 +11,64 @@ const blog = createSelector(
 
 const trustedUsers = createSelector(
   [resource],
-  (resource) => resource.trustedUsers
+  (blog) => blog.trustedUsers
 )
 
 const mode = createSelector(
   [resource],
-  (resource) => resource.mode
+  (blog) => blog.mode
 )
 
 const showEditCommentForm = createSelector(
   [resource],
-  (resource) => resource.showEditCommentForm
+  (blog) => blog.showEditCommentForm
 )
 
 const showCommentForm = createSelector(
   [resource],
-  (resource) => resource.showCommentForm
+  (blog) => blog.showCommentForm
 )
 
 const showComments = createSelector(
   [resource],
-  (resource) => resource.showComments
+  (blog) => blog.showComments
 )
 
 const comments = createSelector(
   [resource],
-  (resource) => resource.comments
+  (blog) => blog.comments
 )
 
 const posts = createSelector(
   [resource],
-  (resource) => {
-    return resource.posts
+  (blog) => {
+    return blog.posts
   }
 )
 
 const pdfenabled = createSelector(
   [resource],
-  (resource) => resource.pdfenabled
+  (blog) => blog.pdfenabled
 )
 
 const postEdit = createSelector(
   [resource],
-  (resource) => resource.post_edit
+  (blog) => blog.post_edit
 )
 
 const post = createSelector(
   [resource],
-  (resource) => resource.post
+  (blog) => blog.post
 )
 
 const goHome = createSelector(
   [resource],
-  (resource) => resource.goHome
+  (blog) => blog.goHome
 )
 
 const calendarSelectedDate = createSelector(
   [resource],
-  (resource) => resource.calendarSelectedDate
+  (blog) => blog.calendarSelectedDate
 )
 
 const countTags = createSelector(
