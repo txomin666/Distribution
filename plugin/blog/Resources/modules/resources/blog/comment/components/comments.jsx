@@ -145,7 +145,7 @@ const Comments = connect(
     isModerated: select.blog(state).data.options.data.commentModerationMode !== constants.COMMENT_MODERATION_MODE_NONE,
     showForm: select.showCommentForm(state),
     showEditCommentForm: select.showEditCommentForm(state),
-    comments: state.comments.data,
+    comments: select.comments(state).data,
     canEdit: hasPermission('edit', resourceSelect.resourceNode(state)),
     canModerate: hasPermission('moderate', resourceSelect.resourceNode(state))
   }),

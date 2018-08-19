@@ -56,6 +56,11 @@ const postEdit = createSelector(
   (resource) => resource.post_edit
 )
 
+const post = createSelector(
+  [resource],
+  (resource) => resource.post
+)
+
 const goHome = createSelector(
   [resource],
   (resource) => resource.goHome
@@ -105,5 +110,6 @@ export const select = {
   postEdit,
   goHome,
   calendarSelectedDate,
+  post,
   STORE_NAME
 }
