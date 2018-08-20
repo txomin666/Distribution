@@ -7,12 +7,13 @@ import {RoutedPageContent} from '#/main/core/layout/router'
 import {ResourcePage} from '#/main/core/resource/containers/page'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 
-import {actions} from '../actions'
-import {BBBContent} from './bbb-content.jsx'
-import {BBBConfig} from './bbb-config.jsx'
+import {actions} from '#/plugin/bbb/resources/bbb/store'
+import {BBBContent} from '#/plugin/bbb/resources/bbb/components/bbb-content'
+import {BBBConfig} from '#/plugin/bbb/resources/bbb/components/bbb-config'
 
 const BBBResource = props =>
   <ResourcePage
+    styles={['claroline-distribution-plugin-big-blue-button-bbb']}
     editor={{
       path: '/edit',
       save: {
@@ -20,7 +21,21 @@ const BBBResource = props =>
         action: props.validateForm
       }
     }}
-    customActions={customActions(props)}
+    customActions={[
+      {
+        type: LINK_BUTTON,
+        icon: 'fa fa-fw fa-home',
+        label: trans('claroline_big_blue_button', {}, 'resource'),
+        target: '/',
+        exact: true
+      }, {
+        type: CALLBACK_BUTTON,
+        icon: 'fa fa-fw fa-stop-circle',
+        label: trans('bbb_end', {}, 'bbb'),
+        displayed: props.canEdit,
+        callback: props.endBBB
+      }
+    ]}
   >
     <RoutedPageContent
       routes={[
@@ -48,34 +63,19 @@ function customActions(props) {
   const actions = []
 
   actions.push({
-    type: LINK_BUTTON,
-    icon: 'fa fa-fw fa-home',
-    label: trans('claroline_big_blue_button', {}, 'resource'),
-    target: '/'
+
   })
 
-  if (props.canEdit) {
+  if () {
     actions.push({
-      type: CALLBACK_BUTTON,
-      icon: 'fa fa-fw fa-stop-circle',
-      label: trans('bbb_end', {}, 'bbb'),
-      callback: props.endBBB
+
     })
   }
 
   return actions
 }
 
-const ConnectedBBBResource = connect(
-  state => ({
-    canEdit: state.canEdit
-  }),
-  dispatch => ({
-    validateForm: () => dispatch(actions.validateResourceForm()),
-    endBBB: () => dispatch(actions.endBBB())
-  })
-)(BBBResource)
 
 export {
-  ConnectedBBBResource as BBBResource
+  BBBResource
 }
