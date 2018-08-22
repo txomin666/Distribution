@@ -2,10 +2,20 @@
  * User mixins.
  */
 
-.sso-connect-btn(@icon, @primary-color, @secondary-color) {
+.sso-btn-font-family(@type) when (@type = default ) {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+}
+
+.sso-btn-font-family(@type) when (@type = brand) {
+    font-family: 'Font Awesome 5 Brands';
+}
+
+.sso-connect-btn(@icon, @primary-color, @secondary-color, @type: default) {
     background-color: @primary-color;
 
     &::before{
+        .sso-btn-font-family(@type);
         content: @icon;
     }
 
