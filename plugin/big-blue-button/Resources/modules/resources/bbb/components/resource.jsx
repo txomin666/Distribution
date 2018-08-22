@@ -6,19 +6,12 @@ import {RoutedPageContent} from '#/main/core/layout/router'
 import {ResourcePage} from '#/main/core/resource/containers/page'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 
-import {BBBContent} from '#/plugin/big-blue-button/resources/bbb/components/bbb-content'
-import {BBBConfig} from '#/plugin/big-blue-button/resources/bbb/components/bbb-config'
+import {BBBContent} from '#/plugin/big-blue-button/resources/bbb/player/components/bbb-content'
+import {BBBConfig} from '#/plugin/big-blue-button/resources/bbb/editor/components/bbb-config'
 
 const BBBResource = props =>
   <ResourcePage
     styles={['claroline-distribution-plugin-big-blue-button-bbb']}
-    editor={{
-      path: '/edit',
-      save: {
-        disabled: false,
-        action: props.validateForm
-      }
-    }}
     customActions={[
       {
         type: LINK_BUTTON,

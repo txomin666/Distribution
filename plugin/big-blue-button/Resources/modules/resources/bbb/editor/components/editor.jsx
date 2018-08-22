@@ -3,11 +3,14 @@ import {connect} from 'react-redux'
 import {PropTypes as T} from 'prop-types'
 
 import {trans} from '#/main/core/translation'
+import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
+import {FormData} from '#/main/app/content/form/containers/data'
+import {actions as formActions} from '#/main/app/content/form/store/actions'
 
-import {actions} from '#/plugin/big-blue-button/resources/bbb/configuration/store'
+import {actions, selectors} from '#/plugin/big-blue-button/resources/bbb/editor/store'
 import {Meetings} from '#/plugin/big-blue-button/resources/bbb/configuration/meetings'
 
-class BBBConfigForm extends Component {
+class EditorComponent extends Component {
   componentDidMount() {
     this.props.getMeetings()
   }
@@ -29,43 +32,9 @@ class BBBConfigForm extends Component {
             {this.props.message.content}
           </div>
         }
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('bbb_server_url', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="text"
-              className="form-control"
-              value={this.props.serverUrl ? this.props.serverUrl : undefined}
-              onChange={e => this.props.updateConfig('serverUrl', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('security_salt', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="text"
-              className="form-control"
-              value={this.props.securitySalt ? this.props.securitySalt : undefined}
-              onChange={e => this.props.updateConfig('securitySalt', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <hr/>
-        <div className="config-buttons">
-          <button
-            className="btn btn-primary"
-            onClick={() => this.props.saveConfig()}
-          >
-            {trans('save_configuration', {}, 'bbb')}
-          </button>
-        </div>
+        <BBBConfigForm
+          saveForm={this.props.saveForm(this.props.bbb.id)}
+        />
         {this.props.meetings.length > 0 &&
           <div>
             <hr/>
@@ -77,7 +46,7 @@ class BBBConfigForm extends Component {
   }
 }
 
-BBBConfigForm.propTypes = {
+EditorComponent.propTypes = {
   serverUrl: T.string,
   securitySalt: T.string,
   message: T.object,
@@ -115,10 +84,15 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    updateConfig: (property, value) => dispatch(actions.updateConfiguration(property, value)),
-    saveConfig: () => dispatch(actions.saveConfiguration()),
-    resetMessage: () => dispatch(actions.resetConfigurationMessage()),
-    getMeetings: () => dispatch(actions.getMeetings())
+    saveForm(id) {
+      dispatch(formActions.saveForm(selectors.STORE_NAME+'.scormForm', ['apiv2_scorm_update', {scorm: id}]))
+    },
+    resetMessage() {
+      dispatch(actions.resetConfigurationMessage())
+    },
+    getMeetings() {
+      dispatch(actions.getMeetings())
+    }
   }
 }
 
