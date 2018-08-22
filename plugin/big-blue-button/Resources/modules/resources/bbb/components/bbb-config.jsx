@@ -6,7 +6,7 @@ import classes from 'classnames'
 import {trans, t} from '#/main/core/translation'
 import {Date} from '#/main/core/layout/form/components/field/date.jsx'
 
-import {actions} from '../actions'
+import {actions} from '#/plugin/big-blue-button/resources/bbb/store'
 
 class BBBConfig extends Component {
   componentDidMount() {

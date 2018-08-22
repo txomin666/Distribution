@@ -1,15 +1,13 @@
 import React from 'react'
 import {PropTypes as T} from 'prop-types'
-import {connect} from 'react-redux'
 
 import {trans} from '#/main/core/translation'
 import {RoutedPageContent} from '#/main/core/layout/router'
 import {ResourcePage} from '#/main/core/resource/containers/page'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 
-import {actions} from '#/plugin/bbb/resources/bbb/store'
-import {BBBContent} from '#/plugin/bbb/resources/bbb/components/bbb-content'
-import {BBBConfig} from '#/plugin/bbb/resources/bbb/components/bbb-config'
+import {BBBContent} from '#/plugin/big-blue-button/resources/bbb/components/bbb-content'
+import {BBBConfig} from '#/plugin/big-blue-button/resources/bbb/components/bbb-config'
 
 const BBBResource = props =>
   <ResourcePage
@@ -56,25 +54,9 @@ BBBResource.propTypes = {
     pathname: T.string.isRequired
   }).isRequired,
   validateForm: T.func,
-  endBBB: T.func
+  endBBB: T.func,
+  canEdit: T.bool.isRequired
 }
-
-function customActions(props) {
-  const actions = []
-
-  actions.push({
-
-  })
-
-  if () {
-    actions.push({
-
-    })
-  }
-
-  return actions
-}
-
 
 export {
   BBBResource

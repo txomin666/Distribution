@@ -5,7 +5,7 @@ import {
   CONFIGURATION_MESSAGE_RESET,
   CONFIGURATION_MESSAGE_UPDATE,
   MEETINGS_INIT
-} from './actions'
+} from '#/plugin/big-blue-button/resources/bbb/configuration/store'
 
 const mainReducers =  makeReducer({}, {})
 

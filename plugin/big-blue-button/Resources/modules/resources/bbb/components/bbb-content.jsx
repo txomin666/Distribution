@@ -1,8 +1,10 @@
 import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import {PropTypes as T} from 'prop-types'
+
 import {trans} from '#/main/core/translation'
-import {actions} from '../actions'
+
+import {actions} from '#/plugin/big-blue-button/resources/bbb/store'
 
 class BBBContent extends Component {
   componentDidMount() {
