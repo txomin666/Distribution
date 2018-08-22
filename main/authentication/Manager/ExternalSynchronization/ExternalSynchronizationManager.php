@@ -117,9 +117,19 @@ class ExternalSynchronizationManager
         $this->sourcesArray = $this->loadExternalSources();
         $this->casManager = null;
         $this->utilities = $utilities;
-        if ($pluginManager->isLoaded('ClarolineAuthenticationBundle')) {
-            $this->casManager = $container->get('claroline.manager.cas_manager');
-        }
+        $this->casManager = $container->get('claroline.manager.cas_manager');
+    }
+
+    public function saveConfig()
+    {
+        return file_put_contents($this->syncFilePath, $this->ymlDumper->dump($this->sourcesArray, 3));
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->om->setLogger($logger);
+        $this->om->activateLog();
     }
 
     public function getExternalSourcesNames($filterBy = [])
@@ -192,7 +202,7 @@ class ExternalSynchronizationManager
 
     public function getTableAndViewNames($sourceName)
     {
-        $repo = $this->getRepositoryForExternalSource($this->getExternalSource($sourceName));
+        $repo = $this->getRepositoryByExternalSourceName($sourceName);
 
         $names = [];
         try {
@@ -211,23 +221,21 @@ class ExternalSynchronizationManager
 
     public function getColumnNamesForTable($sourceName, $table)
     {
-        $repo = $this->getRepositoryForExternalSource($this->getExternalSource($sourceName));
+        $repo = $this->getRepositoryByExternalSourceName($sourceName);
 
         return $repo->findColumnNames($table);
     }
 
     public function loadUsersForExternalSource($sourceName)
     {
-        $externalSource = $this->getExternalSource($sourceName);
-        $repo = $this->getRepositoryForExternalSource($externalSource);
+        $repo = $this->getRepositoryByExternalSourceName($sourceName);
 
         return $repo->findUsers();
     }
 
     public function searchGroupsForExternalSource($sourceName, $search = null, $max = -1)
     {
-        $externalSource = $this->getExternalSource($sourceName);
-        $repo = $this->getRepositoryForExternalSource($externalSource);
+        $repo = $this->getRepositoryByExternalSourceName($sourceName);
         $groups = $repo->findGroups($search, $max);
         foreach ($groups as &$group) {
             $group['name'] = $this->utilities->stringToUtf8($group['name']);
@@ -241,8 +249,7 @@ class ExternalSynchronizationManager
 
     public function getExternalSourceGroupById($sourceName, $groupId)
     {
-        $externalSource = $this->getExternalSource($sourceName);
-        $repo = $this->getRepositoryForExternalSource($externalSource);
+        $repo = $this->getRepositoryByExternalSourceName($sourceName);
         $group = $repo->findOneGroupById($groupId);
         $group['name'] = $this->utilities->stringToUtf8($group['name']);
         if (!empty($group['type'])) {
@@ -250,6 +257,13 @@ class ExternalSynchronizationManager
         }
 
         return $group;
+    }
+
+    public function countExternalSourceUsers($externalSource)
+    {
+        $externalSourceRepo = $this->getRepositoryForExternalSource($externalSource);
+
+        return $externalSourceRepo->countUsers(true);
     }
 
     public function synchronizeUsersForExternalSource(
@@ -262,10 +276,8 @@ class ExternalSynchronizationManager
         // Initialize parameters
         $batchSize = is_null($batch) ? self::USER_BATCH_SIZE_COMMAND : self::USER_BATCH_SIZE_BROWSER;
         $sourceName = $this->slugifyName($sourceName);
-        $casSynchronizedFieldUcf = ucfirst($casSynchronizedField);
         // Get external source repository
-        $externalSource = $this->getExternalSource($sourceName);
-        $externalSourceRepo = $this->getRepositoryForExternalSource($externalSource);
+        $externalSourceRepo = $this->getRepositoryByExternalSourceName($sourceName);
         // Get additional role if set
         $rolesToAdd = [];
         if (!is_null($additionalRole)) {
@@ -273,12 +285,13 @@ class ExternalSynchronizationManager
         }
         // Count users in external source to synchronize
         $countUsers = $externalSourceRepo->countUsers(true);
+        $batch = 6;
         // Return object
         $returnObj = ['next' => false, 'synced' => true, 'first' => 0, 'last' => $countUsers];
         if (!is_null($batch)) {
             $countUsers -= ($batch - 1) * $batchSize;
         }
-        $this->log("Synchronizing {$countUsers} users for source '{$externalSource['name']}'");
+        $this->log("Synchronizing {$countUsers} users for source '{$sourceName}'");
         // While there are still users to sync
         $cnt = (!is_null($batch)) ? max(0, $batch - 1) : 0;
         // Liste of already examined usernames and mails
@@ -336,16 +349,15 @@ class ExternalSynchronizationManager
                 $existingPlatformUsers
             );
             $updateReferenceUserIds = array_merge([], $existingPlatformUserIds);
-            // If CAS enabled get existing user in CAS
+            // If existing user in CAS
             if (
                 $synchronizeCas &&
-                !is_null($this->casManager) &&
-                isset(${"externalSourceUser${casSynchronizedFieldUcf}s"})
+                isset(${'externalSourceUser'.ucfirst($casSynchronizedField).'s'})
             ) {
                 $existingCasUsers = $this
                     ->casManager
                     ->getCasUsersByCasIdsOrUserIds(
-                        ${"externalSourceUser${casSynchronizedFieldUcf}s"},
+                        ${'externalSourceUser'.ucfirst($casSynchronizedField).'s'},
                         $existingPlatformUserIds
                     );
                 $existingCasIds = array_map(
@@ -436,6 +448,7 @@ class ExternalSynchronizationManager
                 $user = is_null($alreadyImportedUser) ? null : $alreadyImportedUser->getUser();
                 // If user doesn't exist create it
                 if (is_null($user)) {
+                    $this->log('User doesn\'t exist');
                     // Otherwise create new user
                     $user = new User();
                     // Search if username exists
@@ -446,6 +459,8 @@ class ExternalSynchronizationManager
                     $user->setUsername($username);
                     $user->setIsMailValidated(true);
                     $user->setPlainPassword(bin2hex(random_bytes(10)));
+                } else {
+                    $this->log($user->getUsername());
                 }
                 // Update or set user values
                 $user->setFirstName($this->utilities->stringToUtf8($externalSourceUser['first_name']));
@@ -455,6 +470,7 @@ class ExternalSynchronizationManager
                     $user->setAdministrativeCode($this->utilities->stringToUtf8($externalSourceUser['code']));
                 }
                 if (is_null($alreadyImportedUser)) {
+                    $this->log('New user, never imported');
                     $publicUrl = $this->userManager->generatePublicUrl($user);
                     $publicUrl .= in_array($publicUrl, $publicUrlList) ? '_'.uniqid() : '';
                     $publicUrlList[] = $publicUrl;
@@ -465,6 +481,7 @@ class ExternalSynchronizationManager
                         $user
                     );
                 } else {
+                    $this->log('Already imported user');
                     if (null !== $additionalRole && !$user->hasRole($additionalRole->getName())) {
                         $user->addRole($additionalRole);
                     }
@@ -500,16 +517,8 @@ class ExternalSynchronizationManager
         }
         $this->log('All users have been synchronized');
         $this->om->allowForceFlush(true);
-        unset($casSynchronizedFieldUcf);
 
         return $returnObj;
-    }
-
-    public function countExternalSourceUsers($externalSource)
-    {
-        $externalSourceRepo = $this->getRepositoryForExternalSource($externalSource);
-
-        return $externalSourceRepo->countUsers(true);
     }
 
     public function syncrhonizeAllGroupsForExternalSource($sourceName, $forceUnsubscribe = true)
@@ -532,8 +541,7 @@ class ExternalSynchronizationManager
 
     public function syncrhonizeGroupForExternalSource($sourceName, ExternalGroup $extGroup, $forceUnsubscribe = true)
     {
-        $externalSource = $this->getExternalSource($sourceName);
-        $externalSourceRepo = $this->getRepositoryForExternalSource($externalSource);
+        $externalSourceRepo = $this->getRepositoryByExternalSourceName($sourceName);
         $group = $extGroup->getGroup();
         $this->log('Synchronizing group '.$group->getName());
         // Get all user ids subscribed to external source group
@@ -574,22 +582,6 @@ class ExternalSynchronizationManager
         $this->log('Group '.$group->getName().' has been synced.');
     }
 
-    public function saveConfig()
-    {
-        return file_put_contents($this->syncFilePath, $this->ymlDumper->dump($this->sourcesArray, 3));
-        if (!empty($this->sourcesArray['sources'])) {
-        }
-
-        return false;
-    }
-
-    public function setLogger(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-        $this->om->setLogger($logger);
-        $this->om->activateLog();
-    }
-
     private function loadExternalSources()
     {
         $fs = new Filesystem();
@@ -608,6 +600,11 @@ class ExternalSynchronizationManager
     private function slugifyName($name)
     {
         return $this->slugify->slugify($name, '_');
+    }
+
+    private function getRepositoryByExternalSourceName($sourceName)
+    {
+        return $this->getRepositoryForExternalSource($this->getExternalSource($sourceName));
     }
 
     private function getRepositoryForExternalSource($resourceConfig)

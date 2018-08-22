@@ -138,7 +138,7 @@ class ExternalUser
         $now = new \DateTime();
         $lastSyncDate = $this->lastSynchronizationDate;
         if ($now->format('Y-m-d') !== $lastSyncDate->format('Y-m-d')) {
-            $this->lastSynchronizationDate = new \DateTime();
+            $this->lastSynchronizationDate = $now;
 
             return true;
         }
