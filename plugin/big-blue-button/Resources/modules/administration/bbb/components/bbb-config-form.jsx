@@ -8,7 +8,7 @@ import {FormData} from '#/main/app/content/form/containers/data'
 import {selectors} from '#/plugin/big-blue-button/administration/bbb/store'
 
 
-const BBBConfigForm = props => {
+const BBBConfigForm = props =>
   <FormData
     level={3}
     displayLevel={2}
@@ -45,9 +45,6 @@ const BBBConfigForm = props => {
       }
     ]}
   />
-
-}
-
 
 export {
   BBBConfigForm

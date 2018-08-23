@@ -11,7 +11,7 @@ import {
 import {selectors} from '#/plugin/big-blue-button/administration/bbb/store/actions'
 
 const reducer = combineReducers({
-  config: makeFormReducer(selectors.FORM_NAME,{}, {
+  config: makeFormReducer(selectors.FORM_NAME, {}, {
     [CONFIGURATION_UPDATE]: (state, action) => {
       const newState = cloneDeep(state)
       newState[action.property] = action.value

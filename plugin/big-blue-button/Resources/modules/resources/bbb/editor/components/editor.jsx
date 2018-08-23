@@ -1,149 +1,104 @@
-import React, {Component} from 'react'
+import React from 'react'
 import {connect} from 'react-redux'
 import {PropTypes as T} from 'prop-types'
-import classes from 'classnames'
 
-import {trans, t} from '#/main/core/translation'
+import {trans} from '#/main/core/translation'
+import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
+import {FormData} from '#/main/app/content/form/containers/data'
 import {actions as formActions} from '#/main/app/content/form/store/actions'
-import {Date} from '#/main/core/layout/form/components/field/date'
 
 import {actions, selectors} from '#/plugin/big-blue-button/resources/bbb/editor/store'
 
-class EditorComponent extends Component {
-  componentDidMount() {
-    this.props.initializeForm()
-  }
-
-  componentWillUnmount() {
-    this.props.resetMessage()
-  }
-
-  updateConfig(property, value) {
-    this.props.updateForm(property, value)
-  }
-
-  render() {
-    return (
-      <div>
-        {this.props.message && this.props.message.content &&
-          <div className={`alert alert-${this.props.message.type}`}>
-            <i
-              className="fa fa-times close"
-              onClick={() => this.props.resetMessage()}
-            >
-            </i>
-            {this.props.message.content}
-          </div>
-        }
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('room_name', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="text"
-              className="form-control"
-              value={this.props.params.roomName ? this.props.params.roomName : undefined}
-              onChange={e => this.updateConfig('roomName', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('welcome_message', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="text"
-              className="form-control"
-              value={this.props.params.welcomeMessage ? this.props.params.welcomeMessage : undefined}
-              onChange={e => this.updateConfig('welcomeMessage', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('open_bbb_in_new_tab', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="checkbox"
-              checked={this.props.params.newTab}
-              onChange={e => this.updateConfig('newTab', e.target.checked)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('wait_for_moderator', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="checkbox"
-              checked={this.props.params.moderatorRequired}
-              onChange={e => this.updateConfig('moderatorRequired', e.target.checked)}
-            />
-          </div>
-        </div>
-
-        <div className="form-group row">
-          <label className="control-label col-md-3">
-            {trans('allow_recording', {}, 'bbb')}
-          </label>
-          <div className="col-md-9">
-            <input
-              type="checkbox"
-              checked={this.props.params.record}
-              onChange={e => this.updateConfig('record', e.target.checked)}
-            />
-          </div>
-        </div>
-
-        <div className={classes('form-group row', {'has-error': this.props.params.startDateError})}>
-          <div className="control-label col-md-3">
-            <label htmlFor="startDate">{t('start_date')}</label>
-          </div>
-          <div className="col-md-9">
-            <Date
-              id="startDate"
-              value={this.props.params.startDate}
-              onChange={date => this.updateConfig('startDate', date)}
-              time={true}
-            />
-            {this.props.params.startDateError &&
-              <div className="help-block field-error">
-                {this.props.params.startDateError}
-              </div>
-            }
-          </div>
-        </div>
-
-        <div className={classes('form-group row', {'has-error': this.props.params.endDateError})}>
-          <div className="control-label col-md-3">
-            <label htmlFor="endDate">{t('end_date')}</label>
-          </div>
-          <div className="col-md-9">
-            <Date
-              id="endDate"
-              value={this.props.params.endDate}
-              onChange={date => this.updateConfig('endDate', date)}
-              time={true}
-            />
-
-            {this.props.params.endDateError &&
-              <div className="help-block field-error">
-                {this.props.params.endDateError}
-              </div>
-            }
-          </div>
-        </div>
+const EditorComponent = (props) =>
+  <div>
+    {props.message && props.message.content &&
+      <div className={`alert alert-${props.message.type}`}>
+        <i
+          className="fa fa-times close"
+          onClick={() => props.resetMessage()}
+        >
+        </i>
+        {props.message.content}
       </div>
-    )
-  }
-}
+    }
+    <FormData
+      level={3}
+      displayLevel={2}
+      name={selectors.FORM_NAME}
+      title={trans('parameters')}
+      className="content-container"
+      buttons={true}
+      save={{
+        type: CALLBACK_BUTTON,
+        callback: (bbbId) => props.saveForm(bbbId)
+      }}
+      cancel={{
+        type: LINK_BUTTON,
+        target: '/',
+        exact: true
+      }}
+      sections={[
+        {
+          title: trans('general'),
+          primary: true,
+          fields: [
+            {
+              name: 'roomName',
+              type: 'string',
+              label: trans('room_name', {}, 'bbb'),
+              displayed: true
+            }, {
+              name: 'moderatorRequired',
+              type: 'boolean',
+              label: trans('wait_for_moderator', {}, 'bbb'),
+              displayed: true
+            }, {
+              name: 'record',
+              type: 'boolean',
+              label: trans('allow_recording', {}, 'bbb'),
+              displayed: true
+            }, {
+              icon: 'fa fa-fw fa-info',
+              title: trans('information'),
+              fields: [
+                {
+                  name: 'welcomeMessage',
+                  type: 'string',
+                  label: trans('welcome_message', {}, 'bbb'),options: {
+                    long: true
+                  },
+                  displayed: true
+                }
+              ]
+            }, {
+              icon: 'fa fa-fw fa-desktop',
+              title: trans('display_parameters'),
+              fields: [
+                {
+                  name: 'newTab',
+                  type: 'boolean',
+                  label: trans('open_bbb_in_new_tab', {}, 'bbb'),
+                  displayed: true
+                }
+              ]
+            }, {
+              icon: 'fa fa-fw fa-key',
+              title: trans('access_restrictions'),
+              fields: [
+                {
+                  name: 'dates',
+                  type: 'date-range',
+                  label: trans('access_dates'),
+                  displayed: true
+                }
+              ]
+            }
+          ]
+        }
+      ]}
+    />
+  </div>
+
 
 EditorComponent.propTypes = {
   params: T.shape({
@@ -153,10 +108,7 @@ EditorComponent.propTypes = {
     newTab: T.boolean,
     moderatorRequired: T.boolean,
     record: T.boolean,
-    startDate: T.oneOfType([T.object, T.string]),
-    endDate: T.oneOfType([T.object, T.string]),
-    startDateError: T.string,
-    endDateError: T.string
+    dates: T.string
   }),
   message: T.shape({
     content: T.string,
@@ -175,8 +127,6 @@ const Editor = connect(
     saveForm(forumId) {
       dispatch(formActions.saveForm(selectors.FORM_NAME, ['apiv2_forum_update', {id: forumId}]))
     },
-    initializeForm: () => dispatch(actions.initializeResourceForm()),
-    updateForm: (property, value) => dispatch(actions.updateResourceForm(property, value)),
     resetMessage: () => dispatch(actions.resetMessage())
   })
 )(EditorComponent)
