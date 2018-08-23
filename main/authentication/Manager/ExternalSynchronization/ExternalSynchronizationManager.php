@@ -42,7 +42,7 @@ class ExternalSynchronizationManager
 {
     use LoggableTrait;
 
-    const USER_BATCH_SIZE_COMMAND = 250;
+    const USER_BATCH_SIZE_COMMAND = 100;
     const USER_BATCH_SIZE_BROWSER = 50;
 
     /** @var string */
@@ -273,6 +273,7 @@ class ExternalSynchronizationManager
         Role $additionalRole = null,
         $batch = null
     ) {
+        $this->om->disableLog();
         // Initialize parameters
         $batchSize = is_null($batch) ? self::USER_BATCH_SIZE_COMMAND : self::USER_BATCH_SIZE_BROWSER;
         $sourceName = $this->slugifyName($sourceName);
@@ -285,7 +286,6 @@ class ExternalSynchronizationManager
         }
         // Count users in external source to synchronize
         $countUsers = $externalSourceRepo->countUsers(true);
-        $batch = 6;
         // Return object
         $returnObj = ['next' => false, 'synced' => true, 'first' => 0, 'last' => $countUsers];
         if (!is_null($batch)) {
@@ -302,7 +302,6 @@ class ExternalSynchronizationManager
         // List with already processed usernames and emails
         $alreadyProcessedUserUsernames = [];
         $alreadyProcessedUserEmails = [];
-        $this->om->allowForceFlush(false);
         while ($countUsers > 0) {
             // Start flash suite
             $this->om->startFlushSuite();
@@ -448,7 +447,6 @@ class ExternalSynchronizationManager
                 $user = is_null($alreadyImportedUser) ? null : $alreadyImportedUser->getUser();
                 // If user doesn't exist create it
                 if (is_null($user)) {
-                    $this->log('User doesn\'t exist');
                     // Otherwise create new user
                     $user = new User();
                     // Search if username exists
@@ -459,8 +457,6 @@ class ExternalSynchronizationManager
                     $user->setUsername($username);
                     $user->setIsMailValidated(true);
                     $user->setPlainPassword(bin2hex(random_bytes(10)));
-                } else {
-                    $this->log($user->getUsername());
                 }
                 // Update or set user values
                 $user->setFirstName($this->utilities->stringToUtf8($externalSourceUser['first_name']));
@@ -470,7 +466,6 @@ class ExternalSynchronizationManager
                     $user->setAdministrativeCode($this->utilities->stringToUtf8($externalSourceUser['code']));
                 }
                 if (is_null($alreadyImportedUser)) {
-                    $this->log('New user, never imported');
                     $publicUrl = $this->userManager->generatePublicUrl($user);
                     $publicUrl .= in_array($publicUrl, $publicUrlList) ? '_'.uniqid() : '';
                     $publicUrlList[] = $publicUrl;
@@ -481,7 +476,6 @@ class ExternalSynchronizationManager
                         $user
                     );
                 } else {
-                    $this->log('Already imported user');
                     if (null !== $additionalRole && !$user->hasRole($additionalRole->getName())) {
                         $user->addRole($additionalRole);
                     }
@@ -516,7 +510,6 @@ class ExternalSynchronizationManager
             ++$cnt;
         }
         $this->log('All users have been synchronized');
-        $this->om->allowForceFlush(true);
 
         return $returnObj;
     }
