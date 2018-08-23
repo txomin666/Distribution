@@ -1,5 +1,9 @@
 import cloneDeep from 'lodash/cloneDeep'
-import {makeReducer} from '#/main/app/store/reducer'
+import {makeReducer, combineReducers} from '#/main/app/store/reducer'
+
+import {RESOURCE_LOAD} from '#/main/core/resource/store'
+import {FORM_SUBMIT_SUCCESS} from '#/main/app/content/form/store/actions'
+
 import {
   BBB_URL_UPDATE,
   RESOURCE_FORM_INITIALIZE,
@@ -8,10 +12,12 @@ import {
   CAN_JOIN_UPDATE,
   MESSAGE_RESET,
   MESSAGE_UPDATE
-} from './actions'
+} from '#/plugin/big-blue-button/resources/bbb/store/actions'
+import {reducer as editorReducer} from '#/plugin/big-blue-button/resources/bbb/editor/store'
 
 const reducer = combineReducers({
   bbb: makeReducer(null, {
+    [RESOURCE_LOAD]: (state, action) => action.resourceData.bbb,
     [BBB_URL_UPDATE]: (state, action) => action.url
   }),
   resourceForm: makeReducer({}, {
@@ -26,7 +32,6 @@ const reducer = combineReducers({
   resource: makeReducer({}, {
     [RESOURCE_INITIALIZE]: (state, action) => action.state
   }),
-  main: makeReducer({}, {}),
   canJoin: makeReducer({}, {
     [CAN_JOIN_UPDATE]: (state, action) => action.value
   }),
@@ -43,7 +48,8 @@ const reducer = combineReducers({
         type: action.status
       }
     }
-  })
+  }),
+  bbbForm: editorReducer
 })
 
 export {

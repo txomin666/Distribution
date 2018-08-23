@@ -5,7 +5,7 @@ import {trans} from '#/main/core/translation'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 import {FormData} from '#/main/app/content/form/containers/data'
 
-import {selectors} from '#/plugin/big-blue-button/resources/bbb/store'
+import {selectors} from '#/plugin/big-blue-button/administration/bbb/store'
 
 
 const BBBConfigForm = props => {

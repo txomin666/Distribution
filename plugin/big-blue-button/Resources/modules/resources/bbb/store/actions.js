@@ -44,7 +44,7 @@ actions.generateBBBJoinUrl = () => (dispatch, getState) => {
   const resourceNode = state.resourceNode
   const serverUrl = state.config.serverUrl
   const securitySalt = state.config.securitySalt
-  const password = state.canEdit ? 'manager' : 'collaborator'
+  const password = state.editable ? 'manager' : 'collaborator'
   const queryString = `meetingID=${resourceNode.id}&password=${password}&userId=${user.id}&fullName=${encodeURIComponent(userName)}`
   const checksum = shajs('sha1').update(`join${queryString}${securitySalt}`).digest('hex')
   const joinUrl = `${serverUrl}/bigbluebutton/api/join?${queryString}&checksum=${checksum}`
@@ -54,45 +54,45 @@ actions.generateBBBJoinUrl = () => (dispatch, getState) => {
 
 actions.updateBBBJoinUrl = makeActionCreator(BBB_URL_UPDATE, 'url')
 
-actions.initializeResourceForm = () => (dispatch, getState) => {
-  const resourceForm = cloneDeep(getState().resource)
-  resourceForm['startDate'] = resourceForm['startDate'] ? new Date(resourceForm['startDate'].date) : resourceForm['startDate']
-  resourceForm['endDate'] = resourceForm['endDate'] ? new Date(resourceForm['endDate'].date) : resourceForm['endDate']
-  dispatch(actions.setResourceForm(resourceForm))
-}
-
-actions.setResourceForm = makeActionCreator(RESOURCE_FORM_INITIALIZE, 'state')
-actions.updateResourcePropertyForm = makeActionCreator(RESOURCE_FORM_UPDATE, 'property', 'value')
-actions.setResource = makeActionCreator(RESOURCE_INITIALIZE, 'state')
-
-actions.updateResourceForm = (property, value) => (dispatch) => {
-  dispatch(actions.updateResourcePropertyForm(property, value))
-  dispatch(actions.resetMessage())
-}
-
-actions.validateResourceForm = () => (dispatch, getState) => {
-  const form = getState().resourceForm
-  const validation = {
-    hasError: false,
-    startDateError: null,
-    endDateError: null
-  }
-
-  if (form['startDate'] && !isValidDate(form['startDate'])) {
-    validation['startDateError'] = t('form_not_valid_error')
-    validation['hasError'] = true
-  }
-  if (form['endDate'] && !isValidDate(form['endDate'])) {
-    validation['endDateError'] = t('form_not_valid_error')
-    validation['hasError'] = true
-  }
-  dispatch(actions.updateResourceForm('startDateError', validation['startDateError']))
-  dispatch(actions.updateResourceForm('endDateError', validation['endDateError']))
-
-  if (!validation['hasError']) {
-    dispatch(actions.saveConfig())
-  }
-}
+// actions.initializeResourceForm = () => (dispatch, getState) => {
+//   const resourceForm = cloneDeep(getState().resource)
+//   resourceForm['startDate'] = resourceForm['startDate'] ? new Date(resourceForm['startDate'].date) : resourceForm['startDate']
+//   resourceForm['endDate'] = resourceForm['endDate'] ? new Date(resourceForm['endDate'].date) : resourceForm['endDate']
+//   dispatch(actions.setResourceForm(resourceForm))
+// }
+//
+// actions.setResourceForm = makeActionCreator(RESOURCE_FORM_INITIALIZE, 'state')
+// actions.updateResourcePropertyForm = makeActionCreator(RESOURCE_FORM_UPDATE, 'property', 'value')
+// actions.setResource = makeActionCreator(RESOURCE_INITIALIZE, 'state')
+//
+// actions.updateResourceForm = (property, value) => (dispatch) => {
+//   dispatch(actions.updateResourcePropertyForm(property, value))
+//   dispatch(actions.resetMessage())
+// }
+//
+// actions.validateResourceForm = () => (dispatch, getState) => {
+//   const form = getState().resourceForm
+//   const validation = {
+//     hasError: false,
+//     startDateError: null,
+//     endDateError: null
+//   }
+//
+//   if (form['startDate'] && !isValidDate(form['startDate'])) {
+//     validation['startDateError'] = t('form_not_valid_error')
+//     validation['hasError'] = true
+//   }
+//   if (form['endDate'] && !isValidDate(form['endDate'])) {
+//     validation['endDateError'] = t('form_not_valid_error')
+//     validation['hasError'] = true
+//   }
+//   dispatch(actions.updateResourceForm('startDateError', validation['startDateError']))
+//   dispatch(actions.updateResourceForm('endDateError', validation['endDateError']))
+//
+//   if (!validation['hasError']) {
+//     dispatch(actions.saveConfig())
+//   }
+// }
 
 actions.saveConfig = () => (dispatch, getState) => {
   const form = getState().resourceForm

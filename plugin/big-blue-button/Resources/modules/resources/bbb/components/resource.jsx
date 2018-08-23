@@ -23,7 +23,7 @@ const BBBResource = props =>
         type: CALLBACK_BUTTON,
         icon: 'fa fa-fw fa-stop-circle',
         label: trans('bbb_end', {}, 'bbb'),
-        displayed: props.canEdit,
+        displayed: props.editable,
         callback: props.endBBB
       }
     ]}
@@ -48,7 +48,7 @@ BBBResource.propTypes = {
   }).isRequired,
   validateForm: T.func,
   endBBB: T.func,
-  canEdit: T.bool.isRequired
+  editable: T.bool.isRequired
 }
 
 export {

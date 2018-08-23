@@ -1,4 +1,4 @@
-import {BBBResource} from '#/plugin/bbb/resources/bbb/containers/resource'
+import {BBBResource} from '#/plugin/big-blue-button/resources/bbb/containers/resource'
 
 /**
  * Path resource application.

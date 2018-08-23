@@ -3,7 +3,7 @@ import {PropTypes as T} from 'prop-types'
 
 import {trans} from '#/main/core/translation'
 
-import {Meeting} from '#/plugin/big-blue-button/resources/bbb/configuration/meeting'
+import {Meeting} from '#/plugin/big-blue-button/administration/bbb/components/meeting'
 
 export const Meetings = props =>
   <div className="bbb-meetings">
