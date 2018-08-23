@@ -1,11 +1,4 @@
 {
-  "webpack": {
-    "entry": {
-      "resource": "bbb/index",
-      "configuration": "configuration/index"
-    }
-  },
-
   "styles": {
     "entry": {
       "bbb": "bbb.less"

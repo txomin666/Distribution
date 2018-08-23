@@ -4,9 +4,9 @@ import {PropTypes as T} from 'prop-types'
 
 import {trans} from '#/main/core/translation'
 
-import {actions} from '#/plugin/big-blue-button/resources/bbb/store'
+import {actions, selectors} from '#/plugin/big-blue-button/resources/bbb/store'
 
-class BBBContent extends Component {
+class PlayerComponent extends Component {
   componentDidMount() {
     if (this.props.serverUrl && this.props.securitySalt) {
       this.props.connectToBBB()
@@ -74,7 +74,7 @@ class BBBContent extends Component {
   }
 }
 
-BBBContent.propTypes = {
+PlayerComponent.propTypes = {
   params: T.shape({
     id: T.number,
     roomName: T.string,
@@ -95,25 +95,21 @@ BBBContent.propTypes = {
   connectToBBB: T.func.isRequired,
   checkForModerators: T.func.isRequired
 }
-
-function mapStateToProps(state) {
-  return {
-    params: state.resource,
-    resource: state.resourceNode,
-    serverUrl: state.config.serverUrl,
-    securitySalt: state.config.securitySalt,
-    bbbUrl: state.bbbUrl,
-    canJoin: state.canJoin
-  }
-}
-
-function mapDispatchToProps(dispatch) {
-  return {
+const Player = connect(
+  (state) => ({
+    params: selectors.resource(state),
+    resource: selectors.resourceNode(state),
+    serverUrl: selectors.config.serverUrl(state),
+    securitySalt: selectors.config(state).securitySalt,
+    bbbUrl: selectors.bbbUrl(state),
+    canJoin: selectors.canJoin(state)
+  }),
+  (dispatch) => ({
     connectToBBB: () => dispatch(actions.connectToBBB()),
     checkForModerators: () => dispatch(actions.checkForModerators())
-  }
+  })
+)(PlayerComponent)
+
+export {
+  Player
 }
-
-const ConnectedBBBContent = connect(mapStateToProps, mapDispatchToProps)(BBBContent)
-
-export {ConnectedBBBContent as BBBContent}

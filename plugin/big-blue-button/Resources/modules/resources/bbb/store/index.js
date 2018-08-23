@@ -1,7 +1,7 @@
 
-import {actions} from '#/plugin/bbb/resources/bbb/store/actions'
-import {reducer} from '#/plugin/bbb/resources/bbb/store/reducer'
-import {selectors} from '#/plugin/bbb/resources/bbb/store/selectors'
+import {actions} from '#/plugin/big-blue-button/resources/bbb/store/actions'
+import {reducer} from '#/plugin/big-blue-button/resources/bbb/store/reducer'
+import {selectors} from '#/plugin/big-blue-button/resources/bbb/store/selectors'
 
 export {
   actions,

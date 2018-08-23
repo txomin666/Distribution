@@ -4,9 +4,10 @@ import {PropTypes as T} from 'prop-types'
 import classes from 'classnames'
 
 import {trans, t} from '#/main/core/translation'
-import {Date} from '#/main/core/layout/form/components/field/date.jsx'
+import {actions as formActions} from '#/main/app/content/form/store/actions'
+import {Date} from '#/main/core/layout/form/components/field/date'
 
-import {actions} from '#/plugin/big-blue-button/resources/bbb/store'
+import {actions, selectors} from '#/plugin/big-blue-button/resources/bbb/editor/store'
 
 class EditorComponent extends Component {
   componentDidMount() {

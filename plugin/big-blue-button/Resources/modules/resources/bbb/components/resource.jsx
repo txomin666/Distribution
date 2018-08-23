@@ -6,8 +6,8 @@ import {RoutedPageContent} from '#/main/core/layout/router'
 import {ResourcePage} from '#/main/core/resource/containers/page'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 
-import {BBBContent} from '#/plugin/big-blue-button/resources/bbb/player/components/bbb-content'
-import {BBBConfig} from '#/plugin/big-blue-button/resources/bbb/editor/components/bbb-config'
+import {Player} from '#/plugin/big-blue-button/resources/bbb/player/components/player'
+import {Editor} from '#/plugin/big-blue-button/resources/bbb/editor/components/editor'
 
 const BBBResource = props =>
   <ResourcePage
@@ -33,10 +33,10 @@ const BBBResource = props =>
         {
           path: '/',
           exact: true,
-          component: BBBContent
+          component: Player
         }, {
           path: '/edit',
-          component: BBBConfig
+          component: Editor
         }
       ]}
     />
