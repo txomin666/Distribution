@@ -9,6 +9,11 @@ const bbb = createSelector(
   (resource) => resource.bbb
 )
 
+const message = createSelector(
+  [resource],
+  (resource) => resource.message
+)
+
 export {
   bbb
 }

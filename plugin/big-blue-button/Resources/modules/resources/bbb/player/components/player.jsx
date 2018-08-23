@@ -11,7 +11,7 @@ class PlayerComponent extends Component {
     if (this.props.serverUrl && this.props.securitySalt) {
       this.props.connectToBBB()
 
-      if (!this.hasEnded() && this.props.params.newTab) {
+      if (!this.hasEnded() && this.props.bbb.newTab) {
         const newTabInterval = setInterval(
           () => {
             if (this.props.bbbUrl && this.props.canJoin) {
@@ -38,9 +38,9 @@ class PlayerComponent extends Component {
   }
 
   hasEnded() {
-    return this.props.params.endDate &&
-      this.props.params.endDate.date &&
-      new Date() > new Date(this.props.params.endDate.date)
+    return this.props.bbb.endDate &&
+      this.props.bbb.endDate.date &&
+      new Date() > new Date(this.props.bbb.endDate.date)
   }
 
   render() {
@@ -56,10 +56,10 @@ class PlayerComponent extends Component {
             {trans('room_is_closed', {}, 'bbb')}
           </div>
         }
-        {!this.hasEnded() && this.props.bbbUrl && this.props.canJoin && !this.props.params.newTab &&
+        {!this.hasEnded() && this.props.bbbUrl && this.props.canJoin && !this.props.bbb.newTab &&
           <iframe className="bbb-iframe" src={this.props.bbbUrl}></iframe>
         }
-        {!this.hasEnded() && this.props.params.newTab && this.props.canJoin &&
+        {!this.hasEnded() && this.props.bbb.newTab && this.props.canJoin &&
           <div className="alert alert-info">
             {trans('bbb_running_in_new_tab', {}, 'bbb')}
           </div>
@@ -75,7 +75,7 @@ class PlayerComponent extends Component {
 }
 
 PlayerComponent.propTypes = {
-  params: T.shape({
+  bbb: T.shape({
     id: T.number,
     roomName: T.string,
     newTab: T.boolean,
@@ -97,9 +97,8 @@ PlayerComponent.propTypes = {
 }
 const Player = connect(
   (state) => ({
-    params: selectors.resource(state),
-    resource: selectors.resourceNode(state),
-    serverUrl: selectors.config.serverUrl(state),
+    bbb: selectors.bbb(state),
+    serverUrl: selectors.config(state).serverUrl,
     securitySalt: selectors.config(state).securitySalt,
     bbbUrl: selectors.bbbUrl(state),
     canJoin: selectors.canJoin(state)

@@ -1,9 +1,8 @@
-import cloneDeep from 'lodash/cloneDeep'
 import {makeReducer, combineReducers} from '#/main/app/store/reducer'
 import {makeFormReducer} from '#/main/app/content/form/store/reducer'
 import {RESOURCE_LOAD} from '#/main/core/resource/store'
+
 import {
-  CONFIGURATION_UPDATE,
   CONFIGURATION_MESSAGE_RESET,
   CONFIGURATION_MESSAGE_UPDATE,
   MEETINGS_INIT
@@ -11,13 +10,13 @@ import {
 import {selectors} from '#/plugin/big-blue-button/administration/bbb/store/actions'
 
 const reducer = combineReducers({
-  config: makeFormReducer(selectors.FORM_NAME, {}, {
-    [CONFIGURATION_UPDATE]: (state, action) => {
-      const newState = cloneDeep(state)
-      newState[action.property] = action.value
-
-      return newState
-    }
+  bbbConfigForm: makeFormReducer(selectors.FORM_NAME, {}, {
+    data: makeReducer({}, {
+      [RESOURCE_LOAD]: (state, action) => action.resourceData.bbbConfig || state
+    }),
+    originalData: makeReducer({}, {
+      [RESOURCE_LOAD]: (state, action) => action.resourceData.bbbConfig || state
+    })
   }),
   message: makeReducer({}, {
     [RESOURCE_LOAD]: (state, action) => action.resourceData.message,

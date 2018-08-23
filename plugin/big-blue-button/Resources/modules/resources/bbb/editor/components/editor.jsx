@@ -2,12 +2,13 @@ import React from 'react'
 import {connect} from 'react-redux'
 import {PropTypes as T} from 'prop-types'
 
-import {trans} from '#/main/core/translation'
+import {trans, t} from '#/main/core/translation'
 import {CALLBACK_BUTTON, LINK_BUTTON} from '#/main/app/buttons'
 import {FormData} from '#/main/app/content/form/containers/data'
-import {actions as formActions} from '#/main/app/content/form/store/actions'
+import {selectors as formSelect} from '#/main/app/content/form/store/selectors'
 
-import {actions, selectors} from '#/plugin/big-blue-button/resources/bbb/editor/store'
+import {actions} from '#/plugin/big-blue-button/resources/bbb/editor/store'
+import {selectors} from '#/plugin/big-blue-button/resources/bbb/store'
 
 const EditorComponent = (props) =>
   <div>
@@ -30,7 +31,7 @@ const EditorComponent = (props) =>
       buttons={true}
       save={{
         type: CALLBACK_BUTTON,
-        callback: (bbbId) => props.saveForm(bbbId)
+        callback: () => props.saveForm(props.bbbForm)
       }}
       cancel={{
         type: LINK_BUTTON,
@@ -86,9 +87,14 @@ const EditorComponent = (props) =>
               title: trans('access_restrictions'),
               fields: [
                 {
-                  name: 'dates',
-                  type: 'date-range',
-                  label: trans('access_dates'),
+                  name: 'startDate',
+                  type: 'date',
+                  label: t('start_date'),
+                  displayed: true
+                }, {
+                  name: 'endDate',
+                  type: 'date',
+                  label: t('end_date'),
                   displayed: true
                 }
               ]
@@ -101,31 +107,32 @@ const EditorComponent = (props) =>
 
 
 EditorComponent.propTypes = {
-  params: T.shape({
+  bbbForm: T.shape({
     id: T.number,
     roomName: T.string,
     welcomeMessage: T.string,
     newTab: T.boolean,
     moderatorRequired: T.boolean,
     record: T.boolean,
-    dates: T.string
+    startDate: T.oneOfType([T.object, T.string]),
+    endDate: T.oneOfType([T.object, T.string])
   }),
   message: T.shape({
     content: T.string,
     type: T.string
   }),
-  initializeForm: T.func,
-  updateForm: T.func,
+  saveForm: T.func,
   resetMessage: T.func
 }
 
 const Editor = connect(
   (state) => ({
+    bbbForm: formSelect.data(formSelect.form(state, selectors.FORM_NAME)),
     message: selectors.message(state)
   }),
   (dispatch) => ({
-    saveForm(forumId) {
-      dispatch(formActions.saveForm(selectors.FORM_NAME, ['apiv2_forum_update', {id: forumId}]))
+    saveForm(bbbForm) {
+      dispatch(actions.saveConfig(bbbForm))
     },
     resetMessage: () => dispatch(actions.resetMessage())
   })
