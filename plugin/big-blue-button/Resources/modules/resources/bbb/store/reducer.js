@@ -8,7 +8,7 @@ import {
   BBB_URL_UPDATE
 } from '#/plugin/big-blue-button/resources/bbb/store/actions'
 import {reducer as editorReducer} from '#/plugin/big-blue-button/resources/bbb/editor/store'
-import {selectors} from '#/plugin/big-blue-button/resources/bbb/store'
+import {selectors} from '#/plugin/big-blue-button/resources/bbb/store/selectors'
 
 const reducer = combineReducers({
   bbb: makeReducer({}, {

@@ -14,6 +14,9 @@ const message = createSelector(
   (resource) => resource.message
 )
 
-export {
-  bbb
+export const selectors =  {
+  STORE_NAME,
+  resource,
+  bbb,
+  message
 }

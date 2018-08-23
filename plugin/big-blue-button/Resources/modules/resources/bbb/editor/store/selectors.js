@@ -1,4 +1,4 @@
-import {selectors as select} from '#/plugin/big-blue-button/resources/bbb/editor/store/selectors'
+import {selectors as select} from '#/plugin/big-blue-button/resources/bbb/store/selectors'
 
 const FORM_NAME = `${select.STORE_NAME}.bbbForm`
 
