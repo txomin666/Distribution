@@ -34,7 +34,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testOpenNonExistentResult()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john');
         $this->om->flush();
 
@@ -45,7 +44,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testOpenNotAllowedResult()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $jane = $this->persist->user('jane');
         $result = $this->persist->result('Result 1', $john);
@@ -57,7 +55,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testOpen()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->om->flush();
@@ -70,7 +67,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testCreateMarkNotAllowed()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $jane = $this->persist->user('jane');
         $result = $this->persist->result('Result 1', $john);
@@ -84,7 +80,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testCreateMarkNoMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->om->flush();
@@ -95,7 +90,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testCreateMarkInvalidMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->om->flush();
@@ -108,7 +102,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testCreateMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->om->flush();
@@ -127,7 +120,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testDeleteMarkNotAllowed()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $jane = $this->persist->user('jane');
         $result = $this->persist->result('Result 1', $john);
@@ -140,7 +132,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testDeleteMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $mark = $this->persist->mark($result, $john, 16);
@@ -153,7 +144,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testEditMarkNotAllowed()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $jane = $this->persist->user('jane');
         $result = $this->persist->result('Result 1', $john);
@@ -169,7 +159,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testEditMarkNoValue()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $mark = $this->persist->mark($result, $john, 11);
@@ -182,7 +171,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testEditMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $mark = $this->persist->mark($result, $john, 14);
@@ -197,7 +185,6 @@ class ResultControllerTest extends TransactionalTestCase
 
     public function testEditMarkInvalidMark()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $mark = $this->persist->mark($result, $john, 14);

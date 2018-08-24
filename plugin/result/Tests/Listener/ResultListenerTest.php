@@ -39,14 +39,12 @@ class ResultListenerTest extends TransactionalTestCase
 
     public function testOnOpen()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $this->listener->setRequest(new Request());
         $this->listener->onOpen(new OpenResourceEvent(new Result()));
     }
 
     public function testOnDelete()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $this->listener->setRequest(new Request());
         $this->listener->onDelete(new DeleteResourceEvent(new Result()));
     }

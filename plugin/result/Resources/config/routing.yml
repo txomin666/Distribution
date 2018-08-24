@@ -1,3 +1,11 @@
 claro_result:
     resource: "@ClarolineResultBundle/Controller/ResultController.php"
     type: annotation
+
+# JSON API
+claro-result_api:
+    resource: "@ClarolineResultBundle/Controller/API/"
+    prefix: apiv2
+    type: api
+    options:
+        expose: true

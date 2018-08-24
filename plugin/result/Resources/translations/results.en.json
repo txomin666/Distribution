@@ -1,4 +1,5 @@
 {
+    "date_mark": "Evaluation date",
     "errors.csv_empty": "The file is empty.",
     "errors.csv_empty_values": "One or more values are empty",
     "errors.csv_extra_users": "User is unknown or isn't a member of this workspace",

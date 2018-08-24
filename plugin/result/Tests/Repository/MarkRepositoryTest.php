@@ -34,7 +34,6 @@ class MarkRepositoryTest extends TransactionalTestCase
 
     public function testFindByResult()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $bob = $this->persist->user('bob', true);
         $bill = $this->persist->user('bill');
         $jane = $this->persist->user('jane');
@@ -68,7 +67,6 @@ class MarkRepositoryTest extends TransactionalTestCase
 
     public function testFindByResultAndUser()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $bob = $this->persist->user('bob', true);
         $bill = $this->persist->user('bill');
         $jane = $this->persist->user('jane');

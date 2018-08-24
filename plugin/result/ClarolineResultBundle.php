@@ -24,8 +24,8 @@ class ClarolineResultBundle extends DistributionPluginBundle
         return $config->addRoutingResource(__DIR__.'/Resources/config/routing.yml', null, 'results');
     }
 
-    public function getAdditionalInstaller()
-    {
-        return new AdditionalInstaller();
-    }
+    // public function getAdditionalInstaller()
+    // {
+    //     return new AdditionalInstaller();
+    // }
 }

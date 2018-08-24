@@ -37,7 +37,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testCreateAndDelete()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $repo = $this->om->getRepository('ClarolineResultBundle:Result');
         $result = $this->manager->create(new Result(null, 20));
         $results = $repo->findAll();
@@ -49,7 +48,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testWidget()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $bob = $this->persist->user('bob');
         $this->om->flush();
         $content = $this->manager->getWidgetContent($bob->getPersonalWorkspace(), $bob);
@@ -58,7 +56,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testGetMarksWithAndWithoutFullAccess()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $bob = $this->persist->user('bob', true);
         $bill = $this->persist->user('bill');
         $jane = $this->persist->user('jane');
@@ -90,7 +87,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportExpectsNonEmptyFile()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->persist->workspaceUser($john->getPersonalWorkspace(), $john);
@@ -103,7 +99,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportExpectsThreeValues()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->persist->workspaceUser($john->getPersonalWorkspace(), $john);
@@ -119,7 +114,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportExpectsNonEmptyValues()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $result = $this->persist->result('Result 1', $john);
         $this->om->flush();
@@ -132,7 +126,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportExpectsValidMarks()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $this->persist->workspaceUser($john->getPersonalWorkspace(), $john);
         $result = $this->persist->result('Result 1', $john);
@@ -148,7 +141,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportExpectsWorkspaceUsers()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $bob = $this->persist->user('bob');
         $this->persist->workspaceUser($john->getPersonalWorkspace(), $john);
@@ -165,7 +157,6 @@ class ResultManagerTest extends TransactionalTestCase
 
     public function testImportMarks()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         $john = $this->persist->user('john', true);
         $jane = $this->persist->user('jane');
         $bob = $this->persist->user('bob');

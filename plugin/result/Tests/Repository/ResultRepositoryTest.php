@@ -31,7 +31,6 @@ class ResultRepositoryTest extends TransactionalTestCase
 
     public function testFindByUserAndWorkspace()
     {
-        $this->markTestSkipped('Temporarily deactivated.');
         /** @var ResultRepository $repo */
         $repo = $this->om->getRepository('ClarolineResultBundle:Result');
 
