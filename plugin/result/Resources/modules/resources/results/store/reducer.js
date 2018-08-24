@@ -7,9 +7,9 @@ import {selectors as editorSelectors} from '#/plugin/result/resources/results/ed
 import {reducer as editorReducer} from '#/plugin/result/resources/results/editor/store/reducer'
 
 const reducer = combineReducers({
-  resultForm: editorReducer.resultForm,
+  resultForm: editorReducer,
   result: makeReducer({}, {
-    [RESOURCE_LOAD]: (state, action) => action.resourceData.text,
+    [RESOURCE_LOAD]: (state, action) => action.resourceData.result,
     [FORM_SUBMIT_SUCCESS+'/'+editorSelectors.FORM_NAME]: (state, action) => action.updatedData
   })
 })

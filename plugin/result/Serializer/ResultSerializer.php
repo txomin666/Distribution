@@ -51,7 +51,8 @@ class ResultSerializer
     public function serialize(Result $result, array $options = [])
     {
         return [
-            'id' => $result->getUuid(),
+            'total' => $result->getTotal(),
+            'date' => $result->getDate(),
         ];
     }
 

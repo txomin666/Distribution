@@ -36,9 +36,9 @@ class Result extends AbstractResource
      */
     private $total;
 
-    public function __construct(\DateTime $date = null, $total = null)
+    public function __construct(\DateTime $date = null, $total = 100)
     {
-        $this->date = $date;
+        $this->date = new \DateTime();
         $this->total = $total;
         $this->marks = new ArrayCollection();
     }
