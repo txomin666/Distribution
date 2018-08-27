@@ -1,6 +1,7 @@
 {
   "webpack": {
     "entry": {
+      "external-sync-config": "administration/external-synchronization/bootstrap",
       "resource-list": "external-synchronization/list/module",
       "user-config": "external-synchronization/userconfig/module",
       "group-config": "external-synchronization/groupconfig/module",
