@@ -16,15 +16,21 @@ actions.open = (formName, id = null, defaultProps) => {
   }
 }
 
-actions.sendMessages = (messages, users) => ({
-  [API_REQUEST]: {
-    url: ['apiv2_plannednotificationmessage_messages_send'],
-    request: {
-      method: 'POST',
-      body: JSON.stringify({
-        messages: messages.map(message => message.id),
-        users: users
-      })
+actions.sendMessages = (messages, users) => {
+  const data = {
+    messages: messages.map(message => message.id),
+    users: users
+  }
+  const formData = new FormData()
+  formData.append('messagesData', JSON.stringify(data))
+
+  return {
+    [API_REQUEST]: {
+      url: ['apiv2_plannednotificationmessage_messages_send'],
+      request: {
+        method: 'POST',
+        body: formData
+      }
     }
   }
-})
+}

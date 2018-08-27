@@ -31,9 +31,9 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class MessageController extends AbstractCrudController
 {
-    /* var FinderProvider */
+    /** @var FinderProvider */
     protected $finder;
-￼
+
     /** @var PlannedNotificationManager */
     protected $manager;
 
@@ -107,9 +107,10 @@ class MessageController extends AbstractCrudController
      */
     public function messagesSendAction(Request $request)
     {
-        $query = $request->request->all();
-        $messages = $this->om->findList('Claroline\PlannedNotificationBundle\Entity\Message', 'uuid', $query['messages']);
-        $users = $this->om->findList('Claroline\CoreBundle\Entity\User', 'uuid', $query['users']);
+        $messagesData = json_decode($request->request->get('messagesData', false), true);
+
+        $messages = $this->om->findList('Claroline\PlannedNotificationBundle\Entity\Message', 'uuid', $messagesData['messages']);
+        $users = $this->om->findList('Claroline\CoreBundle\Entity\User', 'uuid', $messagesData['users']);
         $this->manager->sendMessages($messages, $users);
 
         return new JsonResponse('success', 200);
