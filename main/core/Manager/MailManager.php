@@ -195,6 +195,10 @@ class MailManager
                 $locale = $this->ch->getParameter('locale_language');
             }
 
+            if (!isset($layout[$locale]['content'])) {
+		return false;
+	    }
+
             $usedLayout = $layout[$locale]['content'];
             $body = str_replace('%content%', $body, $usedLayout);
             $body = str_replace('%platform_name%', $this->ch->getParameter('name'), $body);
