@@ -320,7 +320,6 @@ SubjectComponent.propTypes = {
 }
 
 SubjectComponent.defaultProps = {
-  bannedUser: true,
   moderatedMessages: []
 }
 
