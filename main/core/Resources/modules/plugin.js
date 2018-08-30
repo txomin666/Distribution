@@ -40,7 +40,8 @@ registry.add('core', {
 
   widgets: {
     'list'  : () => { return import(/* webpackChunkName: "core-widget-list" */   '#/main/core/widget/types/list') },
-    'simple': () => { return import(/* webpackChunkName: "core-widget-simple" */ '#/main/core/widget/types/simple') }
+    'simple': () => { return import(/* webpackChunkName: "core-widget-simple" */ '#/main/core/widget/types/simple') },
+    'resource': () => { return import(/* webpackChunkName: "core-widget-resource" */ '#/main/core/widget/types/resource') }
   },
 
   data: {
@@ -51,15 +52,16 @@ registry.add('core', {
     sources: {
       'resources' : () => { return import(/* webpackChunkName: "core-data-resources" */  '#/main/core/data/sources/resources') },
       'users'     : () => { return import(/* webpackChunkName: "core-data-users" */      '#/main/core/data/sources/users') },
-      'workspaces': () => { return import(/* webpackChunkName: "core-data-workspaces" */ '#/main/core/data/sources/workspaces') }
+      'workspaces': () => { return import(/* webpackChunkName: "core-data-workspaces" */ '#/main/core/data/sources/workspaces') },
+      'my_workspaces': () => { return import(/* webpackChunkName: "core-data-workspaces" */ '#/main/core/data/sources/workspaces') }
     }
   },
 
   questions: {
 
   },
-  
+
   tinymcePlugins: {
-  
+
   }
 })
