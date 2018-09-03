@@ -11,6 +11,7 @@
 
 namespace Claroline\CoreBundle\Entity\Workspace;
 
+use Claroline\AppBundle\Entity\Meta\Poster;
 use Claroline\CoreBundle\Entity\File\PublicFile;
 use Claroline\CoreBundle\Entity\Model\OrganizationsTrait;
 use Claroline\CoreBundle\Entity\Model\UuidTrait;
@@ -30,6 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Workspace
 {
+    use Poster;
     use OrganizationsTrait;
     use UuidTrait;
 
