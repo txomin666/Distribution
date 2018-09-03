@@ -38,6 +38,17 @@ class Version20180903144605 extends AbstractMigration
             ADD thumbnail VARCHAR(255) DEFAULT NULL,
             DROP thumbnail_id
         ');
+        $this->addSql('
+            ALTER TABLE claro_resource_node
+            DROP FOREIGN KEY FK_A76799FF54B9D732
+        ');
+        $this->addSql('
+            DROP INDEX IDX_A76799FF54B9D732 ON claro_resource_node
+        ');
+        $this->addSql('
+            ALTER TABLE claro_resource_node
+            DROP icon_id
+        ');
     }
 
     public function down(Schema $schema)
@@ -69,6 +80,19 @@ class Version20180903144605 extends AbstractMigration
         ');
         $this->addSql('
             CREATE INDEX IDX_D9028545FDFF2E92 ON claro_workspace (thumbnail_id)
+        ');
+        $this->addSql('
+            ALTER TABLE claro_resource_node
+            ADD icon_id INT DEFAULT NULL
+        ');
+        $this->addSql('
+            ALTER TABLE claro_resource_node
+            ADD CONSTRAINT FK_A76799FF54B9D732 FOREIGN KEY (icon_id)
+            REFERENCES claro_resource_icon (id)
+            ON DELETE SET NULL
+        ');
+        $this->addSql('
+            CREATE INDEX IDX_A76799FF54B9D732 ON claro_resource_node (icon_id)
         ');
     }
 }

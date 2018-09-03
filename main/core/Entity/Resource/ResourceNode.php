@@ -88,21 +88,6 @@ class ResourceNode
     private $resourceType;
 
     /**
-     * @var ResourceIcon
-     *
-     * @ORM\ManyToOne(
-     *     targetEntity="Claroline\CoreBundle\Entity\Resource\ResourceIcon",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(onDelete="SET NULL")
-     *
-     * @deprecated
-     *
-     * @todo remove me with migration (was used to store thumbnails in some cases)
-     */
-    private $icon;
-
-    /**
      * Display resource icon/evaluation when the resource is rendered.
      *
      * @var bool

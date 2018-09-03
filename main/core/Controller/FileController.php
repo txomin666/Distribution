@@ -15,7 +15,6 @@ use Claroline\CoreBundle\Entity\Resource\File;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
 use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Form\TinyMceUploadModalType;
-use Claroline\CoreBundle\Form\UpdateFileType;
 use Claroline\CoreBundle\Library\Security\Collection\ResourceCollection;
 use Claroline\CoreBundle\Library\Utilities\ClaroUtilities;
 use Claroline\CoreBundle\Library\Utilities\FileUtilities;
@@ -225,64 +224,6 @@ class FileController extends Controller
 
         return [
             'form' => $this->formFactory->create(TinyMceUploadModalType::class, null, ['destinations' => $destinations])->createView(),
-        ];
-    }
-
-    /**
-     * @EXT\Route("/update/{file}/form", name="update_file_form", options = {"expose" = true})
-     *
-     * @EXT\Template()
-     */
-    public function updateFileFormAction(File $file)
-    {
-        $collection = new ResourceCollection([$file->getResourceNode()]);
-        $this->checkAccess('EDIT', $collection);
-        $form = $this->formFactory->create(UpdateFileType::class, new File());
-
-        return [
-            'form' => $form->createView(),
-            'resourceType' => 'file',
-            'file' => $file,
-            '_resource' => $file,
-        ];
-    }
-
-    /**
-     * @EXT\Route("/update/{file}", name="update_file", options = {"expose" = true})
-     *
-     * @EXT\Template("ClarolineCoreBundle:file:update_file_form.html.twig")
-     */
-    public function updateFileAction(File $file)
-    {
-        $collection = new ResourceCollection([$file->getResourceNode()]);
-        $this->checkAccess('EDIT', $collection);
-        $form = $this->formFactory->create(UpdateFileType::class, new File());
-        $form->handleRequest($this->request);
-
-        if ($form->isValid()) {
-            $tmpFile = $form->get('file')->getData();
-            $this->fileManager->changeFile($file, $tmpFile);
-
-            if ($this->homeExtension->isDesktop()) {
-                $url = $this->generateUrl('claro_desktop_open_tool', ['toolName' => 'resource_manager']);
-            } else {
-                $url = $this->generateUrl(
-                    'claro_workspace_open_tool',
-                    [
-                        'toolName' => 'resource_manager',
-                        'workspaceId' => $file->getResourceNode()->getWorkspace()->getId(),
-                    ]
-                );
-            }
-
-            return $this->redirect($url);
-        }
-
-        return [
-            'form' => $form->createView(),
-            'resourceType' => 'file',
-            'file' => $file,
-            '_resource' => $file,
         ];
     }
 
