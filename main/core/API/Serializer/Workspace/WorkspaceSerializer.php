@@ -343,7 +343,7 @@ class WorkspaceSerializer
                 PublicFile::class,
                 $data['thumbnail']
             );
-            $workspace->setThumbnail($thumbnail);
+            $workspace->setThumbnail($data['thumbnail']['url']);
             $this->fileUt->createFileUse(
                 $thumbnail,
                 'Claroline\CoreBundle\Entity\Workspace',

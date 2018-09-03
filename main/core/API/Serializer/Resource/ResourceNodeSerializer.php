@@ -89,7 +89,6 @@ class ResourceNodeSerializer
             'id' => $resourceNode->getUuid(),
             'autoId' => $resourceNode->getId(), // TODO : remove me
             'name' => $resourceNode->getName(),
-            'thumbnail' => $resourceNode->getThumbnail() ? $resourceNode->getThumbnail()->getRelativeUrl() : null,
             'meta' => $this->serializeMeta($resourceNode, $options),
             'permissions' => $this->rightsManager->getCurrentPermissionArray($resourceNode),
             'poster' => $this->serializePoster($resourceNode),
@@ -279,7 +278,7 @@ class ResourceNodeSerializer
         }
 
         if (isset($data['thumbnail']) && isset($data['thumbnail']['url'])) {
-            $resourceNode->setPoster($data['thumbnail']['url']);
+            $resourceNode->setThumbnail($data['thumbnail']['url']);
         }
 
         // meta

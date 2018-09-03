@@ -13,7 +13,6 @@ namespace Claroline\CoreBundle\Entity\Workspace;
 
 use Claroline\AppBundle\Entity\Meta\Poster;
 use Claroline\AppBundle\Entity\Meta\Thumbnail;
-use Claroline\CoreBundle\Entity\File\PublicFile;
 use Claroline\CoreBundle\Entity\Model\OrganizationsTrait;
 use Claroline\CoreBundle\Entity\Model\UuidTrait;
 use Claroline\CoreBundle\Entity\Resource\ResourceNode;
@@ -874,16 +873,6 @@ class Workspace
     public function setSlug($slug)
     {
         $this->slug = $slug;
-    }
-
-    public function setThumbnail(PublicFile $file)
-    {
-        $this->thumbnail = $file;
-    }
-
-    public function getThumbnail()
-    {
-        return $this->thumbnail;
     }
 
     public function setDefaultRole(Role $role)
