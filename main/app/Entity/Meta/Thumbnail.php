@@ -16,7 +16,7 @@ trait Thumbnail
     /**
      * @return string
      */
-    public function getThumnail()
+    public function getThumbnail()
     {
         return $this->thumbnail;
     }
