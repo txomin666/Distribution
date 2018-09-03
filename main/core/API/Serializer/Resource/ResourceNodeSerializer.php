@@ -273,8 +273,13 @@ class ResourceNodeSerializer
     public function deserialize(array $data, ResourceNode $resourceNode)
     {
         $this->sipe('name', 'setName', $data, $resourceNode);
+
         if (isset($data['poster']) && isset($data['poster']['url'])) {
             $resourceNode->setPoster($data['poster']['url']);
+        }
+
+        if (isset($data['thumbnail']) && isset($data['thumbnail']['url'])) {
+            $resourceNode->setPoster($data['thumbnail']['url']);
         }
 
         // meta
