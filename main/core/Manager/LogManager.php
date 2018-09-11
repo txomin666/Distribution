@@ -822,7 +822,7 @@ class LogManager
         $receiverGroup = isset($details['receiverGroup']) ? $details['receiverGroup']['name'] : null;
         $role = isset($details['role']) ? $details['role']['name'] : null;
         $workspace = isset($details['workspace']) ? $details['workspace']['name'] : null;
-        $resource = $log->getResourceNode() ? $details['resource']['path'] : null;
+        $resource = isset($details['resource']) ? $details['resource']['path'] : null;
 
         return $translator->trans(
           'log_'.$log->getAction().'_sentence',
