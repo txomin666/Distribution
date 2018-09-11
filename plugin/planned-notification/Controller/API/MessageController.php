@@ -33,7 +33,7 @@ class MessageController extends AbstractCrudController
 {
     /** @var FinderProvider */
     protected $finder;
-￼
+
     /** @var PlannedNotificationManager */
     protected $manager;
 

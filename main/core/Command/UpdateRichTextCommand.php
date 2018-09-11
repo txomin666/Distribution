@@ -114,7 +114,7 @@ class UpdateRichTextCommand extends ContainerAwareCommand
 
         foreach ($entities as $entity) {
             $continue = false;
-            $func = 'get'.ucfirst($parsable[get_class($entity)]);
+            $func = 'get'.ucfirst($parsable[\Doctrine\Common\Util\ClassUtils::getRealClass(get_class($entity))]);
             $text = $entity->$func();
 
             if ($input->getOption('force')) {
@@ -135,7 +135,7 @@ class UpdateRichTextCommand extends ContainerAwareCommand
 
             if ($continue) {
                 $text = str_replace($toMatch, $toReplace, $text);
-                $func = 'set'.ucfirst($parsable[get_class($entity)]);
+                $func = 'set'.ucfirst($parsable[\Doctrine\Common\Util\ClassUtils::getRealClass(get_class($entity))]);
                 $entity->$func($text);
                 $em->persist($entity);
                 ++$i;
@@ -154,8 +154,12 @@ class UpdateRichTextCommand extends ContainerAwareCommand
             'Claroline\CoreBundle\Entity\Resource\Revision' => 'content',
             'Claroline\AgendaBundle\Entity\Event' => 'description',
             'Claroline\CoreBundle\Entity\Resource\Activity' => 'description',
-            'Innova\PathBundle\Entity\Path\Path' => 'description',
+            'Innova\PathBundle\Entity\Path\Path' => 'structure',
+            'Innova\PathBundle\Entity\Step' => 'description',
             'Claroline\CoreBundle\Entity\Widget\SimpleTextConfig' => 'content',
+            'UJM\ExoBundle\Entity\Exercise' => 'endMessage',
+            'UJM\ExoBundle\Entity\Item\Item' => 'content',
+            
         ];
     }
 }
