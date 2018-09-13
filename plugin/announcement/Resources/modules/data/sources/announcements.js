@@ -53,14 +53,6 @@ export default {
         displayable: false,
         filterable: true,
         sortable: false
-      }, {
-        name: 'visible',
-        type: 'boolean',
-        label: trans('visible'),
-        displayed: false,
-        displayable: false,
-        filterable: true,
-        sortable: false
       }
     ],
     card: AnnouncementCard
