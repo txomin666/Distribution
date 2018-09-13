@@ -44,6 +44,24 @@ class AnnouncementFinder extends AbstractFinder
                     break;
                 case 'meta.publishedAt':
                     break;
+                case 'notDoneYet':
+                  $now = new \DateTime();
+                  if ($filterValue) {
+                      $qb->andWhere("obj.publicationDate >= :{$filterName}");
+                  } else {
+                      $qb->andWhere("obj.publicationDate <= :{$filterName}");
+                  }
+                  $qb->setParameter($filterName, $now);
+                  break;
+                case 'visible':
+                  if ($filterValue) {
+                      $now = new \DateTime();
+                      $qb->andWhere("obj.visibleFrom >= :{$filterName}");
+                      $qb->andWhere("obj.visibleUntil <= :{$filterName}");
+                      $qb->andWhere('obj.visible = true');
+                      $qb->setParameter($filterName, $now);
+                  }
+                  break;
                 default:
                     $this->setDefaults($qb, $filterName, $filterValue);
             }
