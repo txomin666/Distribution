@@ -107,8 +107,6 @@ class ProfileController extends Controller
      */
     public function indexAction($publicUrl)
     {
-        //$this->checkAccess();
-
         try {
             $user = $this->repository->findOneByIdOrPublicUrl($publicUrl);
             $serializedUser = $this->userSerializer->serialize($user, [Options::SERIALIZE_FACET]);
