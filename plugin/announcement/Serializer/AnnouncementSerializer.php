@@ -73,14 +73,14 @@ class AnnouncementSerializer
             'title' => $announce->getTitle(),
             'content' => $announce->getContent(),
             'workspace' => $announce->getAggregate()->getResourceNode()->getWorkspace() ?
-                $this->wsSerializer->serialize($announce->getAggregate()->getResourceNode()->getWorkspace(), Options::SERIALIZE_MINIMAL) :
+                $this->wsSerializer->serialize($announce->getAggregate()->getResourceNode()->getWorkspace(), [Options::SERIALIZE_MINIMAL]) :
                 null,
             'meta' => [
                 'resource' => [
                     'id' => $announce->getAggregate()->getResourceNode()->getUuid(),
                 ],
                 'created' => $announce->getCreationDate()->format('Y-m-d\TH:i:s'),
-                'creator' => $announce->getCreator() ? $this->userSerializer->serialize($announce->getCreator()) : null,
+                'creator' => $announce->getCreator() ? $this->userSerializer->serialize($announce->getCreator(), [Options::SERIALIZE_MINIMAL]) : null,
                 'publishedAt' => $announce->getPublicationDate() ? $announce->getPublicationDate()->format('Y-m-d\TH:i:s') : null,
                 'author' => $announce->getAnnouncer(),
                 'notifyUsers' => !empty($announce->getTask()) ? 2 : 0,

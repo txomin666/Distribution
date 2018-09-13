@@ -56,10 +56,16 @@ class AnnouncementFinder extends AbstractFinder
                 case 'visible':
                   if ($filterValue) {
                       $now = new \DateTime();
-                      $qb->andWhere("obj.visibleFrom >= :{$filterName}");
-                      $qb->andWhere("obj.visibleUntil <= :{$filterName}");
+                      $expr[] = $qb->expr()->orX(
+                        $qb->expr()->gte('obj.visibleFrom', $now),
+                        $qb->expr()->isNull('obj.visibleFrom')
+                      );
+                      $expr[] = $qb->expr()->orX(
+                        $qb->expr()->lte('obj.visibleUntil', $now),
+                        $qb->expr()->isNull('obj.visibleUntil')
+                      );
+                      $qb->expr()->andX(...$expr);
                       $qb->andWhere('obj.visible = true');
-                      $qb->setParameter($filterName, $now);
                   }
                   break;
                 default:
