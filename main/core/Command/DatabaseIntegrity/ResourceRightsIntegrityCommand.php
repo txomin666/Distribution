@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: panos
- * Date: 8/31/17
- * Time: 4:37 PM.
- */
 
 namespace Claroline\CoreBundle\Command\DatabaseIntegrity;
 
@@ -33,8 +27,8 @@ class ResourceRightsIntegrityCommand extends ContainerAwareCommand
                 INSERT into claro_resource_rights (mask, role_Id, resourceNode_Id)
                 SELECT 0, {$role->getId()}, node.id
                 FROM claro_resource_node node
-                WHERE NOT EXISTS (
-                  SELECT * from claro_resource_node node2
+                WHERE node.id NOT IN (
+                  SELECT node2.id from claro_resource_node node2
                   JOIN claro_resource_rights rights ON rights.resourceNode_Id = node2.id
                   JOIN claro_role role on rights.role_Id = {$role->getId()}
                 )
