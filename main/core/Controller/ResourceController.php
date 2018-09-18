@@ -278,23 +278,16 @@ class ResourceController
             );
         }
 
-        $content = null;
-        if (!empty($request->getContent())) {
-            $content = json_decode($request->getContent(), true);
-        }
-
-        $attributes = [];
-
-        if ('add' === $action) {
-            $attributes['type'] = $content['resourceNode']['meta']['type'];
-        }
-
         // check current user rights
-        $this->checkAccess($this->actionManager->get($resourceNode, $action), [$resourceNode], $attributes);
+        $this->checkAccess($this->actionManager->get($resourceNode, $action), [$resourceNode]);
 
         // read request and get user query
         $parameters = $request->query->all();
 
+        $content = null;
+        if (!empty($request->getContent())) {
+            $content = json_decode($request->getContent(), true);
+        }
         // dispatch action event
         return $this->actionManager->execute($resourceNode, $action, $parameters, $content);
     }
