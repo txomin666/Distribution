@@ -278,15 +278,22 @@ class ResourceController
             );
         }
 
-        // check current user rights
-        $this->checkAccess($this->actionManager->get($resourceNode, $action), [$resourceNode]);
-
-        // read request and get user query
-        $parameters = $request->query->all();
         $content = null;
         if (!empty($request->getContent())) {
             $content = json_decode($request->getContent(), true);
         }
+
+        $attributes = [];
+
+        if ('add' === $action) {
+            $attributes['type'] = $content['resourceNode']['meta']['type'];
+        }
+
+        // check current user rights
+        $this->checkAccess($this->actionManager->get($resourceNode, $action), [$resourceNode], $attributes);
+
+        // read request and get user query
+        $parameters = $request->query->all();
 
         // dispatch action event
         return $this->actionManager->execute($resourceNode, $action, $parameters, $content);
@@ -374,9 +381,11 @@ class ResourceController
      * @param MenuAction $action
      * @param array      $resourceNodes
      */
-    private function checkAccess(MenuAction $action, array $resourceNodes)
+    private function checkAccess(MenuAction $action, array $resourceNodes, array $attributes = [])
     {
         $collection = new ResourceCollection($resourceNodes);
+        $collection->setAttributes($attributes);
+
         if (!$this->actionManager->hasPermission($action, $collection)) {
             throw new ResourceAccessException($collection->getErrorsForDisplay(), $collection->getResources());
         }
