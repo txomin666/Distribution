@@ -6,8 +6,10 @@ use Claroline\AnnouncementBundle\Entity\Announcement;
 use Claroline\AnnouncementBundle\Entity\AnnouncementAggregate;
 use Claroline\AnnouncementBundle\Manager\AnnouncementManager;
 use Claroline\AppBundle\API\Crud;
+use Claroline\AppBundle\API\FinderProvider;
 use Claroline\AppBundle\API\SerializerProvider;
 use Claroline\AppBundle\Persistence\ObjectManager;
+use Claroline\CoreBundle\Entity\User;
 use Claroline\CoreBundle\Security\PermissionCheckerTrait;
 use JMS\DiExtraBundle\Annotation as DI;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration as EXT;
@@ -38,17 +40,24 @@ class AnnouncementController
      *     "manager"    = @DI\Inject("claroline.manager.announcement_manager"),
      *     "serializer" = @DI\Inject("claroline.api.serializer"),
      *     "crud"       = @DI\Inject("claroline.api.crud"),
-     *     "om"         = @DI\Inject("claroline.persistence.object_manager")
+     *     "om"         = @DI\Inject("claroline.persistence.object_manager"),
+     *     "finder"     = @DI\Inject("claroline.api.finder")
      * })
      *
      * @param AnnouncementManager $managersuppression
      */
-    public function __construct(AnnouncementManager $manager, SerializerProvider $serializer, Crud $crud, ObjectManager $om)
-    {
+    public function __construct(
+      AnnouncementManager $manager,
+      SerializerProvider $serializer,
+      Crud $crud,
+      ObjectManager $om,
+      FinderProvider $finder
+    ) {
         $this->manager = $manager;
         $this->serializer = $serializer;
         $this->crud = $crud;
         $this->om = $om;
+        $this->finder = $finder;
     }
 
     /**
@@ -155,23 +164,32 @@ class AnnouncementController
         $ids = $request->query->all()['filters']['roles'];
         $ids = explode(',', $ids);
         $roles = $this->om->findList('Claroline\CoreBundle\Entity\Role', 'uuid', $ids);
-        $users = $this->manager->getVisibleBy($announcement, $roles);
-        $serialized = [];
 
-        foreach ($users as $user) {
-            $serialized[] = $this->serializer->serialize($user);
+        $node = $announcement->getAggregate()->getResourceNode();
+        $rights = $node->getRights();
+
+        if (0 === count($roles)) {
+            foreach ($rights as $right) {
+                //1 is the default "open" mask
+                if ($right->getMask() & 1) {
+                    $roles[] = $right->getRole();
+                }
+            }
+
+            $roles[] = $this->roleRepo->findOneBy([
+                'name' => 'ROLE_WS_MANAGER_'.$node->getWorkspace()->getUuid(),
+            ]);
         }
 
-        $data = [
-          'data' => $serialized,
-          'totalResults' => count($serialized),
-          'page' => 1,
-          'pageSize' => count($serialized),
-          'filters' => $request->query->all()['filters'],
-          'sortBy' => [],
+        $filters['filters'] = [
+          'role' => array_map(function ($role) {
+              return $role->getName();
+          }, $roles),
         ];
 
-        return new JsonResponse($data, 200);
+        return new JsonResponse($this->finder->search(
+            User::class, $filters
+        ));
     }
 
     /**
@@ -194,7 +212,31 @@ class AnnouncementController
     {
         $this->checkPermission('EDIT', $aggregate->getResourceNode(), [], true);
         $roles = $this->decodeIdsString($request, 'Claroline\CoreBundle\Entity\Role');
-        $users = $this->manager->getVisibleBy($announcement, $roles);
+
+        $node = $announcement->getAggregate()->getResourceNode();
+        $rights = $node->getRights();
+
+        if (0 === count($roles)) {
+            foreach ($rights as $right) {
+                //1 is the default "open" mask
+                if ($right->getMask() & 1) {
+                    $roles[] = $right->getRole();
+                }
+            }
+
+            $roles[] = $this->roleRepo->findOneBy([
+                'name' => 'ROLE_WS_MANAGER_'.$node->getWorkspace()->getUuid(),
+            ]);
+        }
+
+        $filters['hiddenFilters'] = [
+          'role' => array_map(function ($role) {
+              return $role->getName();
+          }, $roles),
+        ];
+
+        $users = $this->finder->search(User::class, $filters);
+
         $this->manager->sendMessage($announcement, $users);
 
         return new JsonResponse(null, 200);
@@ -202,7 +244,7 @@ class AnnouncementController
 
     public function getClass()
     {
-        return 'Claroline\AnnouncementBundle\Entity\Announcement';
+        return Announcement::class;
     }
 
     protected function decodeRequest(Request $request)

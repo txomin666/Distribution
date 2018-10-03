@@ -27,9 +27,9 @@ const SendingConfirmModal = props =>
       definition={UserList.definition}
       card={UserList.card}
       selectable={false}
-      filterable={false}
-      paginated={false}
-      sortable={false}
+      filterable={true}
+      paginated={true}
+      sortable={true}
     />
     <button
       className="modal-btn btn btn-primary"
