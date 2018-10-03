@@ -238,7 +238,7 @@ class Updater120000 extends Updater
             $sql = '
                 INSERT INTO claro_widget_container (id, uuid)
                 SELECT temp.id, (SELECT UUID()) as uuid FROM claro_widget_display_config_temp temp
-                WHERE temp.user_id IS NULL OR temp.workspace_id IS NOT NULL';
+                WHERE temp.user_id IS NOT NULL OR temp.workspace_id IS NOT NULL';
 
             $stmt = $this->conn->prepare($sql);
             $stmt->execute();
@@ -250,7 +250,8 @@ class Updater120000 extends Updater
               UPDATE claro_widget_container container
               JOIN claro_widget_display_config_temp wtc ON wtc.id = container.id
               JOIN claro_widget_home_tab_config_temp htc ON wtc.widget_instance_id = htc.widget_instance_id
-              SET container.homeTab_id = htc.home_tab_id
+              JOIN claro_home_tab tab ON htc.home_tab_id = tab.id
+              SET container.homeTab_id = tab.id          
           ';
 
         $stmt = $this->conn->prepare($sql);
