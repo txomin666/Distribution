@@ -144,6 +144,7 @@ const Editor = withRouter(connect(
   }),
   (dispatch) => ({
     updateTab(currentTabIndex, field, value) {
+      console.log(currentTabIndex, field, value)
       dispatch(formActions.updateProp('editor', `[${currentTabIndex}].${field}`, value))
     },
     setErrors(errors) {
