@@ -79,9 +79,7 @@ class WidgetGridEditor extends Component {
                 // removes the content to delete and replace by null
                 oldParent.contents[movingContentIndex] = null
 
-                //console.log(oldParentTabIndex)
                 this.props.update(widgets)
-                console.log(oldParentTabIndex)
                 this.props.update(oldWidgets, oldParentTabIndex)
               }
 
