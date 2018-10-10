@@ -10,6 +10,7 @@ namespace Claroline\CoreBundle\Command\DatabaseIntegrity;
 
 use Claroline\CoreBundle\Entity\Tab\HomeTab;
 use Claroline\CoreBundle\Entity\Tab\HomeTabConfig;
+use Claroline\CoreBundle\Entity\Workspace\Workspace;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -51,7 +52,7 @@ class HomeTabCommand extends ContainerAwareCommand
             $manager->flush();
         }
 
-        $workspaces = $container->get('claroline.persistence.object_manager')->findAll();
+        $workspaces = $container->get('claroline.persistence.object_manager')->getRepository(Workspace::class)->findAll();
 
         $output->writeln(count($workspaces).' found');
         $i = 1;
