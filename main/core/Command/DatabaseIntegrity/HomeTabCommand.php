@@ -50,5 +50,36 @@ class HomeTabCommand extends ContainerAwareCommand
             $manager->persist($desktopHomeTabConfig);
             $manager->flush();
         }
+
+        $workspaces = $container->get('claroline.persistence.object_manager')->findAll();
+
+        $output->writeln(count($workspaces).' found');
+        $i = 1;
+        foreach ($workspaces as $workspace) {
+            $output->writeln('Workspace '.$i.' :');
+
+            $tabs = $finder->fetch(HomeTab::class, ['workspace' => $workspace->getUuid()]);
+
+            if (0 === count($tabs)) {
+                $output->writeln('No tabs found... restoring default.');
+                $infoName = $translator->trans('informations', [], 'platform');
+
+                $workspaceTab = new HomeTab();
+                $workspaceTab->setType(HomeTab::TYPE_WORKSPACE);
+                $manager->persist($workspaceTab);
+
+                $workspaceTabConfig = new HomeTabConfig();
+                $workspaceTabConfig->setHomeTab($workspaceTab);
+                $workspaceTabConfig->setType(HomeTab::TYPE_WORKSPACE);
+                $workspaceTabConfig->setVisible(true);
+                $workspaceTabConfig->setLocked(false);
+                $workspaceTabConfig->setTabOrder(1);
+                $workspaceTabConfig->setName($infoName);
+                $workspaceTabConfig->setLongTitle($infoName);
+
+                $manager->persist($workspaceTabConfig);
+                $manager->flush();
+            }
+        }
     }
 }
