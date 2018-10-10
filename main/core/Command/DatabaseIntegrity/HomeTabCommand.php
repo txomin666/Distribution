@@ -56,6 +56,8 @@ class HomeTabCommand extends ContainerAwareCommand
 
         $output->writeln(count($workspaces).' found');
         $i = 1;
+
+        //todo: le faire en sql pour aller plus vite
         foreach ($workspaces as $workspace) {
             $output->writeln('Workspace '.$i.' :');
 
@@ -67,13 +69,14 @@ class HomeTabCommand extends ContainerAwareCommand
 
                 $workspaceTab = new HomeTab();
                 $workspaceTab->setType(HomeTab::TYPE_WORKSPACE);
+                $workspaceTab->setWorkspace($workspace);
                 $manager->persist($workspaceTab);
 
                 $workspaceTabConfig = new HomeTabConfig();
                 $workspaceTabConfig->setHomeTab($workspaceTab);
                 $workspaceTabConfig->setType(HomeTab::TYPE_WORKSPACE);
                 $workspaceTabConfig->setVisible(true);
-                $workspaceTabConfig->setLocked(false);
+                $workspaceTabConfig->setLocked(true);
                 $workspaceTabConfig->setTabOrder(1);
                 $workspaceTabConfig->setName($infoName);
                 $workspaceTabConfig->setLongTitle($infoName);
@@ -81,6 +84,7 @@ class HomeTabCommand extends ContainerAwareCommand
                 $manager->persist($workspaceTabConfig);
                 $manager->flush();
             }
+            ++$i;
         }
     }
 }
