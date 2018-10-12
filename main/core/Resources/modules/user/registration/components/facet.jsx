@@ -3,7 +3,6 @@ import {PropTypes as T} from 'prop-types'
 
 import {FormData} from '#/main/app/content/form/containers/data'
 
-import {ProfileFacet as ProfileFacetTypes} from '#/main/core/user/profile/prop-types'
 
 // todo maybe merge with #/main/core/user/profile/editor/components/facet.jsx
 
@@ -16,14 +15,12 @@ const Facet = props =>
   <div className="profile-facet">
     <FormData
       name="user"
-      sections={props.facet.sections}
+      sections={props.sections}
     />
   </div>
 
 Facet.propTypes = {
-  facet: T.shape(
-    ProfileFacetTypes.propTypes
-  ).isRequired
+  sections: T.array.isRequired
 }
 
 export {

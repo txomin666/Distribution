@@ -3,6 +3,7 @@ import {PropTypes as T} from 'prop-types'
 import {connect} from 'react-redux'
 
 import {t} from '#/main/core/translation'
+import cloneDeep from 'lodash/cloneDeep'
 
 import {PageContainer, PageHeader} from '#/main/core/layout/page/index'
 import {FormStepper} from '#/main/core/layout/form/components/form-stepper.jsx'
@@ -11,6 +12,8 @@ import {selectors as formSelect} from '#/main/app/content/form/store/selectors'
 
 import {MODAL_CONFIRM} from '#/main/app/modals/confirm'
 import {actions as modalActions} from '#/main/app/overlay/modal/store'
+
+import {formatFormSections} from '#/main/core/user/profile/utils'
 
 import {Facet} from '#/main/core/user/registration/components/facet.jsx'
 import {Required} from '#/main/core/user/registration/components/required.jsx'
@@ -46,7 +49,8 @@ const RegistrationForm = props => {
     path: `/${facet.id}`,
     title: facet.title,
     component: () => {
-      const currentFacet = <Facet facet={facet}/>
+      const sections = formatFormSections(cloneDeep(facet.sections), props.user, {}, true)
+      const currentFacet = <Facet sections={sections}/>
 
       return currentFacet
     }

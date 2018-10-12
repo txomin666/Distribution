@@ -100,10 +100,15 @@ function getFormDefaultSection(userData, isNew = false) {
   }
 }
 
-function formatFormSections(sections, userData, params) {
-  const hasConfidentialRights = authenticatedUser ? hasRoles(authenticatedUser.roles, ['ROLE_ADMIN'].concat(params['roles_confidential'])): false
-  const hasLockedRights = authenticatedUser ? hasRoles(authenticatedUser.roles, ['ROLE_ADMIN'].concat(params['roles_locked'])): false
+//the `force` param is here for the user registration: just show everything
+function formatFormSections(sections, userData, params, force = null) {
+  let hasConfidentialRights = authenticatedUser ? hasRoles(authenticatedUser.roles, ['ROLE_ADMIN'].concat(params['roles_confidential'])): false
+  let hasLockedRights = authenticatedUser ? hasRoles(authenticatedUser.roles, ['ROLE_ADMIN'].concat(params['roles_locked'])): false
 
+  if (force !== null) {
+    hasLockedRights = hasConfidentialRights = force
+  }
+  
   sections.forEach(section => {
     section.fields = section.fields.filter(f => !f.restrictions.hidden && (hasConfidentialRights || !f.restrictions.isMetadata || (authenticatedUser && authenticatedUser.id === userData['id'])))
     section.fields.forEach(f => {
