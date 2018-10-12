@@ -108,7 +108,7 @@ function formatFormSections(sections, userData, params, force = null) {
   if (force !== null) {
     hasLockedRights = hasConfidentialRights = force
   }
-  
+
   sections.forEach(section => {
     section.fields = section.fields.filter(f => !f.restrictions.hidden && (hasConfidentialRights || !f.restrictions.isMetadata || (authenticatedUser && authenticatedUser.id === userData['id'])))
     section.fields.forEach(f => {
@@ -142,7 +142,7 @@ function formatDetailsSections(sections, user, params) {
   sections.forEach(section => {
     section.fields = section.fields.filter(f => !f.restrictions.hidden && (hasConfidentialRights || !f.restrictions.isMetadata || (authenticatedUser && authenticatedUser.id === user.id)))
     section.fields.forEach(f => {
-      f['name'] = f['id']
+      f['name'] = 'profile.' + f['id']
 
       if (f.type === 'choice') {
         const options = f.options ? f.options : {}

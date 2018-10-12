@@ -49,9 +49,7 @@ const RegistrationForm = props => {
     path: `/${facet.id}`,
     title: facet.title,
     component: () => {
-      const sections = formatFormSections(cloneDeep(facet.sections), props.user, {}, true)
-      console.log(sections)
-      const currentFacet = <Facet sections={sections}/>
+      const currentFacet = <Facet facet={facet}/>
 
       return currentFacet
     }
@@ -100,6 +98,9 @@ RegistrationForm.propTypes = {
   user: T.shape({
     // user type
   }).isRequired,
+  profile: T.shape({
+    // list of facets
+  }).isRequired,
   organization: T.shape({
     // organization type
   }).isRequired,
@@ -126,9 +127,8 @@ const UserRegistration = connect(
     defaultWorkspaces: select.defaultWorkspaces(state)
   }),
   (dispatch) => ({
-    register(user, termOfService) {
+    register(user, profile, termOfService) {
       if (termOfService) {
-        // show terms before create new account
         dispatch(modalActions.showModal(MODAL_CONFIRM, {
           icon: 'fa fa-fw fa-copyright',
           title: t('term_of_service'),
