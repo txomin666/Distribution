@@ -98,9 +98,6 @@ RegistrationForm.propTypes = {
   user: T.shape({
     // user type
   }).isRequired,
-  profile: T.shape({
-    // list of facets
-  }).isRequired,
   organization: T.shape({
     // organization type
   }).isRequired,
@@ -127,7 +124,7 @@ const UserRegistration = connect(
     defaultWorkspaces: select.defaultWorkspaces(state)
   }),
   (dispatch) => ({
-    register(user, profile, termOfService) {
+    register(user, termOfService) {
       if (termOfService) {
         dispatch(modalActions.showModal(MODAL_CONFIRM, {
           icon: 'fa fa-fw fa-copyright',
