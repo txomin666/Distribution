@@ -107,11 +107,11 @@ function formatFormSections(sections, userData, params) {
   sections.forEach(section => {
     section.fields = section.fields.filter(f => !f.restrictions.hidden && (hasConfidentialRights || !f.restrictions.isMetadata || (authenticatedUser && authenticatedUser.id === userData['id'])))
     section.fields.forEach(f => {
-      f['name'] = f['id']
+      f['name'] = 'profile.' + f['id']
 
       if (!hasLockedRights && (
         (f.restrictions.locked && !f.restrictions.lockedEditionOnly) ||
-        (f.restrictions.locked && f.restrictions.lockedEditionOnly && userData[f.id] !== undefined && userData[f.id] !== null)
+        (f.restrictions.locked && f.restrictions.lockedEditionOnly && userData['profile'][f.id] !== undefined && userData['profile'][f.id] !== null)
       )) {
         f['disabled'] = true
       }
