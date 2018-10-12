@@ -50,6 +50,7 @@ const RegistrationForm = props => {
     title: facet.title,
     component: () => {
       const sections = formatFormSections(cloneDeep(facet.sections), props.user, {}, true)
+      console.log(sections)
       const currentFacet = <Facet sections={sections}/>
 
       return currentFacet
